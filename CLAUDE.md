@@ -22,6 +22,10 @@ Gestion de notes de frais pour trois rôles (salarié, manager, admin). Un dép�
 
 ## Commandes
 
+Depuis la racine (`Makefile`) : `make install` · `make dev` (API en arrière-plan + front) · `make stop` (arrête l'API) · `make test` · `make` (aide).
+
+Dans chaque projet :
+
 | | `frontend/` | `backend/` |
 |---|---|---|
 | Lancer | `npm run dev` (port 5173, proxy `/api` → 8000) | `symfony serve -d` (port 8000) |
