@@ -1,108 +1,115 @@
 # AGENTS.md
 
-This is a Symfony project. Check `composer.json` for the exact Symfony/PHP version
-in use, and read `symfony.lock` to see which recipes ran. Don't assume Doctrine,
-Twig, API Platform, Messenger, or Lock are installed unless one of those says so.
+Ceci est un projet Symfony. Consulter `composer.json` pour connaître la version
+exacte de Symfony et de PHP utilisée, et lire `symfony.lock` pour savoir quelles
+recettes ont été exécutées. Ne pas supposer que Doctrine, Twig, API Platform,
+Messenger ou Lock sont installés tant que l'un de ces fichiers ne l'indique pas.
 
-## Ask before generating
+## Demander avant de générer
 
-If the task doesn't specify, ask rather than guess:
+Si la tâche ne le précise pas, demander plutôt que deviner :
 
-- Persistence: Doctrine ORM, Doctrine ODM, or none?
-- Interface: server-rendered (Twig), API (Serializer, maybe API Platform), or both?
-- Auth: SecurityBundle, and which authenticator?
+- Persistance : Doctrine ORM, Doctrine ODM, ou aucune ?
+- Interface : rendu serveur (Twig), API (Serializer, éventuellement API Platform), ou les deux ?
+- Authentification : SecurityBundle, et avec quel authenticator ?
 
-If you can't ask (no interactive channel), state the assumption you're making and
-pick the smallest option (e.g. no persistence layer) rather than scaffolding a
-full stack nobody asked for.
+S'il est impossible de demander (pas de canal interactif), énoncer l'hypothèse
+retenue et choisir l'option la plus légère (par exemple, aucune couche de
+persistance) plutôt que d'échafauder une stack complète que personne n'a demandée.
 
-## Adding features: Flex, not hand-wiring
+## Ajouter des fonctionnalités : Flex, pas de câblage à la main
 
-Install new capabilities with `composer require <package>` (e.g. `symfony/lock`,
-`symfony/messenger`, `orm-pack`) and let the Flex recipe register the bundle and
-generate its config. Don't hand-edit `config/bundles.php` or hand-write a bundle's
-base config; that's what the recipe is for. Don't skip a good-fit component just
-because it isn't installed yet; installing it is one command.
+Installer les nouvelles fonctionnalités avec `composer require <paquet>` (par exemple
+`symfony/lock`, `symfony/messenger`, `orm-pack`) et laisser la recette Flex
+enregistrer le bundle et générer sa configuration. Ne pas modifier
+`config/bundles.php` à la main ni écrire soi-même la configuration de base d'un
+bundle : c'est le rôle de la recette. Ne pas renoncer à un composant adapté
+simplement parce qu'il n'est pas encore installé : l'installer tient en une commande.
 
 ## Conventions
 
-Follow https://symfony.com/doc/current/best_practices.html to write idiomatic
-Symfony:
+Suivre https://symfony.com/doc/current/best_practices.html pour écrire du Symfony
+idiomatique :
 
-- Use PHP attributes for framework metadata, and not only on controllers:
-  `#[Route]`, `#[MapRequestPayload]`, `#[IsGranted]` on actions, `#[Assert\...]`
-  on properties, `#[AsCommand]`, `#[AsEventListener]`, `#[AsMessageHandler]`, and
-  `#[AsAlias]` / `#[AsTaggedItem]` / `#[Autoconfigure]` on services. No YAML or
-  XML routing.
-- Rely on autowiring and autoconfiguration. Type-hint constructor arguments and
-  let the container resolve them. Where a type-hint can't express it, stay in the
-  class with `#[Autowire]` (parameters, env vars, expressions) or `#[Target]` (one
-  of several implementations of an interface). A YAML service definition is the
-  last resort, not the first.
-- Controllers extend `AbstractController`, stay thin, and delegate to services.
-- Use the framework for what it already does: Form for server-rendered forms,
-  Validator for validation, Serializer for JSON, Messenger for async work,
-  Security (voters, authenticators) for access control, Twig `path()`/`url()`
-  instead of hardcoded URLs.
-- Before hand-writing infrastructure (locks, queues, caches, HTTP clients,
-  mailers, schedulers) or reaching for a third-party library, check whether a
-  Symfony component covers it. It usually does.
+- Utiliser les attributs PHP pour les métadonnées du framework, et pas seulement
+  sur les contrôleurs : `#[Route]`, `#[MapRequestPayload]`, `#[IsGranted]` sur les
+  actions, `#[Assert\...]` sur les propriétés, `#[AsCommand]`, `#[AsEventListener]`,
+  `#[AsMessageHandler]`, et `#[AsAlias]` / `#[AsTaggedItem]` / `#[Autoconfigure]`
+  sur les services. Pas de routage en YAML ou en XML.
+- S'appuyer sur l'autowiring et l'autoconfiguration. Typer les arguments du
+  constructeur et laisser le conteneur les résoudre. Quand un type ne suffit pas,
+  rester dans la classe avec `#[Autowire]` (paramètres, variables d'environnement,
+  expressions) ou `#[Target]` (une implémentation parmi plusieurs d'une interface).
+  Une définition de service en YAML est le dernier recours, pas le premier.
+- Les contrôleurs étendent `AbstractController`, restent fins et délèguent aux services.
+- Utiliser le framework pour ce qu'il sait déjà faire : Form pour les formulaires
+  rendus côté serveur, Validator pour la validation, Serializer pour le JSON,
+  Messenger pour le travail asynchrone, Security (voters, authenticators) pour le
+  contrôle d'accès, `path()` / `url()` de Twig plutôt que des URL en dur.
+- Avant d'écrire soi-même de l'infrastructure (verrous, files, caches, clients HTTP,
+  mailers, planificateurs) ou de recourir à une bibliothèque tierce, vérifier si un
+  composant Symfony la couvre. C'est généralement le cas.
 
-Three specifics worth spelling out, because they are easy to get wrong:
+Trois points précis méritent d'être explicités, car on se trompe facilement :
 
-- Bind request data with `#[MapRequestPayload]` / `#[MapQueryString]` on action
-  arguments, which wires up Serializer and Validator for you, instead of calling
-  `json_decode()` or `SerializerInterface` by hand. If neither package is
-  installed yet, `composer require` them rather than falling back to manual
-  parsing.
-- Use constructor property promotion, and `readonly` for DTOs and value objects.
-  Don't mark a service `readonly` if it might become `lazy: true`: a lazy proxy
-  can't extend a `readonly` class.
-- Use `symfony/lock` (`LockFactory`) for mutual exclusion. A hand-built flag or
-  lock file looks fine in review and is usually wrong under concurrency.
+- Lier les données de la requête avec `#[MapRequestPayload]` / `#[MapQueryString]`
+  sur les arguments de l'action, ce qui branche automatiquement Serializer et
+  Validator, plutôt que d'appeler `json_decode()` ou `SerializerInterface` à la main.
+  Si aucun des deux paquets n'est encore installé, les installer avec
+  `composer require` plutôt que de se rabattre sur un parsing manuel.
+- Utiliser la promotion des propriétés du constructeur, et `readonly` pour les DTO
+  et les objets valeur. Ne pas marquer un service `readonly` s'il risque de devenir
+  `lazy: true` : un proxy lazy ne peut pas étendre une classe `readonly`.
+- Utiliser `symfony/lock` (`LockFactory`) pour l'exclusion mutuelle. Un drapeau ou
+  un fichier de verrou fait maison a l'air correct en revue et se révèle
+  généralement faux en cas d'accès concurrents.
 
-## Everyday workflow
+## Travail au quotidien
 
-- Run the app with `symfony serve -d`, and commands with `symfony console ...`
-  (or `bin/console` when the Symfony CLI isn't available).
-- When something fails, read `var/log/dev.log` and the web profiler
-  (`/_profiler`) before changing code.
-- If `maker-bundle` is installed, prefer `bin/console make:*` with every argument
-  passed up front and `--no-interaction` where supported: makers prompt on a
-  terminal by default, which hangs a non-interactive shell. If a maker still
-  needs interactive input, hand-write the code instead.
-- If Doctrine ORM is installed, schema changes go through migrations
-  (`bin/console make:migration`, then `doctrine:migrations:migrate`), never
-  `doctrine:schema:update` or hand-written SQL.
-- `.env` is committed and holds defaults only. Real secrets belong in `.env.local`
-  (git-ignored) or the secrets vault (`bin/console secrets:set`), read via
-  `%env(...)%`.
+- Lancer l'application avec `symfony serve -d`, et les commandes avec
+  `symfony console ...` (ou `bin/console` si le CLI Symfony n'est pas disponible).
+- En cas d'échec, lire `var/log/dev.log` et le profiler web (`/_profiler`) avant
+  de modifier le code.
+- Si `maker-bundle` est installé, préférer `bin/console make:*` en passant tous les
+  arguments d'emblée et `--no-interaction` quand c'est possible : par défaut, les
+  makers posent des questions dans le terminal, ce qui bloque un shell non
+  interactif. Si un maker exige malgré tout une saisie interactive, écrire le code
+  à la main.
+- Si Doctrine ORM est installé, toute modification du schéma passe par une migration
+  (`bin/console make:migration`, puis `doctrine:migrations:migrate`), jamais par
+  `doctrine:schema:update` ni par du SQL écrit à la main.
+- `.env` est committé et ne contient que des valeurs par défaut. Les vrais secrets
+  vont dans `.env.local` (ignoré par git) ou dans le coffre de secrets
+  (`bin/console secrets:set`), et sont lus via `%env(...)%`.
 
-## Testing
+## Tests
 
-Install `symfony/test-pack` if it isn't already. Functional/HTTP tests extend
-`WebTestCase`; service-level tests extend `KernelTestCase`. Run
-`php bin/phpunit` (falls back to `vendor/bin/phpunit`). A feature isn't done
-until it has a test that exercises it the way a caller would, an HTTP request for
-a controller or a service call for a service, not just "it didn't throw."
+Installer `symfony/test-pack` s'il ne l'est pas déjà. Les tests fonctionnels / HTTP
+étendent `WebTestCase` ; les tests de services étendent `KernelTestCase`. Lancer
+`php bin/phpunit` (ou à défaut `vendor/bin/phpunit`). Une fonctionnalité n'est pas
+terminée tant qu'un test ne l'exerce pas comme le ferait un appelant : une requête
+HTTP pour un contrôleur, un appel de service pour un service, et pas seulement
+« ça n'a pas levé d'exception ».
 
-## Code style
+## Style de code
 
-Symfony's coding standard, the `@Symfony` php-cs-fixer ruleset (a PSR-12-derived
-superset). Run `vendor/bin/php-cs-fixer fix` if `friendsofphp/php-cs-fixer` is
-installed; it isn't part of the skeleton by default.
+Le standard de code de Symfony, c'est-à-dire le jeu de règles `@Symfony` de
+php-cs-fixer (un sur-ensemble dérivé de PSR-12). Lancer `vendor/bin/php-cs-fixer fix`
+si `friendsofphp/php-cs-fixer` est installé ; il ne fait pas partie du squelette
+par défaut.
 
-## Discover, don't guess
+## Chercher, ne pas deviner
 
-Framework APIs change between versions and your training data may be stale. Look
-things up in the project instead of relying on memory:
+Les API du framework changent d'une version à l'autre et les connaissances issues
+de l'entraînement peuvent être périmées. Chercher dans le projet plutôt que de se
+fier à sa mémoire :
 
-- `bin/console about`: versions, environment, paths.
-- `bin/console debug:router`, `debug:container`, `debug:autowiring <name>`,
-  `debug:config <bundle>`, `config:dump-reference <bundle>`: what exists and how
-  it is configured.
-- `bin/console lint:container`, plus `lint:twig templates/` and
-  `lint:yaml config/` where those packages are installed: validate before running.
-- Read the installed source and docblocks under `vendor/`.
-- Docs: https://symfony.com/doc/current/ (switch to the version matching
-  `composer.json` if it differs).
+- `bin/console about` : versions, environnement, chemins.
+- `bin/console debug:router`, `debug:container`, `debug:autowiring <nom>`,
+  `debug:config <bundle>`, `config:dump-reference <bundle>` : ce qui existe et
+  comment c'est configuré.
+- `bin/console lint:container`, ainsi que `lint:twig templates/` et
+  `lint:yaml config/` quand ces paquets sont installés : valider avant d'exécuter.
+- Lire le code source installé et les docblocks dans `vendor/`.
+- Documentation : https://symfony.com/doc/current/ (basculer sur la version
+  correspondant à `composer.json` si elle diffère).
