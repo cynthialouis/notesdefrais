@@ -23,7 +23,7 @@ final class UserViewFactory
         foreach ($this->roleHierarchy->getReachableRoleNames($user->getRoles()) as $securityRole) {
             $role = UserRole::fromSecurityRole($securityRole);
             if (null !== $role) {
-                $accessibleRoles[] = $role->value;
+                $accessibleRoles[] = $role;
             }
         }
 
@@ -31,8 +31,8 @@ final class UserViewFactory
             (int) $user->getId(),
             $user->getName(),
             $user->getEmail(),
-            $user->getRole()->value,
-            array_values(array_unique($accessibleRoles)),
+            $user->getRole(),
+            array_values(array_unique($accessibleRoles, \SORT_REGULAR)),
         );
     }
 }
