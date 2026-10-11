@@ -5,10 +5,10 @@ namespace App\Service;
 use App\Dto\ExpenseInput;
 use App\Entity\Expense;
 use App\Entity\User;
+use App\Http\PublicHttpException;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
-use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Symfony\Component\Workflow\WorkflowInterface;
 
 /**
@@ -49,7 +49,7 @@ final class ExpenseManager
     public function submit(Expense $expense): Expense
     {
         if (!$this->workflow->can($expense, 'submit')) {
-            throw new ConflictHttpException('Seul un brouillon peut être soumis.');
+            throw PublicHttpException::conflict('Seul un brouillon peut être soumis.');
         }
         $this->workflow->apply($expense, 'submit');
         $this->em->flush();
@@ -67,7 +67,7 @@ final class ExpenseManager
     private function assertEditable(Expense $expense): void
     {
         if (!$expense->getStatus()->isEditable()) {
-            throw new ConflictHttpException('Cette note n\'est plus modifiable.');
+            throw PublicHttpException::conflict('Cette note n\'est plus en brouillon : elle ne peut plus être modifiée ni supprimée.');
         }
     }
 

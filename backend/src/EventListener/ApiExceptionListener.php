@@ -3,6 +3,7 @@
 namespace App\EventListener;
 
 use App\Http\ApiError;
+use App\Http\PublicHttpException;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
@@ -21,6 +22,16 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 #[AsEventListener(event: KernelEvents::EXCEPTION, priority: -64)]
 final class ApiExceptionListener
 {
+    /**
+     * Messages produits par Symfony lui-même (erreurs de type à la désérialisation, MapRequestPayload
+     * et MapQueryString), en anglais : remplacés par un message en français.
+     */
+    private const FRAMEWORK_MESSAGES = [
+        'This value was of an unexpected type.' => 'Valeur invalide.',
+        'This value should be of type {{ type }}.' => 'Valeur invalide.',
+        'This attribute was not expected.' => 'Champ inattendu.',
+    ];
+
     public function __invoke(ExceptionEvent $event): void
     {
         if (!str_starts_with($event->getRequest()->getPathInfo(), '/api')) {
@@ -34,6 +45,7 @@ final class ApiExceptionListener
             $isHttp ? $exception->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR,
             self::fields($exception),
             $isHttp ? $exception->getHeaders() : [],
+            $exception instanceof PublicHttpException ? $exception->getMessage() : null,
         ));
     }
 
@@ -48,7 +60,7 @@ final class ApiExceptionListener
         for ($e = $exception; null !== $e; $e = $e->getPrevious()) {
             if ($e instanceof ValidationFailedException) {
                 foreach ($e->getViolations() as $violation) {
-                    $fields[$violation->getPropertyPath()] ??= (string) $violation->getMessage();
+                    $fields[$violation->getPropertyPath()] ??= self::FRAMEWORK_MESSAGES[$violation->getMessageTemplate()] ?? (string) $violation->getMessage();
                 }
             }
             if ($e instanceof PartialDenormalizationException) {

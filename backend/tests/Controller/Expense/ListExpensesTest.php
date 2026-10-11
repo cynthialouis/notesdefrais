@@ -166,4 +166,15 @@ final class ListExpensesTest extends ApiTestCase
         self::assertArrayNotHasKey('fields', $error);
         self::assertArrayNotHasKey(0, $this->responseJson());
     }
+
+    public function testRevueUnEtatInconnuEstSignaleEnFrancais(): void
+    {
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        $this->login($lea);
+
+        $this->client->request('GET', '/api/expenses?status=foo');
+
+        $fields = $this->assertValidationError('status');
+        self::assertSame('Valeur invalide.', $fields['status']);
+    }
 }

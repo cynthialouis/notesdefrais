@@ -177,4 +177,16 @@ final class SubmitExpenseTest extends ApiTestCase
         self::assertSame(ExpenseStatus::Draft, $expense?->getStatus());
         self::assertNull($expense?->getSubmittedAt());
     }
+
+    public function testRevueLe409ExpliqueQueSeulUnBrouillonPeutEtreSoumis(): void
+    {
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        $expense = $this->createExpense($lea, status: ExpenseStatus::Submitted);
+        $this->login($lea);
+
+        $this->client->request('POST', '/api/expenses/'.$expense->getId().'/submit');
+
+        $error = $this->assertErrorResponse(409);
+        self::assertSame('Seul un brouillon peut être soumis.', $error['message']);
+    }
 }
