@@ -6,8 +6,8 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 |---|---|---|---|
 | GET | `/health` | public | `{ ok: true }` |
 | GET | `/auth/demo-users` | public | Comptes de démo proposés à la connexion : `id`, `name`, `role` (sans email) |
-| POST | `/auth/login` | public | `{ userId }` → ouvre (ou remplace) la session et renvoie l'utilisateur courant ; 400 si le corps est invalide, 401 si le compte n'existe pas |
-| POST | `/auth/logout` | connecté | Ferme la session (204) |
+| POST | `/auth/login` | public | `{ userId }` → ouvre (ou remplace) la session et renvoie l'utilisateur courant ; 400 si le corps est invalide, 401 si le compte n'existe pas, 415 si le corps n'est pas du JSON |
+| POST | `/auth/logout` | connecté | Ferme la session (204) ; GET refusé (405) |
 | GET | `/me` | connecté | Utilisateur courant : `id`, `name`, `email`, `role`, `accessibleRoles` (rôles atteints par la hiérarchie) |
 | GET | `/categories` | connecté | Catégories + politique associée |
 | GET | `/expenses` | salarié : les siennes ; manager : son équipe | Liste filtrable (`?status=`) |
@@ -30,7 +30,7 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 - Autorisation par Voter, sur la ressource précise et pas seulement sur le rôle : un manager ne décide que pour les salariés de son équipe.
 - Transitions de statut uniquement via le Workflow ; transition impossible → 409.
 - Erreurs au format unique : `{ error: { code, message, fields? } }`, construit uniquement par `App\Http\ApiError` (utilisé par le listener d'exceptions et par la sécurité).
-- Codes HTTP : 400 validation, 401 non connecté, 403 interdit, 404 introuvable, 409 transition impossible.
+- Codes HTTP : 400 validation, 401 non connecté, 403 interdit, 404 introuvable, 405 méthode non autorisée (ex. déconnexion en GET), 409 transition impossible, 415 corps non JSON (ex. connexion, contre le CSRF de connexion).
 - Schéma de base modifié uniquement par migration (`make:migration` puis `doctrine:migrations:migrate`).
 - Configuration : `.env` committé ne contient que des valeurs par défaut ; les secrets vont dans `.env.local` (ignoré) ou dans le coffre Symfony (`secrets:set`).
 - Justificatifs : type et taille validés côté serveur ; nom de fichier stocké généré par le serveur ; stockage hors de `public/`, dans un dossier ignoré par git.

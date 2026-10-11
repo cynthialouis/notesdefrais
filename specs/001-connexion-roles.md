@@ -38,6 +38,8 @@ Les pages « Mes notes », « Équipe » et « Politique » sont vides dans cett
 
 - Session expirée ou cookie altéré : traité comme non connecté (401 côté API, page de connexion côté front).
 - Déconnexion sans session ouverte : refusée (401).
+- Déconnexion demandée autrement que par une action explicite (lien, image : requête GET) : refusée (405), la session reste ouverte. *Ajouté le 11/10 après la revue API.*
+- Demande de connexion dont le corps n'est pas du JSON (ce qu'enverrait un formulaire d'un autre site pour connecter un visiteur à son insu) : refusée (415). *Ajouté le 11/10 après la revue API.*
 - Le rôle et les pages accessibles viennent toujours du serveur ; modifier l'état du navigateur ne donne accès à aucune donnée.
 
 ## Règles recalculées côté front
