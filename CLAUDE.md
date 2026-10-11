@@ -1,10 +1,14 @@
 # Notes de frais
 
-Gestion de notes de frais pour trois rôles (salarié, manager, admin). Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par HTTP via `/api` :
+Gestion de notes de frais pour trois rôles (salarié, manager, admin). 
+Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par HTTP via `/api` :
 - `frontend/` : React 19 + TypeScript (Vite)
 - `backend/` : API Symfony 8 (PHP 8.4+), Doctrine + SQLite. Voir aussi `backend/CLAUDE.md`.
 
-État actuel : squelettes en place, route `GET /api/health` branchée de bout en bout. Aucune feature métier.
+État actuel : 
+- squelettes en place
+- route `GET /api/health` branchée de bout en bout
+- Aucune feature métier.
 
 ## Documentation
 
@@ -22,7 +26,12 @@ Gestion de notes de frais pour trois rôles (salarié, manager, admin). Un dép�
 
 ## Commandes
 
-Depuis la racine (`Makefile`) : `make install` · `make dev` (API en arrière-plan + front) · `make stop` (arrête l'API) · `make test` · `make` (aide).
+Depuis la racine (`Makefile`) : 
+- `make install`
+- `make dev` (API en arrière-plan + front)
+- `make stop` (arrête l'API)
+- `make test`
+- `make` (aide)
 
 Dans chaque projet :
 
