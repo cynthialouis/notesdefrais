@@ -7,6 +7,7 @@ use App\Entity\Expense;
 use App\Entity\User;
 use App\Http\PublicHttpException;
 use App\Repository\CategoryRepository;
+use App\Text\UnicodeTrim;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Workflow\WorkflowInterface;
@@ -78,7 +79,7 @@ final class ExpenseManager
         \assert(null !== $category && false !== $date && null !== $input->label && \is_int($input->amountCents), 'ExpenseInput doit être validé avant.');
 
         $expense
-            ->setLabel(trim($input->label))
+            ->setLabel(UnicodeTrim::trim($input->label))
             ->setAmountCents($input->amountCents)
             ->setDate($date)
             ->setCategory($category);

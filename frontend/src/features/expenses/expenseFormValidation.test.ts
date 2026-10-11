@@ -53,6 +53,19 @@ describe('parseExpenseForm', () => {
   })
 })
 
+describe('parseExpenseForm – alignement avec le serveur', () => {
+  it('refuse un libellé fait d\'espaces insécables et retire les blancs Unicode autour', () => {
+    expect(parseExpenseForm({ ...valid, label: '\u00a0\u202f\u00a0' }).ok).toBe(false)
+    const result = parseExpenseForm({ ...valid, label: '\u00a0Taxi\u2028' })
+    expect(result.ok && result.input.label).toBe('Taxi')
+  })
+
+  it('compte la longueur en caractères : 80 emoji acceptés, 81 refusés', () => {
+    expect(parseExpenseForm({ ...valid, label: '🚕'.repeat(80) }).ok).toBe(true)
+    expect(parseExpenseForm({ ...valid, label: '🚕'.repeat(81) }).ok).toBe(false)
+  })
+})
+
 describe('todayIso', () => {
   it('donne la date locale au format AAAA-MM-JJ', () => {
     expect(todayIso()).toBe('2026-10-11')

@@ -2,6 +2,7 @@
 
 namespace App\Dto;
 
+use App\Text\UnicodeTrim;
 use App\Validator\ExistingCategory;
 use App\Validator\NotInFuture;
 use OpenApi\Attributes as OA;
@@ -17,8 +18,9 @@ use Symfony\Component\Validator\Constraints as Assert;
 final readonly class ExpenseInput
 {
     public function __construct(
-        #[Assert\NotBlank(message: 'Le libellé est obligatoire.', normalizer: 'trim')]
-        #[Assert\Length(min: 2, max: 80, minMessage: 'Le libellé doit faire au moins {{ limit }} caractères.', maxMessage: 'Le libellé doit faire au plus {{ limit }} caractères.', normalizer: 'trim')]
+        // Longueur comptée en caractères (points de code) après UnicodeTrim, comme le front
+        #[Assert\NotBlank(message: 'Le libellé est obligatoire.', normalizer: [UnicodeTrim::class, 'trim'])]
+        #[Assert\Length(min: 2, max: 80, minMessage: 'Le libellé doit faire au moins {{ limit }} caractères.', maxMessage: 'Le libellé doit faire au plus {{ limit }} caractères.', normalizer: [UnicodeTrim::class, 'trim'])]
         public ?string $label = null,
 
         #[Assert\NotNull(message: 'Le montant est obligatoire.')]

@@ -295,4 +295,37 @@ final class CreateExpenseTest extends ApiTestCase
         self::assertArrayNotHasKey('fields', $error);
         self::assertSame(0, $this->countExpenses());
     }
+
+    public function testRelectureUnLibelleFaitDEspacesInsecablesEstRefuse(): void
+    {
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        $this->login($lea);
+
+        $this->jsonRequest('POST', '/api/expenses', $this->expensePayload(['label' => "\u{00A0}\u{202F}\u{00A0}"]));
+
+        $this->assertValidationError('label');
+    }
+
+    public function testRelectureLesEspacesUnicodeAutourDuLibelleSontRetires(): void
+    {
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        $this->login($lea);
+
+        $this->jsonRequest('POST', '/api/expenses', $this->expensePayload(['label' => "\u{00A0}Taxi\u{2028}"]));
+
+        self::assertResponseStatusCodeSame(201);
+        self::assertSame('Taxi', $this->responseJson()['label'] ?? null);
+    }
+
+    public function testRelectureLaLongueurDuLibelleSeCompteEnCaracteres(): void
+    {
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        $this->login($lea);
+
+        $this->jsonRequest('POST', '/api/expenses', $this->expensePayload(['label' => str_repeat('🚕', 80)]));
+        self::assertResponseStatusCodeSame(201);
+
+        $this->jsonRequest('POST', '/api/expenses', $this->expensePayload(['label' => str_repeat('🚕', 81)]));
+        $this->assertValidationError('label');
+    }
 }
