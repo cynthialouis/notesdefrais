@@ -98,3 +98,40 @@ describe('ExpenseDetailPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Note introuvable.')
   })
 })
+
+describe('ExpenseDetailPage – modification et refus', () => {
+  it('C5 – enregistre les modifications en PATCH avec tous les champs, puis revient à la liste', async () => {
+    const fetchMock = stubApi({
+      'GET /api/expenses/2': json(200, draftExpense),
+      'GET /api/categories': json(200, categories),
+      'PATCH /api/expenses/2': json(200, { ...draftExpense, label: 'Train Paris – Marseille', amountCents: 12000 }),
+      'GET /api/expenses': json(200, []),
+    })
+    await renderDetail(2)
+
+    const label = await screen.findByLabelText('Libellé')
+    await userEvent.clear(label)
+    await userEvent.type(label, 'Train Paris – Marseille')
+    await userEvent.clear(screen.getByLabelText('Montant (€)'))
+    await userEvent.type(screen.getByLabelText('Montant (€)'), '120')
+    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer les modifications' }))
+
+    expect(await screen.findByRole('heading', { name: 'Liste des notes' })).toBeInTheDocument()
+    const patch = fetchMock.mock.calls.find(([, init]) => init?.method === 'PATCH')
+    expect(JSON.parse(String(patch?.[1]?.body))).toEqual({ label: 'Train Paris – Marseille', amountCents: 12000, date: '2026-10-06', categorySlug: 'transport' })
+  })
+
+  it('C7 – un refus du serveur à la soumission (409) est affiché et l\'utilisateur reste sur la note', async () => {
+    stubApi({
+      'GET /api/expenses/2': json(200, draftExpense),
+      'GET /api/categories': json(200, categories),
+      'POST /api/expenses/2/submit': json(409, { error: { code: 'conflict', message: 'Seul un brouillon peut être soumis.' } }),
+    })
+    await renderDetail(2)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Soumettre la note' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Seul un brouillon peut être soumis.')
+    expect(screen.getByRole('button', { name: 'Soumettre la note' })).toBeEnabled()
+  })
+})

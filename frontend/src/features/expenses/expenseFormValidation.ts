@@ -8,10 +8,6 @@ import { MAX_AMOUNT_CENTS, parseEurosToCents } from './money'
  * le serveur reste la source de vérité.
  */
 
-export type ExpenseFormField = 'label' | 'amount' | 'date' | 'categorySlug'
-export type ExpenseFormValues = Record<ExpenseFormField, string>
-export type ExpenseFormErrors = Partial<Record<ExpenseFormField, string>>
-
 /** Date du jour du navigateur au format AAAA-MM-JJ (le serveur compare à Europe/Paris). */
 export function todayIso(now: Date = new Date()): string {
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -58,6 +54,11 @@ const expenseFormSchema = z.object({
     .refine((value) => value <= todayIso(), 'La date ne peut pas être dans le futur.'),
   categorySlug: z.string().min(1, 'La catégorie est obligatoire.'),
 })
+
+/** Valeurs saisies (avant transformation) et champs du formulaire, déduits du schéma. */
+export type ExpenseFormValues = z.input<typeof expenseFormSchema>
+export type ExpenseFormField = keyof ExpenseFormValues
+export type ExpenseFormErrors = Partial<Record<ExpenseFormField, string>>
 
 export type ExpenseFormResult = { ok: true; input: ExpenseInput } | { ok: false; errors: ExpenseFormErrors }
 
