@@ -36,10 +36,10 @@ afterEach(() => {
 })
 
 describe('protection des pages', () => {
-  it('C6 – une page protégée sans session amène à la connexion', async () => {
+  it.each(['/', '/notes', '/equipe', '/politique'])('C6 – %s sans session amène à la connexion', async (path) => {
     useSessionStore.setState({ session: { status: 'anonymous' } })
     await renderAsync(
-      <MemoryRouter initialEntries={['/notes']}>
+      <MemoryRouter initialEntries={[path]}>
         <AppRoutes />
       </MemoryRouter>,
     )
@@ -71,9 +71,13 @@ describe('protection des pages', () => {
     expect(screen.getByRole('heading', { name: 'Équipe' })).toBeInTheDocument()
   })
 
-  it('C9 – un admin accède à toutes les pages', () => {
-    renderAt('/equipe', admin)
-    expect(screen.getByRole('heading', { name: 'Équipe' })).toBeInTheDocument()
+  it.each([
+    ['/notes', 'Mes notes'],
+    ['/equipe', 'Équipe'],
+    ['/politique', 'Politique de dépenses'],
+  ])('C9 – un admin accède à %s', (path, heading) => {
+    renderAt(path, admin)
+    expect(screen.getByRole('heading', { name: heading })).toBeInTheDocument()
   })
 
   it('affiche un chargement tant que la session est inconnue', () => {

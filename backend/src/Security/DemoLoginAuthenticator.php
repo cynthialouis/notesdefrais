@@ -68,7 +68,7 @@ final class DemoLoginAuthenticator extends AbstractAuthenticator implements Auth
     public function onAuthenticationFailure(Request $request, AuthenticationException $exception): Response
     {
         // Même message quel que soit le motif : on ne révèle pas si le compte existe (C11)
-        return ApiError::response(Response::HTTP_UNAUTHORIZED, message: 'Connexion refusée : compte inconnu.');
+        return ApiError::response(Response::HTTP_UNAUTHORIZED, message: 'Connexion refusée.');
     }
 
     public function start(Request $request, ?AuthenticationException $authException = null): Response

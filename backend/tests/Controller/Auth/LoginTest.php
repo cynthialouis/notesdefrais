@@ -62,6 +62,25 @@ final class LoginTest extends ApiTestCase
         $this->assertNotAuthenticated();
     }
 
+    /**
+     * @return iterable<string, array{int}>
+     */
+    public static function identifiantsNonPositifs(): iterable
+    {
+        yield 'zéro' => [0];
+        yield 'négatif' => [-1];
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('identifiantsNonPositifs')]
+    public function testC10ConnexionAvecUserIdNonPositifRenvoie400AvecLeChamp(int $userId): void
+    {
+        $this->jsonRequest('POST', '/api/auth/login', ['userId' => $userId]);
+
+        $error = $this->assertErrorResponse(400);
+        self::assertArrayHasKey('userId', $error['fields'] ?? []);
+        $this->assertNotAuthenticated();
+    }
+
     public function testC10ConnexionAvecCorpsJsonMalFormeRenvoie400(): void
     {
         $this->jsonRequest('POST', '/api/auth/login', '{"userId":');
