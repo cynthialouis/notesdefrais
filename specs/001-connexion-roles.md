@@ -56,3 +56,20 @@ Aucune. Tranchées le 11/10 : une connexion remplace la session ouverte (C12) ; 
 
 - `docs/api.md` : nouvelle route publique de liste des comptes de démo ; l'utilisateur courant expose ses rôles accessibles.
 - `docs/produit.md` (écrans) : avec la hiérarchie, « Mes notes » et « Équipe » ne sont plus réservées à un seul rôle.
+
+## Plan
+
+- **Back** : entité `User` (id, nom, email unique, rôle en enum PHP, manager optionnel) + migration + fixtures (1 admin, 2 managers, 4 salariés). Sécurité Symfony : provider `entity`, `role_hierarchy` admin → manager → salarié, authenticator `DemoLoginAuthenticator` sur `POST /api/auth/login` (DTO `LoginInput` validé, 400 / 401 JSON, sert aussi d'entry point 401), logout sur `POST /api/auth/logout` (204), `access_control` (routes publiques : health, doc, login, demo-users ; reste de `/api` : `IS_AUTHENTICATED`). Listener d'exceptions pour le format `{ error: { code, message, fields? } }`. Routes `GET /api/auth/demo-users` et `GET /api/me` (rôles accessibles calculés par `RoleHierarchyInterface`), sorties typées pour OpenAPI.
+- **Front** : `react-router`, `zustand`, `zod`, Vitest + Testing Library, `openapi-typescript` (types générés depuis `nelmio:apidoc:dump`). Client `/api` avec `ApiError`. Store de session en union discriminée (`loading` / `anonymous` / `authenticated`), `fetchMe` appelé une fois dans `main.tsx`. `LoginPage` (`useActionState`), `RequireRole`, layout avec menu filtré et déconnexion, pages vides protégées.
+- **Tests du back** : `dama/doctrine-test-bundle` (rollback par test), base de test migrée par `make test`.
+
+## Tâches
+
+1. Entité `User`, migration, fixtures (C1, C9)
+2. Listener d'erreurs JSON (C5, C10, C11)
+3. Sécurité : provider, hiérarchie, authenticator, logout, access_control (C2, C3, C4, C5, C10, C11, C12)
+4. Routes `demo-users` et `me` (C1, C3, C9)
+5. Dépendances front, scripts `test` / `gen:api`, cible `make api-types`
+6. Client API et `ApiError` (C5)
+7. Store de session (C2, C3, C4, C12)
+8. Écrans : connexion, `RequireRole`, layout, menu, pages vides (C1, C2, C4, C6, C7, C8, C13)
