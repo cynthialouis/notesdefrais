@@ -60,6 +60,70 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_categories"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expenses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_expenses_list"];
+        put?: never;
+        post: operations["post_api_expenses_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/expenses/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_expenses_show"];
+        put?: never;
+        post?: never;
+        delete: operations["delete_api_expenses_delete"];
+        options?: never;
+        head?: never;
+        patch: operations["patch_api_expenses_update"];
+        trace?: never;
+    };
+    "/api/expenses/{id}/submit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_api_expenses_submit"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -97,6 +161,25 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         /** @enum {string} */
+        ExpenseStatus: "draft" | "submitted" | "approved" | "rejected";
+        ExpenseListQuery: {
+            /** @default null */
+            status: components["schemas"]["ExpenseStatus"] | null;
+        };
+        ExpenseInput: {
+            /** @default null */
+            label: string | null;
+            /**
+             * @description Montant en centimes
+             * @default null
+             */
+            amountCents: number | null;
+            /** @default null */
+            date: string | null;
+            /** @default null */
+            categorySlug: string | null;
+        };
+        /** @enum {string} */
         UserRole: "employee" | "manager" | "admin";
         DemoUserView: {
             id: number;
@@ -109,6 +192,25 @@ export interface components {
             email: string;
             role: components["schemas"]["UserRole"];
             accessibleRoles: components["schemas"]["UserRole"][];
+        };
+        CategoryView: {
+            slug: string;
+            label: string;
+        };
+        ExpenseView: {
+            id: number;
+            label: string;
+            amountCents: number;
+            /** Date de la dépense, au format Y-m-d */
+            date: string;
+            category: components["schemas"]["CategoryView"];
+            status: components["schemas"]["ExpenseStatus"];
+            /** Date et heure ISO 8601 */
+            createdAt: string;
+            /** Date et heure ISO 8601, null tant que la note n'est pas soumise */
+            submittedAt?: string | null;
+            /** Vrai si le propriétaire peut encore la modifier ou la supprimer (ExpenseStatus::isEditable()) */
+            editable: boolean;
         };
     };
     responses: never;
@@ -197,6 +299,281 @@ export interface operations {
             };
             /** @description Aucune session ouverte */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_categories: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Catégories de dépense */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryView"][];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_expenses_list: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["ExpenseStatus"] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notes de l'utilisateur, les plus récentes d'abord */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseView"][];
+                };
+            };
+            /** @description État inconnu */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_expenses_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseInput"];
+            };
+        };
+        responses: {
+            /** @description Brouillon créé */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseView"];
+                };
+            };
+            /** @description Champ invalide */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_expenses_show: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Note */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseView"];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Note inexistante ou d'un autre utilisateur */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_api_expenses_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Brouillon supprimé */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Note inexistante ou d'un autre utilisateur */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La note n'est plus en brouillon */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    patch_api_expenses_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExpenseInput"];
+            };
+        };
+        responses: {
+            /** @description Brouillon modifié (tous les champs sont remplacés) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseView"];
+                };
+            };
+            /** @description Champ invalide */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Note inexistante ou d'un autre utilisateur */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La note n'est plus en brouillon */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_expenses_submit: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Note soumise */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseView"];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Note inexistante ou d'un autre utilisateur */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La note n'est plus en brouillon */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

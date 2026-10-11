@@ -1,2 +1,22 @@
 framework:
-    workflows: null
+    workflows:
+        # Cycle de vie d'une note de frais (docs/modele-donnees.md).
+        # Les places sont les valeurs de l'enum App\Enum\ExpenseStatus, stockée dans Expense::$status.
+        # Les transitions de validation et de rejet arrivent avec la feature 003.
+        expense:
+            type: state_machine
+            marking_store:
+                type: method
+                property: status
+            supports:
+                - App\Entity\Expense
+            initial_marking: draft
+            places:
+                - draft
+                - submitted
+                - approved
+                - rejected
+            transitions:
+                submit:
+                    from: draft
+                    to: submitted

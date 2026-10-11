@@ -84,6 +84,249 @@
                 }
             }
         },
+        "/api/categories": {
+            "get": {
+                "operationId": "get_api_categories",
+                "responses": {
+                    "200": {
+                        "description": "Cat\u00e9gories de d\u00e9pense",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/CategoryView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/expenses": {
+            "get": {
+                "operationId": "get_api_expenses_list",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "required": false,
+                        "schema": {
+                            "nullable": true,
+                            "oneOf": [
+                                {
+                                    "$ref": "#/components/schemas/ExpenseStatus"
+                                }
+                            ],
+                            "default": null
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notes de l'utilisateur, les plus r\u00e9centes d'abord",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExpenseView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "\u00c9tat inconnu"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "post_api_expenses_create",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExpenseInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Brouillon cr\u00e9\u00e9",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Champ invalide"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/expenses/{id}": {
+            "get": {
+                "operationId": "get_api_expenses_show",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Note",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Note inexistante ou d'un autre utilisateur"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "delete_api_expenses_delete",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Brouillon supprim\u00e9"
+                    },
+                    "404": {
+                        "description": "Note inexistante ou d'un autre utilisateur"
+                    },
+                    "409": {
+                        "description": "La note n'est plus en brouillon"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "patch_api_expenses_update",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ExpenseInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Brouillon modifi\u00e9 (tous les champs sont remplac\u00e9s)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Champ invalide"
+                    },
+                    "404": {
+                        "description": "Note inexistante ou d'un autre utilisateur"
+                    },
+                    "409": {
+                        "description": "La note n'est plus en brouillon"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/expenses/{id}/submit": {
+            "post": {
+                "operationId": "post_api_expenses_submit",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Note soumise",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Note inexistante ou d'un autre utilisateur"
+                    },
+                    "409": {
+                        "description": "La note n'est plus en brouillon"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
         "/api/health": {
             "get": {
                 "operationId": "get_api_health",
@@ -117,6 +360,60 @@
     },
     "components": {
         "schemas": {
+            "ExpenseStatus": {
+                "type": "string",
+                "enum": [
+                    "draft",
+                    "submitted",
+                    "approved",
+                    "rejected"
+                ]
+            },
+            "ExpenseListQuery": {
+                "properties": {
+                    "status": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ExpenseStatus"
+                            }
+                        ],
+                        "default": null
+                    }
+                },
+                "type": "object"
+            },
+            "ExpenseInput": {
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null,
+                        "maxLength": 80,
+                        "minLength": 2
+                    },
+                    "amountCents": {
+                        "description": "Montant en centimes",
+                        "type": "integer",
+                        "nullable": true,
+                        "default": null,
+                        "maximum": 1000000,
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                    },
+                    "date": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "categorySlug": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    }
+                },
+                "type": "object"
+            },
             "UserRole": {
                 "type": "string",
                 "enum": [
@@ -170,6 +467,68 @@
                         "items": {
                             "$ref": "#/components/schemas/UserRole"
                         }
+                    }
+                },
+                "type": "object"
+            },
+            "CategoryView": {
+                "required": [
+                    "slug",
+                    "label"
+                ],
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "ExpenseView": {
+                "required": [
+                    "id",
+                    "label",
+                    "amountCents",
+                    "date",
+                    "category",
+                    "status",
+                    "createdAt",
+                    "editable"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "amountCents": {
+                        "type": "integer"
+                    },
+                    "date": {
+                        "title": "Date de la d\u00e9pense, au format Y-m-d",
+                        "type": "string"
+                    },
+                    "category": {
+                        "$ref": "#/components/schemas/CategoryView"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ExpenseStatus"
+                    },
+                    "createdAt": {
+                        "title": "Date et heure ISO 8601",
+                        "type": "string"
+                    },
+                    "submittedAt": {
+                        "title": "Date et heure ISO 8601, null tant que la note n'est pas soumise",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "editable": {
+                        "title": "Vrai si le propri\u00e9taire peut encore la modifier ou la supprimer (ExpenseStatus::isEditable())",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"

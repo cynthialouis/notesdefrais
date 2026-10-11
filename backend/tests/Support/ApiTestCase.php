@@ -2,8 +2,12 @@
 
 namespace App\Tests\Support;
 
+use App\Entity\Category;
+use App\Entity\Expense;
 use App\Entity\User;
+use App\Enum\ExpenseStatus;
 use App\Enum\UserRole;
+use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
@@ -122,5 +126,142 @@ abstract class ApiTestCase extends WebTestCase
         self::assertSame($user->getEmail(), $me['email'] ?? null);
 
         return $me;
+    }
+
+    protected function entityManager(): EntityManagerInterface
+    {
+        return static::getContainer()->get(EntityManagerInterface::class);
+    }
+
+    /**
+     * Catégorie de référence insérée par la migration (spec 002) : repas, transport, hebergement, materiel, autre.
+     */
+    protected function category(string $slug): Category
+    {
+        $category = static::getContainer()->get(CategoryRepository::class)->findOneBy(['slug' => $slug]);
+        self::assertInstanceOf(Category::class, $category, "La catégorie '$slug' doit exister en base (insérée par la migration).");
+
+        return $category;
+    }
+
+    /**
+     * Crée et enregistre une note directement en base (entité prévue par la spec 002).
+     * Le propriétaire est rechargé depuis l'EntityManager courant : le helper reste utilisable après une requête.
+     */
+    protected function createExpense(
+        User $owner,
+        string $label = 'Déjeuner client',
+        int $amountCents = 1250,
+        string $date = '2026-10-01',
+        string $categorySlug = 'repas',
+        ExpenseStatus $status = ExpenseStatus::Draft,
+    ): Expense {
+        $em = $this->entityManager();
+        $managedOwner = $em->find(User::class, $owner->getId());
+        self::assertInstanceOf(User::class, $managedOwner);
+
+        $expense = new Expense();
+        $expense->setOwner($managedOwner);
+        $expense->setCategory($this->category($categorySlug));
+        $expense->setLabel($label);
+        $expense->setAmountCents($amountCents);
+        $expense->setDate(new \DateTimeImmutable($date));
+        $expense->setStatus($status);
+
+        $em->persist($expense);
+        $em->flush();
+
+        return $expense;
+    }
+
+    /**
+     * Relit une note en base, sans passer par le cache de l'EntityManager.
+     */
+    protected function findExpense(int $id): ?Expense
+    {
+        $em = $this->entityManager();
+        $em->clear();
+
+        return $em->find(Expense::class, $id);
+    }
+
+    protected function countExpenses(): int
+    {
+        $em = $this->entityManager();
+        $em->clear();
+
+        return $em->getRepository(Expense::class)->count([]);
+    }
+
+    /**
+     * Corps valide pour POST /api/expenses et PATCH /api/expenses/{id}.
+     *
+     * @param array<string, mixed> $overrides
+     *
+     * @return array<string, mixed>
+     */
+    protected function expensePayload(array $overrides = []): array
+    {
+        return array_merge([
+            'label' => 'Taxi gare',
+            'amountCents' => 2350,
+            'date' => '2026-10-02',
+            'categorySlug' => 'transport',
+        ], $overrides);
+    }
+
+    /**
+     * Date du jour en Europe/Paris, décalée de `$modifier` (ex. '+1 day'), au format Y-m-d.
+     */
+    protected function parisDate(string $modifier = 'now'): string
+    {
+        return (new \DateTimeImmutable('now', new \DateTimeZone('Europe/Paris')))->modify($modifier)->format('Y-m-d');
+    }
+
+    /**
+     * Vérifie le format de sortie d'une note (ExpenseView).
+     *
+     * @param array<mixed> $view
+     */
+    protected function assertExpenseView(array $view): void
+    {
+        self::assertEqualsCanonicalizing(
+            ['id', 'label', 'amountCents', 'date', 'category', 'status', 'createdAt', 'submittedAt', 'editable'],
+            array_keys($view),
+        );
+        self::assertIsInt($view['id']);
+        self::assertIsString($view['label']);
+        self::assertIsInt($view['amountCents']);
+        self::assertIsString($view['date']);
+        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $view['date']);
+        self::assertIsArray($view['category']);
+        self::assertEqualsCanonicalizing(['slug', 'label'], array_keys($view['category']));
+        self::assertContains($view['status'], ['draft', 'submitted', 'approved', 'rejected']);
+        self::assertIsBool($view['editable']);
+        self::assertIsString($view['createdAt']);
+        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view['createdAt']);
+        if (null !== $view['submittedAt']) {
+            self::assertIsString($view['submittedAt']);
+            self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view['submittedAt']);
+        }
+    }
+
+    /**
+     * Vérifie une erreur de validation 400 portant au moins sur les champs donnés, et renvoie les erreurs par champ.
+     *
+     * @return array<mixed>
+     */
+    protected function assertValidationError(string ...$fields): array
+    {
+        $error = $this->assertErrorResponse(400);
+        self::assertArrayHasKey('fields', $error);
+        self::assertIsArray($error['fields']);
+        foreach ($fields as $field) {
+            self::assertArrayHasKey($field, $error['fields'], "Le champ '$field' doit être signalé.");
+            self::assertIsString($error['fields'][$field]);
+            self::assertNotSame('', $error['fields'][$field]);
+        }
+
+        return $error['fields'];
     }
 }
