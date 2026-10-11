@@ -63,7 +63,7 @@ Spec OpenAPI : `GET /api/doc.json`.
 - React : pas de `useEffect` pour une valeur dérivée, calcul direct pendant le rendu.
 - Symfony : suivre `backend/AGENTS.md` (attributs, autowiring, `#[MapRequestPayload]`, recettes Flex plutôt que configuration à la main).
 - Ne pas ajouter de dépendance sans le signaler et le justifier.
-- Si la syntaxe d'une API n'est pas certaine : vérifier dans la doc de la version installée (`composer.json`, `package.json`), ne pas deviner.
+- Si la syntaxe ou le comportement d'une API n'est pas certain : ne pas deviner. Utiliser le subagent `verificateur-docs` pour les librairies du front, Nelmio et la configuration de Claude Code (hooks, permissions, skills, subagents). Pour le cœur de Symfony, interroger d'abord le projet avec `bin/console` (voir `backend/AGENTS.md`).
 - Secrets : jamais committés. Back : `.env` ne contient que des valeurs par défaut, secrets dans `.env.local` ou `secrets:set`.
 - Commits conventionnels (`feat:`, `fix:`, `test:`, `refactor:`, `docs:`, `chore:`, `chore(harness):`), petits et atomiques.
 - Toute la documentation (README, commentaires, docs, ce fichier) est rédigée en français.
