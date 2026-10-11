@@ -5,7 +5,15 @@ security:
 
     # https://symfony.com/doc/current/security.html#loading-the-user-the-user-provider
     providers:
-        users_in_memory: { memory: null }
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    # Un rôle donne accès aux droits des rôles inférieurs : admin > manager > salarié
+    role_hierarchy:
+        ROLE_ADMIN: ROLE_MANAGER
+        ROLE_MANAGER: ROLE_EMPLOYEE
 
     firewalls:
         dev:
@@ -14,18 +22,20 @@ security:
             security: false
         main:
             lazy: true
-            provider: users_in_memory
-
-            # Activate different ways to authenticate:
-            # https://symfony.com/doc/current/security.html#the-firewall
-
-            # https://symfony.com/doc/current/security/impersonating_user.html
-            # switch_user: true
+            provider: app_user_provider
+            # Connexion de démo sans mot de passe (POST /api/auth/login), qui sert aussi
+            # de point d'entrée : 401 JSON pour une route protégée appelée sans session
+            custom_authenticators:
+                - App\Security\DemoLoginAuthenticator
+            entry_point: App\Security\DemoLoginAuthenticator
+            logout:
+                path: /api/auth/logout
 
     # Note: Only the *first* matching rule is applied
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        - { path: ^/api/(health|doc\.json)$, roles: PUBLIC_ACCESS }
+        - { path: ^/api/auth/(login|demo-users)$, roles: PUBLIC_ACCESS }
+        - { path: ^/api, roles: IS_AUTHENTICATED }
 
 when@test:
     security:

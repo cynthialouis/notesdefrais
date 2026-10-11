@@ -2,8 +2,8 @@
 
 namespace App\EventListener;
 
+use App\Http\ApiError;
 use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
-use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
@@ -21,16 +21,6 @@ use Symfony\Component\Validator\Exception\ValidationFailedException;
 #[AsEventListener(event: KernelEvents::EXCEPTION, priority: -64)]
 final class ApiExceptionListener
 {
-    private const CODES = [
-        400 => ['bad_request', 'Requête invalide.'],
-        401 => ['unauthorized', 'Authentification requise.'],
-        403 => ['forbidden', 'Accès refusé.'],
-        404 => ['not_found', 'Ressource introuvable.'],
-        405 => ['method_not_allowed', 'Méthode non autorisée.'],
-        409 => ['conflict', 'Action impossible dans l\'état actuel.'],
-        422 => ['validation_failed', 'Données invalides.'],
-    ];
-
     public function __invoke(ExceptionEvent $event): void
     {
         if (!str_starts_with($event->getRequest()->getPathInfo(), '/api')) {
@@ -38,18 +28,13 @@ final class ApiExceptionListener
         }
 
         $exception = $event->getThrowable();
-        $status = $exception instanceof HttpExceptionInterface ? $exception->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR;
-        $headers = $exception instanceof HttpExceptionInterface ? $exception->getHeaders() : [];
+        $isHttp = $exception instanceof HttpExceptionInterface;
 
-        [$code, $message] = self::CODES[$status] ?? ['internal_error', 'Erreur interne.'];
-        $error = ['code' => $code, 'message' => $message];
-
-        $fields = self::fields($exception);
-        if ([] !== $fields) {
-            $error = ['code' => 'validation_failed', 'message' => 'Données invalides.', 'fields' => $fields];
-        }
-
-        $event->setResponse(new JsonResponse(['error' => $error], $status, $headers));
+        $event->setResponse(ApiError::response(
+            $isHttp ? $exception->getStatusCode() : Response::HTTP_INTERNAL_SERVER_ERROR,
+            self::fields($exception),
+            $isHttp ? $exception->getHeaders() : [],
+        ));
     }
 
     /**
@@ -67,7 +52,7 @@ final class ApiExceptionListener
                 }
             }
             if ($e instanceof PartialDenormalizationException) {
-                foreach ($e->getErrors() as $error) {
+                foreach ($e->getNotNormalizableValueErrors() as $error) {
                     $fields[(string) $error->getPath()] ??= 'Type invalide.';
                 }
             }
