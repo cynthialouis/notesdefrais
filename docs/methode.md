@@ -2,6 +2,11 @@
 
 Chaque feature = une branche, un commit de spec, un commit de tests, puis les commits d'implémentation.
 
+## Rôles
+
+- **Claude** rédige tout (specs, plans, tests, code, harness, documentation, journal), se critique avec les grilles ci-dessous et applique lui-même les corrections pertinentes. Il justifie ce qu'il écarte.
+- **L'humain** exprime le besoin, tranche les questions ouvertes, valide la spec et le plan, lit les diffs pour les comprendre, teste à la main dans le navigateur et prépare la démo.
+
 Specs prévues dans `specs/` : `001-connexion-roles`, `002-soumettre-note`, `003-valider-rejeter`, `004-politique-depenses`, `005-justificatifs`, `006-tableau-de-bord`.
 
 ## Étapes
@@ -9,13 +14,13 @@ Specs prévues dans `specs/` : `001-connexion-roles`, `002-soumettre-note`, `003
 | Étape | Action |
 |---|---|
 | F1. Branche | `git switch -c feat/00X-nom-court` |
-| F2. Spec | `/ecrire-spec` avec l'idée de départ. Relecture avec la grille ci-dessous, questions ouvertes tranchées par l'humain. Commit `docs(spec): 00X nom` |
-| F3. Plan | Plan mode, prompt P-Plan. Relecture avec la grille plan, puis validation |
-| F4a. Tests (à partir de 002) | Subagent `testeur-spec` sur la spec. Tests nommés d'après les critères, qui échouent pour la bonne raison ; `git diff --stat` ne montre que des fichiers de test. Commit `test(00X): tests depuis la spec` |
-| F4b. Implémentation | Une tâche du plan à la fois (P-Impl, ou P-Tâche pour 001), relecture du diff, tests du projet touché (`php bin/phpunit` dans `backend/`, `npm run test` dans `frontend/`), commit `feat(00X): tâche N – description` |
+| F2. Spec | `/ecrire-spec` avec l'idée de départ. Claude relit la spec avec la grille ci-dessous et la corrige ; l'humain tranche les questions ouvertes et valide. Commit `docs(spec): 00X nom` |
+| F3. Plan | Plan mode, prompt P-Plan. Claude vérifie le plan avec la grille et l'ajuste ; l'humain valide |
+| F4a. Tests (à partir de 002) | Subagent `testeur-spec` sur la spec. Claude vérifie : tests nommés d'après les critères, qui échouent pour la bonne raison ; `git diff --stat` ne montre que des fichiers de test. Commit `test(00X): tests depuis la spec` |
+| F4b. Implémentation | Une tâche du plan à la fois (P-Impl, ou P-Tâche pour 001), lecture du diff par l'humain pour le comprendre, tests du projet touché (`php bin/phpunit` dans `backend/`, `npm run test` dans `frontend/`), commit `feat(00X): tâche N – description` |
 | F5. Vérification à la main | `symfony serve` dans `backend/` et `npm run dev` dans `frontend/`, chaque critère d'acceptation déroulé dans le navigateur avec le bon compte de démo |
-| F6. Revues | `/revue-api` si `backend/` a changé, `/revue-react` si `frontend/` a changé. Chaque remarque acceptée ou refusée avec justification |
-| F7. Relecture à froid (à partir de 003) | Subagent `relecteur` sur la spec |
+| F6. Revues | `/revue-api` si `backend/` a changé, `/revue-react` si `frontend/` a changé. Claude applique les remarques pertinentes et justifie celles qu'il écarte |
+| F7. Relecture à froid (à partir de 003) | Subagent `relecteur` sur la spec ; Claude corrige les problèmes signalés |
 | F8. Fusion | `git switch main && git merge --no-ff feat/00X-nom-court`, puis les tests des deux projets sur main |
 
 Si une API est incertaine à n'importe quelle étape : subagent `verificateur-docs`.
@@ -33,16 +38,16 @@ Une page maximum, sections dans cet ordre :
 - Plan (DTO et contraintes, entités et migration, routes et Voters, schémas Zod et composants du front)
 - Tâches numérotées, chacune reliée à un ou plusieurs critères
 
-## Grille de relecture d'une spec
+## Grille de relecture d'une spec (appliquée par Claude)
 
 - Chaque critère est-il testable ?
 - Les autorisations sont-elles explicites (qui peut, qui ne peut pas) ?
 - Les cas limites sont-ils là (vide, zéro, déjà traité, pas le droit) ?
 - Le hors périmètre est-il écrit ?
-- Les questions ouvertes sont-elles tranchées par l'humain ?
+- Les questions ouvertes sont-elles listées pour que l'humain les tranche, et non devinées ?
 - Une page maximum ?
 
-## Grille de relecture d'un plan
+## Grille de relecture d'un plan (appliquée par Claude)
 
 - L'ordre est-il `backend/` (DTO, entités, routes) → `frontend/` (types générés, composants) ?
 - Chaque tâche est-elle reliée à un critère de la spec ?
@@ -66,7 +71,7 @@ Une page maximum, sections dans cet ordre :
 
 ## Journal
 
-Chaque intervention humaine (proposition refusée, API inventée, version obsolète, spec mal interprétée) donne une ligne dans `JOURNAL-IA.md`, avec des entrées réelles uniquement :
+Chaque écart détecté (test du harness, remarque de revue retenue ou écartée, API inventée, version obsolète, spec mal interprétée) donne une ligne dans `JOURNAL-IA.md`, tenue par Claude, avec des entrées réelles uniquement :
 
 | Date | Étape | Ce que l'agent a proposé | Ce que j'ai fait | Pourquoi |
 |---|---|---|---|---|

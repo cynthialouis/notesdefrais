@@ -71,6 +71,7 @@ Spec OpenAPI : `GET /api/doc.json`.
 ## Façon de travailler avec moi
 
 - Toujours lire les fichiers concernés avant de proposer une modification.
+- Tu rédiges et tu corriges toi-même le harness (CLAUDE.md, subagents, skills, settings), la documentation et le journal : après une critique, applique les corrections pertinentes au lieu de me les laisser. Moi, je valide les specs et les plans, je tranche les questions ouvertes et je teste à la main.
 - Proposer un plan avant toute modification qui touche plus de deux fichiers.
 - Ne jamais modifier de fichier si je demande une analyse, une explication ou une review.
 - Après chaque modification, vérifier le projet touché : front → `npx tsc -b` et `npm run lint` ; back → `php bin/phpunit` et `php bin/console lint:container`.

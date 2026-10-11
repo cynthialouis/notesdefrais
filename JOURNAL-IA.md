@@ -1,6 +1,6 @@
 # Journal IA
 
-Une ligne par intervention : proposition refusée, API inventée, version obsolète, spec mal interprétée, test du harness. Entrées réelles uniquement.
+Une ligne par écart détecté : test du harness, remarque de revue retenue ou écartée, API inventée, version obsolète, spec mal interprétée. Tenu par Claude, entrées réelles uniquement.
 
 | Date | Étape | Ce que l'agent a proposé | Ce que j'ai fait | Pourquoi |
 |---|---|---|---|---|
