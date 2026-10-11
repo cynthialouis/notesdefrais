@@ -42,7 +42,7 @@ La vérification de politique est un service PHP (`PolicyChecker`) qui renvoie `
 
 ## Types côté front
 
-Les types des réponses sont générés depuis OpenAPI. Le front y ajoute ce qu'OpenAPI n'exprime pas :
+Les types des réponses sont générés depuis OpenAPI. Une note renvoyée par l'API porte `editable` (calculé par `ExpenseStatus::isEditable()`) : le front ne recalcule pas cette règle. Le front ajoute ce qu'OpenAPI n'exprime pas, sous forme de schéma Zod validé à la réception (`features/expenses/expensesStore.ts`) :
 
 ```ts
 // Union discriminée sur le statut : une note rejetée sans motif est impossible à représenter
