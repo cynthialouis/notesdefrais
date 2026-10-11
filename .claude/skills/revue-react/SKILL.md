@@ -24,7 +24,7 @@ Lance `npx tsc -b` et `npm run lint` dans `frontend/`. Rapporte leurs erreurs te
 1. **useEffect injustifié** : valeur dérivée (total, liste filtrée, alerte) ou réaction à un événement placée dans un effet. Corriger par un calcul pendant le rendu ou un gestionnaire d'événement. Un effet n'est légitime que pour synchroniser avec l'extérieur de React (abonnement, API du navigateur, chargement initial de la session).
 2. **État mal placé** : state dupliqué ou dérivable d'un autre ; donnée mise dans Zustand alors qu'un seul composant s'en sert (un filtre de liste reste local).
 3. **Immutabilité** : mutation d'un tableau ou d'un objet du state ou du store (`push`, `sort`, affectation de propriété).
-4. **Zustand** : store entier sélectionné ; objet ou tableau sélectionné sans `useShallow` ; logique d'appel réseau hors des actions du store.
+4. **Zustand** : store entier sélectionné ; objet ou tableau sélectionné sans `useShallow` ; donnée partagée (session, cache des notes) chargée hors des actions du store. Une donnée lue par un seul composant peut être chargée localement (règle 2) : ce n'est pas une remarque.
 5. **Formulaires** : soumission gérée à la main (`onSubmit` + `useState` pour l'état d'envoi et les erreurs) au lieu de `useActionState` ; saisie validée avec `parse` au lieu de `safeParse` ; type de formulaire écrit à la main au lieu de `z.infer`.
 6. **Contrat avec l'API** : type de réponse écrit à la main au lieu du type généré depuis OpenAPI ; URL de serveur en dur au lieu de `/api/...`.
 7. **Règles métier** : règle recalculée côté front qui n'est pas listée dans la spec, ou sans test. Montants manipulés autrement qu'en centimes entiers (conversion en flottant, arrondi) ; affichage en euros qui n'utilise pas `Intl.NumberFormat`.
