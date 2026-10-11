@@ -5,9 +5,9 @@ import { useExpensesStore, type ExpenseInput } from './expensesStore'
 
 const draft = {
   id: 2, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
-  status: 'draft', createdAt: '2026-10-06T10:00:00+02:00', submittedAt: null,
+  status: 'draft', createdAt: '2026-10-06T10:00:00+02:00', submittedAt: null, editable: true,
 }
-const submitted = { ...draft, id: 1, label: 'Déjeuner', status: 'submitted', submittedAt: '2026-10-07T09:00:00+02:00' }
+const submitted = { ...draft, id: 1, label: 'Déjeuner', status: 'submitted', submittedAt: '2026-10-07T09:00:00+02:00', editable: false }
 const input: ExpenseInput = { label: 'Train', amountCents: 8900, date: '2026-10-06', categorySlug: 'transport' }
 
 const fetchMock = vi.fn<typeof fetch>()
@@ -73,7 +73,7 @@ describe('expensesStore', () => {
   })
 
   it('C6 – soumission', async () => {
-    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ...draft, status: 'submitted', submittedAt: '2026-10-11T10:00:00+02:00' }))
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, { ...draft, status: 'submitted', submittedAt: '2026-10-11T10:00:00+02:00', editable: false }))
       .mockResolvedValueOnce(jsonResponse(200, []))
 
     const result = await useExpensesStore.getState().submit(2)

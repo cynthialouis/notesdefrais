@@ -226,7 +226,7 @@ abstract class ApiTestCase extends WebTestCase
     protected function assertExpenseView(array $view): void
     {
         self::assertEqualsCanonicalizing(
-            ['id', 'label', 'amountCents', 'date', 'category', 'status', 'createdAt', 'submittedAt'],
+            ['id', 'label', 'amountCents', 'date', 'category', 'status', 'createdAt', 'submittedAt', 'editable'],
             array_keys($view),
         );
         self::assertIsInt($view['id']);
@@ -237,6 +237,7 @@ abstract class ApiTestCase extends WebTestCase
         self::assertIsArray($view['category']);
         self::assertEqualsCanonicalizing(['slug', 'label'], array_keys($view['category']));
         self::assertContains($view['status'], ['draft', 'submitted', 'approved', 'rejected']);
+        self::assertIsBool($view['editable']);
         self::assertIsString($view['createdAt']);
         self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view['createdAt']);
         if (null !== $view['submittedAt']) {

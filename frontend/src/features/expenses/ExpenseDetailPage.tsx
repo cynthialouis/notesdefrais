@@ -54,7 +54,7 @@ function ExpenseDetail({ expense: expensePromise, categories }: { expense: Promi
       <h1>
         {expense.label} <StatusBadge status={expense.status} />
       </h1>
-      {expense.status === 'draft' ? <DraftActions expense={expense} categories={categories} /> : <ReadOnlyExpense expense={expense} />}
+      {expense.editable ? <EditableExpense expense={expense} categories={categories} /> : <ReadOnlyExpense expense={expense} />}
     </>
   )
 }
@@ -72,8 +72,8 @@ function ReadOnlyExpense({ expense }: { expense: Expense }) {
   )
 }
 
-/** Brouillon : modifiable (C5), soumettable (C6), supprimable après confirmation (C11). */
-function DraftActions({ expense, categories }: { expense: Expense & { status: 'draft' }; categories: Promise<CategoriesResult> }) {
+/** Note modifiable (brouillon en 002) : modifiable (C5), soumettable (C6), supprimable après confirmation (C11). */
+function EditableExpense({ expense, categories }: { expense: Expense; categories: Promise<CategoriesResult> }) {
   const update = useExpensesStore((state) => state.update)
   const submit = useExpensesStore((state) => state.submit)
   const remove = useExpensesStore((state) => state.remove)

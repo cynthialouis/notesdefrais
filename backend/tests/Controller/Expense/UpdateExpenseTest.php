@@ -208,4 +208,16 @@ final class UpdateExpenseTest extends ApiTestCase
         self::assertSame('repas', $expense->getCategory()->getSlug());
         self::assertSame($status, $expense->getStatus());
     }
+
+    public function testRelectureUnCorpsInvalideSurUneNoteSoumiseEstRefuseEn400AvantLEtat(): void
+    {
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        $expense = $this->createExpense($lea, label: 'Avant', status: ExpenseStatus::Submitted);
+        $this->login($lea);
+
+        $this->jsonRequest('PATCH', '/api/expenses/'.$expense->getId(), $this->expensePayload(['label' => '']));
+
+        $this->assertValidationError('label');
+        self::assertSame('Avant', $this->findExpense((int) $expense->getId())?->getLabel());
+    }
 }

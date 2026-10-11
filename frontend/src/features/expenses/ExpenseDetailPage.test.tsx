@@ -40,7 +40,7 @@ describe('ExpenseDetailPage', () => {
     const fetchMock = stubApi({
       'GET /api/expenses/2': json(200, draftExpense),
       'GET /api/categories': json(200, categories),
-      'POST /api/expenses/2/submit': json(200, { ...draftExpense, status: 'submitted', submittedAt: '2026-10-11T10:00:00+02:00' }),
+      'POST /api/expenses/2/submit': json(200, { ...draftExpense, status: 'submitted', submittedAt: '2026-10-11T10:00:00+02:00', editable: false }),
       'GET /api/expenses': json(200, []),
     })
     await renderDetail(2)
@@ -96,6 +96,17 @@ describe('ExpenseDetailPage', () => {
     await renderDetail(9)
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Note introuvable.')
+  })
+})
+
+describe('ExpenseDetailPage – modifiable selon le serveur', () => {
+  it('suit l\'indication editable du serveur, sans recalculer la règle à partir de l\'état', async () => {
+    stubApi({ 'GET /api/expenses/2': json(200, { ...draftExpense, editable: false }), 'GET /api/categories': json(200, categories) })
+    await renderDetail(2)
+
+    expect(await screen.findByText('Brouillon')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Soumettre la note' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
 })
 

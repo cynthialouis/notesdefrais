@@ -100,4 +100,18 @@ final class ShowExpenseTest extends ApiTestCase
         self::assertArrayNotHasKey('fields', $error);
         self::assertStringNotContainsString('Note de Sophie', (string) $this->client->getResponse()->getContent());
     }
+
+    public function testRelectureLeServeurIndiqueSiLaNoteEstModifiable(): void
+    {
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        $draft = $this->createExpense($lea);
+        $submitted = $this->createExpense($lea, status: ExpenseStatus::Submitted);
+        $this->login($lea);
+
+        $this->client->request('GET', '/api/expenses/'.$draft->getId());
+        self::assertTrue($this->responseJson()['editable'] ?? null);
+
+        $this->client->request('GET', '/api/expenses/'.$submitted->getId());
+        self::assertFalse($this->responseJson()['editable'] ?? null);
+    }
 }

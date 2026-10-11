@@ -209,6 +209,8 @@ export interface components {
             createdAt: string;
             /** Date et heure ISO 8601, null tant que la note n'est pas soumise */
             submittedAt?: string | null;
+            /** Vrai si le propriétaire peut encore la modifier ou la supprimer (ExpenseStatus::isEditable()) */
+            editable: boolean;
         };
     };
     responses: never;

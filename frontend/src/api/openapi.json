@@ -494,7 +494,8 @@
                     "date",
                     "category",
                     "status",
-                    "createdAt"
+                    "createdAt",
+                    "editable"
                 ],
                 "properties": {
                     "id": {
@@ -524,6 +525,10 @@
                         "title": "Date et heure ISO 8601, null tant que la note n'est pas soumise",
                         "type": "string",
                         "nullable": true
+                    },
+                    "editable": {
+                        "title": "Vrai si le propri\u00e9taire peut encore la modifier ou la supprimer (ExpenseStatus::isEditable())",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"

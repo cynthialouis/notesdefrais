@@ -22,6 +22,8 @@ final readonly class ExpenseView
         public string $createdAt,
         /** Date et heure ISO 8601, null tant que la note n'est pas soumise */
         public ?string $submittedAt,
+        /** Vrai si le propriétaire peut encore la modifier ou la supprimer (ExpenseStatus::isEditable()) */
+        public bool $editable,
     ) {
     }
 
@@ -36,6 +38,7 @@ final readonly class ExpenseView
             $expense->getStatus(),
             $expense->getCreatedAt()->format(\DATE_ATOM),
             $expense->getSubmittedAt()?->format(\DATE_ATOM),
+            $expense->getStatus()->isEditable(),
         );
     }
 }

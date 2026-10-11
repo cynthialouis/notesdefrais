@@ -40,11 +40,15 @@ Champs valides (C3, C4) : libellé de 2 à 80 caractères après suppression des
 - Abandonner la confirmation de suppression : rien n'est supprimé.
 - Aucune note, ou aucune note dans l'état filtré : message explicite au lieu d'une liste vide.
 - Identifiant de note inexistant ou d'un autre utilisateur : 404, dans les deux cas.
+- Modification d'une note qui n'est plus en brouillon avec des données invalides : refusée en 400 (le contenu est vérifié avant l'état), sans modification. *Précisé le 11/10 après la relecture à froid.*
 
 ## Règles recalculées côté front
 
 - Validation du formulaire (mêmes règles que le serveur, pour l'affichage immédiat de C4) : testée des deux côtés, celle du serveur fait foi.
 - « Date pas postérieure à aujourd'hui » : le front compare à la date locale du navigateur, le serveur à la date du jour en Europe/Paris ; un écart est possible autour de minuit, le serveur tranche.
+- Le libellé est nettoyé des blancs (Unicode compris) et sa longueur comptée en caractères de la même façon des deux côtés.
+
+Non recalculé : savoir si une note est modifiable. Le serveur l'indique pour chaque note ; le front l'affiche sans recalculer la règle. *Précisé le 11/10 après la relecture à froid.*
 
 ## Hors périmètre
 

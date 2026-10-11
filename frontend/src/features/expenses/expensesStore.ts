@@ -9,6 +9,8 @@ const expenseBaseSchema = z.object({
   date: z.string(),
   category: z.object({ slug: z.string(), label: z.string() }),
   createdAt: z.string(),
+  /** Décidé par le serveur (ExpenseStatus::isEditable()) : le front ne recalcule pas la règle. */
+  editable: z.boolean(),
 })
 
 /**
