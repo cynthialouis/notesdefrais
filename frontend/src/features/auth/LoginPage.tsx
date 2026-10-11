@@ -67,8 +67,8 @@ function LoginForm({ demoUsers }: { demoUsers: Promise<DemoUsersResult> }) {
   }
 
   return (
-    <form action={formAction} aria-describedby={state.error ? 'login-error' : undefined}>
-      <fieldset>
+    <form action={formAction}>
+      <fieldset aria-describedby={state.error ? 'login-error' : undefined} aria-invalid={state.error ? true : undefined}>
         <legend>Choisissez un compte de démo</legend>
         {result.users.map((user) => (
           <label key={user.id} className="login-account">

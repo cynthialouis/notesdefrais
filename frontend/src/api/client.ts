@@ -46,10 +46,13 @@ async function toApiError(response: Response): Promise<ApiError> {
 export async function apiFetch<T>(path: `/${string}`, init: RequestInit = {}): Promise<T> {
   let response: Response
   try {
-    response = await fetch(`/api${path}`, {
-      ...init,
-      headers: { Accept: 'application/json', ...(init.body ? { 'Content-Type': 'application/json' } : {}), ...init.headers },
-    })
+    // new Headers() accepte toutes les formes de HeadersInit (un objet Headers étalé serait vide)
+    const headers = new Headers(init.headers)
+    headers.set('Accept', 'application/json')
+    if (init.body && !headers.has('Content-Type')) {
+      headers.set('Content-Type', 'application/json')
+    }
+    response = await fetch(`/api${path}`, { ...init, headers })
   } catch {
     throw new ApiError(0, 'network_error', 'Serveur injoignable.')
   }

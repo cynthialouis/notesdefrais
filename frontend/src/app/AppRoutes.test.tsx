@@ -61,9 +61,14 @@ describe('protection des pages', () => {
     expect(screen.getByRole('heading', { name: 'Accès refusé' })).toBeInTheDocument()
   })
 
-  it('C9 – un manager accède à Mes notes et à Équipe', () => {
+  it('C9 – un manager accède à Mes notes', () => {
     renderAt('/notes', manager)
     expect(screen.getByRole('heading', { name: 'Mes notes' })).toBeInTheDocument()
+  })
+
+  it('C9 – un manager accède à Équipe', () => {
+    renderAt('/equipe', manager)
+    expect(screen.getByRole('heading', { name: 'Équipe' })).toBeInTheDocument()
   })
 
   it('C9 – un admin accède à toutes les pages', () => {
@@ -115,5 +120,15 @@ describe('session', () => {
 
     expect(await screen.findByRole('heading', { name: 'Notes de frais' })).toBeInTheDocument()
     expect(useSessionStore.getState().session).toEqual({ status: 'anonymous' })
+  })
+
+  it('C4 – une déconnexion impossible est signalée et garde l\'utilisateur sur la page', async () => {
+    fetchMock.mockRejectedValue(new TypeError('Failed to fetch'))
+    renderAt('/', employee)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Déconnexion impossible')
+    expect(screen.getByRole('heading', { name: 'Tableau de bord' })).toBeInTheDocument()
   })
 })

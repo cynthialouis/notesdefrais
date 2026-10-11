@@ -65,6 +65,7 @@ describe('LoginPage', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Se connecter' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Choisissez un compte.')
+    expect(screen.getByRole('group', { name: 'Choisissez un compte de démo' })).toHaveAccessibleDescription('Choisissez un compte.')
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
