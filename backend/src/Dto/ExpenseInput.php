@@ -4,6 +4,7 @@ namespace App\Dto;
 
 use App\Validator\ExistingCategory;
 use App\Validator\NotInFuture;
+use OpenApi\Attributes as OA;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
@@ -24,6 +25,7 @@ final readonly class ExpenseInput
         #[Assert\Type(type: 'integer', message: 'Le montant doit être un nombre entier de centimes.')]
         #[Assert\Positive(message: 'Le montant doit être positif.')]
         #[Assert\LessThanOrEqual(value: 1_000_000, message: 'Le montant ne peut pas dépasser 10 000,00 €.')]
+        #[OA\Property(type: 'integer', minimum: 1, maximum: 1_000_000, description: 'Montant en centimes')]
         public mixed $amountCents = null,
 
         #[Assert\NotBlank(message: 'La date est obligatoire.')]
