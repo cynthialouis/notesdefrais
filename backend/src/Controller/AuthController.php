@@ -40,4 +40,16 @@ final class AuthController extends AbstractController
     {
         throw new \LogicException('Cette route est interceptée par DemoLoginAuthenticator.');
     }
+
+    /**
+     * La requête est traitée par le logout du firewall (voir security.yaml et ApiLogoutListener).
+     * Déclarer la route ici la limite à POST : un simple lien ou une image ne peut pas déconnecter.
+     */
+    #[Route('/logout', name: 'api_auth_logout', methods: ['POST'])]
+    #[OA\Response(response: 204, description: 'Session fermée')]
+    #[OA\Response(response: 401, description: 'Aucune session ouverte')]
+    public function logout(): never
+    {
+        throw new \LogicException('Cette route est interceptée par le logout du firewall.');
+    }
 }

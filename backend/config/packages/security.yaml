@@ -29,7 +29,8 @@ security:
                 - App\Security\DemoLoginAuthenticator
             entry_point: App\Security\DemoLoginAuthenticator
             logout:
-                path: /api/auth/logout
+                # Nom de route (POST uniquement, déclarée dans AuthController)
+                path: api_auth_logout
 
     # Note: Only the *first* matching rule is applied
     access_control:

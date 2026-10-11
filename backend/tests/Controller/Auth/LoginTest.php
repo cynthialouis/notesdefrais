@@ -110,4 +110,15 @@ final class LoginTest extends ApiTestCase
         self::assertSame('manager', $me['role'] ?? null);
         self::assertEqualsCanonicalizing(['manager', 'employee'], $me['accessibleRoles'] ?? null);
     }
+
+    public function testUneConnexionSansCorpsJsonEstRefuseeEn415(): void
+    {
+        $alice = $this->createUser('Alice Admin', 'alice@demo.test', UserRole::Admin);
+
+        // Ce qu'enverrait un formulaire d'un autre site (CSRF de connexion)
+        $this->client->request('POST', '/api/auth/login', [], [], ['CONTENT_TYPE' => 'text/plain'], json_encode(['userId' => $alice->getId()], \JSON_THROW_ON_ERROR));
+
+        $this->assertErrorResponse(415);
+        $this->assertNotAuthenticated();
+    }
 }

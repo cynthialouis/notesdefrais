@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpKernel\Exception\UnsupportedMediaTypeHttpException;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
@@ -27,7 +28,7 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 /**
  * Connexion de démo, sans mot de passe : POST /api/auth/login { "userId": <int> }.
  *
- * - corps invalide → 400 avec le détail des champs (via ApiExceptionListener) ;
+ * - corps non JSON → 415 ; corps invalide → 400 avec le détail des champs (via ApiExceptionListener) ;
  * - compte inexistant → 401 générique, qui ne révèle pas si le compte existe ;
  * - succès → session ouverte (ou remplacée) et utilisateur courant en JSON.
  *
@@ -81,6 +82,12 @@ final class DemoLoginAuthenticator extends AbstractAuthenticator implements Auth
      */
     private function validInput(Request $request): LoginInput
     {
+        // Un formulaire d'un autre site ne peut pas envoyer application/json sans CORS :
+        // exiger ce type empêche de connecter un visiteur à son insu (CSRF de connexion)
+        if ('json' !== $request->getContentTypeFormat()) {
+            throw new UnsupportedMediaTypeHttpException('Corps JSON attendu.');
+        }
+
         try {
             $input = $this->serializer->deserialize($request->getContent(), LoginInput::class, 'json', [
                 DenormalizerInterface::COLLECT_DENORMALIZATION_ERRORS => true,

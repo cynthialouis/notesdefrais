@@ -16,6 +16,7 @@ final class ApiError
         404 => ['not_found', 'Ressource introuvable.'],
         405 => ['method_not_allowed', 'Méthode non autorisée.'],
         409 => ['conflict', 'Action impossible dans l\'état actuel.'],
+        415 => ['unsupported_media_type', 'Corps JSON attendu.'],
     ];
 
     /**

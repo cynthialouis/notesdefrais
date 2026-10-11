@@ -69,6 +69,21 @@
                 }
             }
         },
+        "/api/auth/logout": {
+            "post": {
+                "summary": "La requ\u00eate est trait\u00e9e par le logout du firewall (voir security.yaml et ApiLogoutListener).",
+                "description": "D\u00e9clarer la route ici la limite \u00e0 POST : un simple lien ou une image ne peut pas d\u00e9connecter.",
+                "operationId": "post_api_auth_logout",
+                "responses": {
+                    "204": {
+                        "description": "Session ferm\u00e9e"
+                    },
+                    "401": {
+                        "description": "Aucune session ouverte"
+                    }
+                }
+            }
+        },
         "/api/health": {
             "get": {
                 "operationId": "get_api_health",

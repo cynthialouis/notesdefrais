@@ -69,4 +69,16 @@ final class LogoutTest extends ApiTestCase
         self::assertResponseStatusCodeSame(204);
         $this->assertNotAuthenticated();
     }
+
+    public function testLaDeconnexionParGetEstRefuseeEtLaSessionConservee(): void
+    {
+        $alice = $this->createUser('Alice Admin', 'alice@demo.test', UserRole::Admin);
+        $this->login($alice);
+
+        // Un lien ou une image pointant vers la déconnexion ne doit pas fermer la session
+        $this->client->request('GET', '/api/auth/logout');
+
+        $this->assertErrorResponse(405);
+        $this->assertAuthenticatedAs($alice);
+    }
 }
