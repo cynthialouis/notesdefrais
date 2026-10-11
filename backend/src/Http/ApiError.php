@@ -21,14 +21,15 @@ final class ApiError
     /**
      * @param array<string, string> $fields  erreurs par champ, pour une erreur de validation
      * @param array<string, string> $headers
+     * @param string|null           $message message propre au cas d'erreur, à la place du message par défaut du statut
      */
-    public static function response(int $status, array $fields = [], array $headers = []): JsonResponse
+    public static function response(int $status, array $fields = [], array $headers = [], ?string $message = null): JsonResponse
     {
         if ([] !== $fields) {
-            $error = ['code' => 'validation_failed', 'message' => 'Données invalides.', 'fields' => $fields];
+            $error = ['code' => 'validation_failed', 'message' => $message ?? 'Données invalides.', 'fields' => $fields];
         } else {
-            [$code, $message] = self::CODES[$status] ?? ['internal_error', 'Erreur interne.'];
-            $error = ['code' => $code, 'message' => $message];
+            [$code, $defaultMessage] = self::CODES[$status] ?? ['internal_error', 'Erreur interne.'];
+            $error = ['code' => $code, 'message' => $message ?? $defaultMessage];
         }
 
         return new JsonResponse(['error' => $error], $status, $headers);
