@@ -1,0 +1,179 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Notes de frais API",
+        "description": "API de gestion des notes de frais",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/api/auth/demo-users": {
+            "get": {
+                "operationId": "get_api_auth_demo_users",
+                "responses": {
+                    "200": {
+                        "description": "Comptes de d\u00e9mo propos\u00e9s sur la page de connexion",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/DemoUserView"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/auth/login": {
+            "post": {
+                "summary": "La requ\u00eate est trait\u00e9e par DemoLoginAuthenticator, qui r\u00e9pond avant d'atteindre ce contr\u00f4leur.",
+                "description": "La route doit exister pour que le routeur (qui passe avant le firewall) ne r\u00e9ponde pas 404.",
+                "operationId": "post_api_auth_login",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "userId"
+                                ],
+                                "properties": {
+                                    "userId": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Session ouverte : utilisateur courant",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Corps invalide"
+                    },
+                    "401": {
+                        "description": "Compte inconnu"
+                    }
+                }
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "summary": "La requ\u00eate est trait\u00e9e par le logout du firewall (voir security.yaml et ApiLogoutListener).",
+                "description": "D\u00e9clarer la route ici la limite \u00e0 POST : un simple lien ou une image ne peut pas d\u00e9connecter.",
+                "operationId": "post_api_auth_logout",
+                "responses": {
+                    "204": {
+                        "description": "Session ferm\u00e9e"
+                    },
+                    "401": {
+                        "description": "Aucune session ouverte"
+                    }
+                }
+            }
+        },
+        "/api/health": {
+            "get": {
+                "operationId": "get_api_health",
+                "responses": {
+                    "default": {
+                        "description": ""
+                    }
+                }
+            }
+        },
+        "/api/me": {
+            "get": {
+                "operationId": "get_api_me",
+                "responses": {
+                    "200": {
+                        "description": "Utilisateur courant et r\u00f4les accessibles",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/UserView"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "UserRole": {
+                "type": "string",
+                "enum": [
+                    "employee",
+                    "manager",
+                    "admin"
+                ]
+            },
+            "DemoUserView": {
+                "required": [
+                    "id",
+                    "name",
+                    "role"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/UserRole"
+                    }
+                },
+                "type": "object"
+            },
+            "UserView": {
+                "required": [
+                    "id",
+                    "name",
+                    "email",
+                    "role",
+                    "accessibleRoles"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": "string"
+                    },
+                    "role": {
+                        "$ref": "#/components/schemas/UserRole"
+                    },
+                    "accessibleRoles": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/UserRole"
+                        }
+                    }
+                },
+                "type": "object"
+            }
+        }
+    }
+}
