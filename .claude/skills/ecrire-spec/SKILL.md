@@ -44,4 +44,4 @@ Pas de section Plan ni Tâches : elles sont produites à l'étape F3 puis ajout�
 - les questions ouvertes, numérotées, avec ta proposition pour chacune ;
 - les écarts avec les docs, s'il y en a.
 
-Attends que l'humain tranche les questions et valide la spec. Intègre ses réponses dans la spec (les questions tranchées passent dans les critères ou le hors périmètre) avant tout commit.
+Attends que je tranche les questions et valide la spec. Intègre mes réponses dans la spec (les questions tranchées passent dans les critères ou le hors périmètre) avant tout commit.
