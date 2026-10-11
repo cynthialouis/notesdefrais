@@ -16,5 +16,5 @@ stop: ## Arrête l'API
 	cd backend && symfony server:stop
 
 test: ## Lance les tests des deux projets
-	cd backend && php bin/phpunit
+	cd backend && php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test && php bin/phpunit
 	@echo "Front : pas encore de tests (Vitest à venir)"
