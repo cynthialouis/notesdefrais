@@ -6,9 +6,8 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 - `backend/` : API Symfony 8 (PHP 8.4+), Doctrine + SQLite. Voir aussi `backend/CLAUDE.md`.
 
 État actuel : 
-- squelettes en place
-- route `GET /api/health` branchée de bout en bout
-- Aucune feature métier.
+- feature 001 (connexion par rôle) en place : session de démo, rôles hiérarchisés, pages protégées
+- pas encore de notes de frais (features 002 et suivantes)
 
 ## Documentation
 
@@ -21,7 +20,7 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 
 ## Stack
 
-- **Front** : React 19, TypeScript strict, Vite 8, oxlint. Prévus : Zustand, Zod, React Router, Tailwind, Vitest + Testing Library, génération des types depuis OpenAPI.
+- **Front** : React 19, TypeScript strict, Vite 8, oxlint, React Router 8, Zustand 5, Zod 4, Vitest 5 + Testing Library, types générés depuis OpenAPI (`openapi-typescript`). Prévu : Tailwind.
 - **Back** : Symfony 8.1, Doctrine ORM + Migrations (SQLite), Validator, Serializer, Security, Workflow, NelmioApiDocBundle, PHPUnit.
 
 ## Commandes
@@ -30,7 +29,8 @@ Depuis la racine (`Makefile`) :
 - `make install`
 - `make dev` (API en arrière-plan + front)
 - `make stop` (arrête l'API)
-- `make test`
+- `make test` (migre la base de test, puis PHPUnit et Vitest)
+- `make api-types` (régénère les types du front depuis la spec OpenAPI, après tout changement de contrat)
 - `make` (aide)
 
 Dans chaque projet :
@@ -38,10 +38,10 @@ Dans chaque projet :
 | | `frontend/` | `backend/` |
 |---|---|---|
 | Lancer | `npm run dev` (port 5173, proxy `/api` → 8000) | `symfony serve -d` (port 8000) |
-| Tests | à venir (`npm run test`) | `php bin/phpunit` |
+| Tests | `npm run test` | `php bin/phpunit` (après migration de la base de test, voir `make test`) |
 | Types / lint | `npx tsc -b` · `npm run lint` | `php bin/console lint:container` |
 | Build | `npm run build` | — |
-| Base | — | `php bin/console make:migration` · `php bin/console doctrine:migrations:migrate` |
+| Base | — | `php bin/console make:migration` · `php bin/console doctrine:migrations:migrate` · `php bin/console doctrine:fixtures:load` (comptes de démo) |
 
 Spec OpenAPI : `GET /api/doc.json`.
 
@@ -74,4 +74,4 @@ Spec OpenAPI : `GET /api/doc.json`.
 - Tu rédiges et tu corriges toi-même le harness (CLAUDE.md, subagents, skills, settings), la documentation et le journal : après une critique, applique les corrections pertinentes au lieu de me les laisser. Moi, je valide les specs et les plans, je tranche les questions ouvertes et je teste à la main.
 - Proposer un plan avant toute modification qui touche plus de deux fichiers.
 - Ne jamais modifier de fichier si je demande une analyse, une explication ou une review.
-- Après chaque modification, vérifier le projet touché : front → `npx tsc -b` et `npm run lint` ; back → `php bin/phpunit` et `php bin/console lint:container`.
+- Après chaque modification, vérifier le projet touché : front → `npx tsc -b`, `npm run lint` et `npm run test` ; back → `php bin/phpunit` et `php bin/console lint:container`.

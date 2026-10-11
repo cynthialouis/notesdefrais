@@ -50,9 +50,9 @@ Vraie authentification (mot de passe, OAuth), remboursement / paiement, multi-de
 |---|---|---|
 | `/login` | tous | Choix du compte de démo |
 | `/` | tous | Tableau de bord selon le rôle |
-| `/notes` | salarié | Mes notes, filtre par statut (state local), bouton « Nouvelle note » |
+| `/notes` | salarié et plus | Mes notes, filtre par statut (state local), bouton « Nouvelle note » |
 | `/notes/nouvelle`, `/notes/:id` | salarié | Formulaire (`useActionState` + `expenseInputSchema.safeParse`), justificatif, alerte hors politique calculée en direct |
-| `/equipe` | manager | Notes soumises de l'équipe, valider / rejeter (motif), historique |
+| `/equipe` | manager et plus | Notes soumises de l'équipe, valider / rejeter (motif), historique |
 | `/politique` | admin | Plafonds par catégorie |
 
-Routes protégées par rôle via un composant `RequireRole`. Badge de statut = `switch` exhaustif avec `never`.
+Rôles hiérarchisés (admin > manager > salarié) : un rôle accède aux pages des rôles inférieurs. Routes protégées par rôle via un composant `RequireRole`. Badge de statut = `switch` exhaustif avec `never`.
