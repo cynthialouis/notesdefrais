@@ -59,3 +59,20 @@ Aucune. Tranchées le 11/10 : tout utilisateur connecté gère ses notes (C13), 
 - `docs/api.md` : `GET /categories` renvoie « catégories + politique associée » ; en 002, les catégories seules (les politiques arrivent en 004).
 - `docs/modele-donnees.md` : historique des transitions reporté à 003.
 - `docs/api.md` : nouvelle route de suppression d'un brouillon.
+
+## Plan
+
+- **Back** : entité `Category` (5 catégories insérées par la migration, données de référence) et `GET /api/categories`. Entité `Expense` (propriétaire, catégorie, libellé, `amountCents`, date, `status` en enum `ExpenseStatus`, `createdAt`, `submittedAt`) ; `ExpenseStatus::isEditable()` dit seul quels états se modifient. Workflow `expense` (state machine, transition `submit`, date de soumission posée par un listener via `ClockInterface`). DTO `ExpenseInput` (contraintes Validator, `NotInFuture` en Europe/Paris, `ExistingCategory`) et `ExpenseListQuery`, reçus avec `validationFailedStatusCode: 400`. `ExpenseVoter` (`EXPENSE_OWNER`) avec `#[IsGranted(..., statusCode: 404)]`. `ExpenseController` fin + service `ExpenseManager` : liste filtrable triée (date puis id décroissants), création 201, lecture, `PATCH` (tous les champs), soumission, suppression 204 ; 409 hors brouillon. Sortie `ExpenseView`.
+- **Front** : types régénérés ; `money.ts` (`parseEurosToCents`, seul point de conversion, et `formatCents` avec `Intl.NumberFormat`) ; store Zustand `expensesStore` (cache des notes, réponses validées en union discriminée Zod) ; pages `/notes` (filtre local, liste calculée au rendu, badge `switch` exhaustif), `/notes/nouvelle` et `/notes/:id` (formulaire commun `useActionState` + `safeParse`, erreurs par champ, soumission, suppression confirmée).
+
+## Tâches
+
+1. `Category`, migration avec les 5 catégories, `GET /api/categories` (C10)
+2. `Expense`, `ExpenseStatus`, migration, fixtures de démo (C1, C2)
+3. Workflow `expense` et date de soumission (C6, C7)
+4. `ExpenseInput`, `ExpenseListQuery`, contraintes `NotInFuture` et `ExistingCategory` (C3)
+5. `ExpenseVoter` (C13, autorisations 404)
+6. `ExpenseController` et `ExpenseManager` : liste, création, lecture, modification, soumission, suppression (C1, C2, C5 à C9, C11 à C13)
+7. Types régénérés, `money.ts` (C2)
+8. Store `expensesStore` (C1, C5, C6, C8, C11)
+9. Écrans : liste et filtre, formulaire, soumission, suppression (C4, C8, C9, C10, C11)
