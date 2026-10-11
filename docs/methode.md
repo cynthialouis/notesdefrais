@@ -15,7 +15,7 @@ Specs prévues dans `specs/` : `001-connexion-roles`, `002-soumettre-note`, `003
 |---|---|
 | F1. Branche | `git switch -c feat/00X-nom-court` |
 | F2. Spec | `/ecrire-spec` avec l'idée de départ. Claude relit la spec avec la grille ci-dessous et la corrige ; l'humain tranche les questions ouvertes et valide. Commit `docs(spec): 00X nom` |
-| F3. Plan | Plan mode, prompt P-Plan. Claude vérifie le plan avec la grille et l'ajuste ; l'humain valide |
+| F3. Plan | Plan mode, prompt P-Plan. Claude vérifie le plan avec la grille et l'ajuste ; l'humain valide. Le plan et les tâches sont ajoutés à la spec. Commit `docs(spec): 00X plan` |
 | F4a. Tests (à partir de 002) | Subagent `testeur-spec` sur la spec. Claude vérifie : tests nommés d'après les critères, qui échouent pour la bonne raison ; `git diff --stat` ne montre que des fichiers de test. Commit `test(00X): tests depuis la spec` |
 | F4b. Implémentation | Une tâche du plan à la fois (P-Impl, ou P-Tâche pour 001), lecture du diff par l'humain pour le comprendre, tests du projet touché (`php bin/phpunit` dans `backend/`, `npm run test` dans `frontend/`), commit `feat(00X): tâche N – description` |
 | F5. Vérification à la main | `symfony serve` dans `backend/` et `npm run dev` dans `frontend/`, chaque critère d'acceptation déroulé dans le navigateur avec le bon compte de démo |
@@ -30,11 +30,15 @@ Si une API est incertaine à n'importe quelle étape : subagent `verificateur-do
 Une page maximum, sections dans cet ordre :
 
 - Besoin (qui, quoi, pourquoi, sans technologie)
-- Critères d'acceptation au format EARS (QUAND… LE SYSTÈME DOIT… / SI… ALORS… / TANT QUE…), chacun testable
-- Autorisations (qui peut faire quoi)
+- Critères d'acceptation numérotés `C1`, `C2`… au format EARS (QUAND… LE SYSTÈME DOIT… / SI… ALORS… / TANT QUE…), chacun testable
+- Autorisations (qui peut faire quoi, avec le code attendu : 401, 403, 404)
 - Cas limites et erreurs
+- Règles recalculées côté front (duplications volontaires, ou « aucune »)
 - Hors périmètre
-- Questions ouvertes (listées, jamais devinées)
+- Questions ouvertes (listées avec une proposition, jamais devinées)
+
+Rédigée à l'étape F2 par le skill `ecrire-spec`. Les sections suivantes sont ajoutées à l'étape F3, une fois le plan validé :
+
 - Plan (DTO et contraintes, entités et migration, routes et Voters, schémas Zod et composants du front)
 - Tâches numérotées, chacune reliée à un ou plusieurs critères
 
