@@ -7,7 +7,8 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 
 État actuel : 
 - feature 001 (connexion par rôle) en place : session de démo, rôles hiérarchisés, pages protégées
-- pas encore de notes de frais (features 002 et suivantes)
+- feature 002 (soumettre une note) en place : brouillon, modification, soumission, suppression, liste filtrable
+- à venir : validation / rejet par le manager (003), politique (004), justificatifs (005), tableau de bord (006)
 
 ## Documentation
 
@@ -31,6 +32,7 @@ Depuis la racine (`Makefile`) :
 - `make stop` (arrête l'API)
 - `make test` (migre la base de test, puis PHPUnit et Vitest)
 - `make api-types` (régénère les types du front depuis la spec OpenAPI, après tout changement de contrat)
+- `make db` (migre la base de dev et recharge les données de démo, sans purger les catégories)
 - `make` (aide)
 
 Dans chaque projet :
@@ -41,7 +43,7 @@ Dans chaque projet :
 | Tests | `npm run test` | `php bin/phpunit` (après migration de la base de test, voir `make test`) |
 | Types / lint | `npx tsc -b` · `npm run lint` | `php bin/console lint:container` |
 | Build | `npm run build` | — |
-| Base | — | `php bin/console make:migration` · `php bin/console doctrine:migrations:migrate` · `php bin/console doctrine:fixtures:load` (comptes de démo) |
+| Base | — | `php bin/console make:migration` · `php bin/console doctrine:migrations:migrate` · `make db` (ne jamais lancer `doctrine:fixtures:load` sans `--purge-exclusions=category`) |
 
 Spec OpenAPI : `GET /api/doc.json`.
 
