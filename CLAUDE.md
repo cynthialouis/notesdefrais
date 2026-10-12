@@ -21,7 +21,7 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 
 ## Stack
 
-- **Front** : React 19, TypeScript strict, Vite 8, oxlint, React Router 8, Zustand 5, Zod 4, Vitest 5 + Testing Library, types générés depuis OpenAPI (`openapi-typescript`). Prévu : Tailwind.
+- **Front** : React 19, TypeScript strict, Vite 8, oxlint, React Router 8, Zustand 5, Zod 4, Vitest 5 + Testing Library, types générés depuis OpenAPI (`openapi-typescript`), Tailwind CSS 4.
 - **Back** : Symfony 8.1, Doctrine ORM + Migrations (SQLite), Validator, Serializer, Security, Workflow, NelmioApiDocBundle, PHPUnit.
 
 ## Commandes
@@ -63,6 +63,7 @@ Spec OpenAPI : `GET /api/doc.json`.
 - Montants en centimes entiers, des deux côtés.
 - TypeScript : jamais de `any` (utiliser `unknown` + validation Zod), `import type` pour les types, pas d'`enum`, de `namespace` ni de parameter properties (`erasableSyntaxOnly`).
 - React : pas de `useEffect` pour une valeur dérivée, calcul direct pendant le rendu.
+- UI : réutiliser les composants de `frontend/src/ui/` (Button, Card, PageHeader, Field, Badge, Alert, EmptyState, Table…) avant d'écrire des classes ; styles uniquement en classes Tailwind, jetons du thème dans `index.css` (couleur d'accent `brand-*`), aucun autre fichier CSS. Tout élément interactif garde un focus visible.
 - Symfony : suivre `backend/AGENTS.md` (attributs, autowiring, `#[MapRequestPayload]`, recettes Flex plutôt que configuration à la main).
 - Ne pas ajouter de dépendance sans le signaler et le justifier.
 - Si la syntaxe ou le comportement d'une API n'est pas certain : ne pas deviner. Utiliser le subagent `verificateur-docs` pour les librairies du front, Nelmio et la configuration de Claude Code (hooks, permissions, skills, subagents). Pour le cœur de Symfony, interroger d'abord le projet avec `bin/console` (voir `backend/AGENTS.md`).

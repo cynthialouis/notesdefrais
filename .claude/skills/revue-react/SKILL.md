@@ -29,7 +29,7 @@ Lance `npx tsc -b` et `npm run lint` dans `frontend/`. Rapporte leurs erreurs te
 6. **Contrat avec l'API** : type de réponse écrit à la main au lieu du type généré depuis OpenAPI ; URL de serveur en dur au lieu de `/api/...`.
 7. **Règles métier** : règle recalculée côté front qui n'est pas listée dans la spec, ou sans test. Montants manipulés autrement qu'en centimes entiers (conversion en flottant, arrondi) ; affichage en euros qui n'utilise pas `Intl.NumberFormat`.
 8. **Typage** : `any` ; `as` sans justification ; `switch` sur un statut sans branche `default` exhaustive avec `never`.
-9. **Accessibilité** : élément cliquable qui n'est pas un `button` ou un `a` ; champ sans `label` ; erreur non reliée au champ par `aria-describedby` ; listes avec l'index comme `key`.
+9. **Accessibilité et UI** : élément cliquable qui n'est pas un `button` ou un `a` ; champ sans `label` ; erreur non reliée au champ par `aria-describedby` ; listes avec l'index comme `key` ; élément interactif sans focus visible ; information portée par la seule couleur ; style écrit à la main alors qu'un composant de `src/ui/` le fournit (`Field`, `Button`, `Badge`…).
 10. **Tests** : comportement nouveau sans test Testing Library ; requêtes par classe CSS ou par `data-testid` alors qu'un rôle ou un texte suffit.
 
 Ne signale que ce que tu peux montrer dans le code : chaque remarque cite le fichier et la ligne. Pas de remarque de style ni de préférence personnelle.

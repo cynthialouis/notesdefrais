@@ -22,6 +22,22 @@ docs/                documentation du projet, docs/adr/ pour les décisions
 
 Dans `frontend/src/features/*`, chaque feature regroupe ses composants, hooks, store et tests.
 
+## Interface (`frontend/src/ui/`)
+
+Tailwind CSS 4, configuré dans `frontend/src/index.css` (`@import "tailwindcss"`, `@theme`) : la couleur d'accent est l'alias `brand-*` (indigo), seul endroit à changer pour l'identité visuelle. Aucun autre fichier CSS.
+
+`src/ui/` contient les composants de présentation réutilisables, sans logique métier :
+
+| Composant | Rôle |
+|---|---|
+| `Button`, `ButtonLink` | Boutons `primary` / `secondary` / `danger`, état `pending` ; lien avec l'apparence d'un bouton |
+| `Card`, `PageHeader` | Conteneur blanc avec en-tête optionnel ; titre de page, description, actions |
+| `Field`, `Input`, `Select` | Champ de formulaire : `Field` génère l'`id` et les liaisons `aria-describedby` / `aria-invalid` (aide, erreur) |
+| `Badge`, `Alert`, `EmptyState`, `LoadingState` | Statut (le texte porte l'information), messages (`role="alert"` / `"status"`), états vides et de chargement |
+| `Table`, `Th`, `Td` | Tableau de données, défilement horizontal sur mobile, montants alignés en chiffres tabulaires |
+
+Les styles de variantes passent par `cx()` et `buttonStyles.ts`, sans dépendance supplémentaire.
+
 ## Comment les morceaux s'assemblent
 
 - **Deux processus en dev** : `symfony serve` dans `backend/` (port 8000), `npm run dev` dans `frontend/` (port 5173).
