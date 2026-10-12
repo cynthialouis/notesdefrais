@@ -205,6 +205,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/policies/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put: operations["put_api_policies_update"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/team/expenses": {
         parameters: {
             query?: never;
@@ -248,6 +264,15 @@ export interface components {
             /** @default null */
             reason: string | null;
         };
+        PolicyInput: {
+            /**
+             * @description Plafond en centimes ; null = aucun plafond
+             * @default null
+             */
+            maxAmountCents: number | null;
+            /** @default null */
+            receiptRequired: boolean | null;
+        };
         /** @enum {string} */
         UserRole: "employee" | "manager" | "admin";
         DemoUserView: {
@@ -265,10 +290,24 @@ export interface components {
         CategoryView: {
             slug: string;
             label: string;
+            /** Plafond par note en centimes ; null = aucun plafond */
+            maxAmountCents?: number | null;
+            receiptRequired: boolean;
         };
         PersonRef: {
             id: number;
             name: string;
+        };
+        ExpenseCategoryRef: {
+            slug: string;
+            label: string;
+        };
+        PolicyCheck: {
+            /** Plafond applicable, en centimes ; null = aucun plafond */
+            limitCents?: number | null;
+            /** Dépassement en centimes ; null si la note est conforme (montant ≤ plafond) ou sans plafond */
+            overLimitByCents?: number | null;
+            receiptRequired: boolean;
         };
         ExpenseView: {
             id: number;
@@ -277,7 +316,7 @@ export interface components {
             amountCents: number;
             /** Date de la dépense, au format Y-m-d */
             date: string;
-            category: components["schemas"]["CategoryView"];
+            category: components["schemas"]["ExpenseCategoryRef"];
             status: components["schemas"]["ExpenseStatus"];
             /** Date et heure ISO 8601 */
             createdAt: string;
@@ -292,6 +331,7 @@ export interface components {
             editable: boolean;
             /** Vrai si le lecteur est le responsable du propriétaire et peut la valider ou la rejeter */
             decidable: boolean;
+            policy: components["schemas"]["PolicyCheck"];
         };
         /** @enum {string} */
         ExpenseEventType: "created" | "submitted" | "approved" | "rejected";
@@ -856,6 +896,60 @@ export interface operations {
             };
             /** @description Non connecté */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    put_api_policies_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyInput"];
+            };
+        };
+        responses: {
+            /** @description Politique enregistrée */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryView"];
+                };
+            };
+            /** @description Plafond ou justificatif invalide */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réservé à l'admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Catégorie inconnue */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

@@ -43,7 +43,7 @@ describe('NewExpensePage', () => {
     await renderPage()
 
     const select = await screen.findByLabelText('Catégorie')
-    expect([...select.querySelectorAll('option')].map((option) => option.textContent)).toEqual(['Choisir une catégorie', 'Repas', 'Transport'])
+    expect([...select.querySelectorAll('option')].map((option) => option.textContent)).toEqual(['Choisir une catégorie', 'Repas', 'Transport', 'Hébergement'])
   })
 
   it('C4 – affiche chaque erreur sous son champ, sans rien envoyer', async () => {

@@ -9,8 +9,9 @@ export function jsonResponse(status: number, body?: unknown): Response {
 }
 
 export const categories = [
-  { slug: 'repas', label: 'Repas' },
-  { slug: 'transport', label: 'Transport' },
+  { slug: 'repas', label: 'Repas', maxAmountCents: 5000, receiptRequired: false },
+  { slug: 'transport', label: 'Transport', maxAmountCents: 30000, receiptRequired: false },
+  { slug: 'hebergement', label: 'Hébergement', maxAmountCents: 15000, receiptRequired: true },
 ]
 
 export const draftExpense = {
@@ -25,6 +26,7 @@ export const draftExpense = {
   submittedAt: null,
   editable: true,
   decidable: false,
+  policy: { limitCents: 30000, overLimitByCents: null, receiptRequired: false },
 }
 
 export const submittedExpense = {
