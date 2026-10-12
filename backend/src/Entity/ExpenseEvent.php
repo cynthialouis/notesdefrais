@@ -35,7 +35,8 @@ class ExpenseEvent
         #[ORM\Column(length: 1000, nullable: true)]
         private ?string $comment = null,
     ) {
-        $this->createdAt = Clock::get()->now();
+        // Stocké en UTC (voir Expense::utc())
+        $this->createdAt = Clock::get()->now()->setTimezone(new \DateTimeZone('UTC'));
     }
 
     public function getId(): ?int

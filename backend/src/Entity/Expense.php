@@ -59,7 +59,18 @@ class Expense
 
     public function __construct()
     {
-        $this->createdAt = Clock::get()->now();
+        $this->createdAt = self::utc(Clock::get()->now());
+    }
+
+    /**
+     * Les instants sont stockés en UTC : Doctrine écrit une date dans le fuseau de l'objet sans le
+     * décalage, puis la relit dans le fuseau par défaut (UTC). Une date en +02:00 serait décalée de 2 h.
+     *
+     * @return ($date is null ? null : \DateTimeImmutable)
+     */
+    private static function utc(?\DateTimeImmutable $date): ?\DateTimeImmutable
+    {
+        return $date?->setTimezone(new \DateTimeZone('UTC'));
     }
 
     public function getId(): ?int
@@ -155,7 +166,7 @@ class Expense
 
     public function setSubmittedAt(?\DateTimeImmutable $submittedAt): static
     {
-        $this->submittedAt = $submittedAt;
+        $this->submittedAt = self::utc($submittedAt);
 
         return $this;
     }
@@ -167,7 +178,7 @@ class Expense
 
     public function setDecidedAt(?\DateTimeImmutable $decidedAt): static
     {
-        $this->decidedAt = $decidedAt;
+        $this->decidedAt = self::utc($decidedAt);
 
         return $this;
     }
