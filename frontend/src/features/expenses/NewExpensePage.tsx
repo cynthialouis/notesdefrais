@@ -1,5 +1,8 @@
 import { Suspense, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { Card } from '../../ui/Card'
+import { PageHeader } from '../../ui/PageHeader'
+import { LoadingState } from '../../ui/Spinner'
 import { loadCategories } from './categories'
 import { ExpenseForm } from './ExpenseForm'
 import { useExpensesStore, type ExpenseInput } from './expensesStore'
@@ -18,12 +21,14 @@ export function NewExpensePage() {
   }
 
   return (
-    <section>
+    <>
       <title>Nouvelle note – Notes de frais</title>
-      <h1>Nouvelle note</h1>
-      <Suspense fallback={<p role="status">Chargement…</p>}>
-        <ExpenseForm categories={categories} initialValues={emptyValues} submitLabel="Enregistrer le brouillon" onSave={save} />
-      </Suspense>
-    </section>
+      <PageHeader title="Nouvelle note" description="La note est enregistrée en brouillon : vous pourrez la modifier avant de la soumettre." />
+      <Card className="max-w-2xl">
+        <Suspense fallback={<LoadingState />}>
+          <ExpenseForm categories={categories} initialValues={emptyValues} submitLabel="Enregistrer le brouillon" onSave={save} />
+        </Suspense>
+      </Card>
+    </>
   )
 }

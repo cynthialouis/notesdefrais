@@ -1,5 +1,8 @@
 import { use, useActionState } from 'react'
 import { ApiError } from '../../api/client'
+import { Alert } from '../../ui/Alert'
+import { Button } from '../../ui/Button'
+import { Field, Input, Select } from '../../ui/Field'
 import type { CategoriesResult } from './categories'
 import {
   parseExpenseForm,
@@ -54,52 +57,43 @@ export function ExpenseForm({ categories, initialValues, submitLabel, onSave }: 
   )
 
   if (!categoriesResult.ok) {
-    return <p role="alert">{categoriesResult.message}</p>
+    return <Alert>{categoriesResult.message}</Alert>
   }
 
   const { values, errors } = state
-  const describedBy = (field: ExpenseFormField) => (errors[field] ? `${field}-error` : undefined)
-  const fieldError = (field: ExpenseFormField) =>
-    errors[field] && (
-      <p id={`${field}-error`} className="field-error">
-        {errors[field]}
-      </p>
-    )
 
   // Les valeurs saisies sont reprises en defaultValue : le formulaire est réinitialisé après chaque action
   return (
-    <form action={formAction} className="expense-form" noValidate>
-      <div className="field">
-        <label htmlFor="label">Libellé</label>
-        <input id="label" name="label" defaultValue={values.label} aria-invalid={errors.label ? true : undefined} aria-describedby={describedBy('label')} />
-        {fieldError('label')}
+    <form action={formAction} className="flex flex-col gap-5" noValidate>
+      <Field label="Libellé" error={errors.label}>
+        {(control) => <Input {...control} name="label" defaultValue={values.label} placeholder="Ex. Train Paris – Lyon" />}
+      </Field>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Montant (€)" error={errors.amount} hint="Deux décimales au plus, ex. 12,50.">
+          {(control) => <Input {...control} name="amount" inputMode="decimal" defaultValue={values.amount} placeholder="12,50" />}
+        </Field>
+        <Field label="Date" error={errors.date}>
+          {(control) => <Input {...control} name="date" type="date" max={todayIso()} defaultValue={values.date} />}
+        </Field>
       </div>
-      <div className="field">
-        <label htmlFor="amount">Montant (€)</label>
-        <input id="amount" name="amount" inputMode="decimal" placeholder="12,50" defaultValue={values.amount} aria-invalid={errors.amount ? true : undefined} aria-describedby={describedBy('amount')} />
-        {fieldError('amount')}
+      <Field label="Catégorie" error={errors.categorySlug}>
+        {(control) => (
+          <Select {...control} name="categorySlug" defaultValue={values.categorySlug}>
+            <option value="">Choisir une catégorie</option>
+            {categoriesResult.categories.map((category) => (
+              <option key={category.slug} value={category.slug}>
+                {category.label}
+              </option>
+            ))}
+          </Select>
+        )}
+      </Field>
+      {state.message && <Alert>{state.message}</Alert>}
+      <div className="flex justify-end border-t border-gray-200 pt-5">
+        <Button type="submit" variant="primary" pending={isPending}>
+          {isPending ? 'Enregistrement…' : submitLabel}
+        </Button>
       </div>
-      <div className="field">
-        <label htmlFor="date">Date</label>
-        <input id="date" name="date" type="date" max={todayIso()} defaultValue={values.date} aria-invalid={errors.date ? true : undefined} aria-describedby={describedBy('date')} />
-        {fieldError('date')}
-      </div>
-      <div className="field">
-        <label htmlFor="categorySlug">Catégorie</label>
-        <select id="categorySlug" name="categorySlug" defaultValue={values.categorySlug} aria-invalid={errors.categorySlug ? true : undefined} aria-describedby={describedBy('categorySlug')}>
-          <option value="">Choisir une catégorie</option>
-          {categoriesResult.categories.map((category) => (
-            <option key={category.slug} value={category.slug}>
-              {category.label}
-            </option>
-          ))}
-        </select>
-        {fieldError('categorySlug')}
-      </div>
-      {state.message && <p role="alert">{state.message}</p>}
-      <button type="submit" disabled={isPending}>
-        {isPending ? 'Enregistrement…' : submitLabel}
-      </button>
     </form>
   )
 }

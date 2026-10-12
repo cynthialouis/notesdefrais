@@ -1,12 +1,13 @@
+import { Badge, type BadgeTone } from '../../ui/Badge'
 import type { ExpenseStatus } from './expensesStore'
 import { statusLabels } from './statusLabels'
 
-function badgeTone(status: ExpenseStatus): string {
+function badgeTone(status: ExpenseStatus): BadgeTone {
   switch (status) {
     case 'draft':
       return 'neutral'
     case 'submitted':
-      return 'pending'
+      return 'info'
     case 'approved':
       return 'success'
     case 'rejected':
@@ -20,5 +21,5 @@ function badgeTone(status: ExpenseStatus): string {
 }
 
 export function StatusBadge({ status }: { status: ExpenseStatus }) {
-  return <span className={`status-badge status-badge--${badgeTone(status)}`}>{statusLabels[status]}</span>
+  return <Badge tone={badgeTone(status)}>{statusLabels[status]}</Badge>
 }
