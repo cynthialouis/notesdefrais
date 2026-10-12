@@ -25,7 +25,9 @@ final class OwnExpensesForAllRolesTest extends ApiTestCase
     #[DataProvider('roles')]
     public function testC13ChaqueRoleCreeListeModifieEtSoumetSesNotes(string $role): void
     {
-        $user = $this->createUser('Utilisateur', $role.'@demo.test', UserRole::from($role));
+        // Spec 003 C13 : salarié et manager ont un responsable ; l'admin n'en a pas et ne peut pas soumettre.
+        $responsible = 'admin' === $role ? null : $this->createUser('Responsable', 'responsable@demo.test', UserRole::Admin);
+        $user = $this->createUser('Utilisateur', $role.'@demo.test', UserRole::from($role), $responsible);
         $other = $this->createUser('Autre', 'autre@demo.test', UserRole::Employee);
         $this->createExpense($other, 'Note d\'un autre');
         $this->login($user);
@@ -44,6 +46,12 @@ final class OwnExpensesForAllRolesTest extends ApiTestCase
         self::assertSame('Libellé corrigé', $this->findExpense($id)?->getLabel());
 
         $this->client->request('POST', '/api/expenses/'.$id.'/submit');
+        if ('admin' === $role) {
+            $this->assertErrorResponse(409);
+            self::assertSame(ExpenseStatus::Draft, $this->findExpense($id)?->getStatus());
+
+            return;
+        }
         self::assertResponseStatusCodeSame(200);
         self::assertSame('submitted', $this->responseJson()['status']);
         self::assertSame(ExpenseStatus::Submitted, $this->findExpense($id)?->getStatus());

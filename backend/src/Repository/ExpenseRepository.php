@@ -39,4 +39,26 @@ class ExpenseRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    /**
+     * Notes à traiter par un responsable : les notes soumises des personnes qu'il encadre directement,
+     * les plus anciennes soumissions d'abord (spec 003, C1).
+     *
+     * @return list<Expense>
+     */
+    public function findSubmittedForResponsible(User $responsible): array
+    {
+        return $this->createQueryBuilder('e')
+            ->addSelect('c', 'o')
+            ->join('e.category', 'c')
+            ->join('e.owner', 'o')
+            ->where('o.manager = :responsible')
+            ->andWhere('e.status = :status')
+            ->setParameter('responsible', $responsible)
+            ->setParameter('status', ExpenseStatus::Submitted)
+            ->orderBy('e.submittedAt', 'ASC')
+            ->addOrderBy('e.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

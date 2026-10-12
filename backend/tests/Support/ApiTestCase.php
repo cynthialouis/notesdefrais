@@ -155,6 +155,7 @@ abstract class ApiTestCase extends WebTestCase
         string $date = '2026-10-01',
         string $categorySlug = 'repas',
         ExpenseStatus $status = ExpenseStatus::Draft,
+        ?string $submittedAt = null,
     ): Expense {
         $em = $this->entityManager();
         $managedOwner = $em->find(User::class, $owner->getId());
@@ -167,6 +168,9 @@ abstract class ApiTestCase extends WebTestCase
         $expense->setAmountCents($amountCents);
         $expense->setDate(new \DateTimeImmutable($date));
         $expense->setStatus($status);
+        if (null !== $submittedAt) {
+            $expense->setSubmittedAt(new \DateTimeImmutable($submittedAt));
+        }
 
         $em->persist($expense);
         $em->flush();
@@ -219,14 +223,16 @@ abstract class ApiTestCase extends WebTestCase
     }
 
     /**
-     * Vérifie le format de sortie d'une note (ExpenseView).
+     * Vérifie le format de sortie d'une note (ExpenseView), étendu par la spec 003
+     * (owner, decidedAt, decidedBy, rejectionReason, decidable).
      *
      * @param array<mixed> $view
      */
     protected function assertExpenseView(array $view): void
     {
         self::assertEqualsCanonicalizing(
-            ['id', 'label', 'amountCents', 'date', 'category', 'status', 'createdAt', 'submittedAt', 'editable'],
+            ['id', 'label', 'amountCents', 'date', 'category', 'status', 'createdAt', 'submittedAt', 'editable',
+                'owner', 'decidedAt', 'decidedBy', 'rejectionReason', 'decidable'],
             array_keys($view),
         );
         self::assertIsInt($view['id']);
@@ -238,12 +244,63 @@ abstract class ApiTestCase extends WebTestCase
         self::assertEqualsCanonicalizing(['slug', 'label'], array_keys($view['category']));
         self::assertContains($view['status'], ['draft', 'submitted', 'approved', 'rejected']);
         self::assertIsBool($view['editable']);
+        self::assertIsBool($view['decidable']);
         self::assertIsString($view['createdAt']);
         self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view['createdAt']);
-        if (null !== $view['submittedAt']) {
-            self::assertIsString($view['submittedAt']);
-            self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view['submittedAt']);
+        foreach (['submittedAt', 'decidedAt'] as $key) {
+            if (null !== $view[$key]) {
+                self::assertIsString($view[$key]);
+                self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view[$key]);
+            }
         }
+        $this->assertPersonRef($view['owner']);
+        if (null !== $view['decidedBy']) {
+            $this->assertPersonRef($view['decidedBy']);
+        }
+        if (null !== $view['rejectionReason']) {
+            self::assertIsString($view['rejectionReason']);
+        }
+    }
+
+    /**
+     * Référence à une personne dans une sortie de l'API : { id, name } (spec 003).
+     */
+    protected function assertPersonRef(mixed $ref): void
+    {
+        self::assertIsArray($ref);
+        self::assertEqualsCanonicalizing(['id', 'name'], array_keys($ref));
+        self::assertIsInt($ref['id']);
+        self::assertIsString($ref['name']);
+    }
+
+    /**
+     * Équipe type de la spec 003 : admin (sans responsable), managers rattachés à l'admin,
+     * salariés rattachés à leur manager.
+     *
+     * @return array{admin: User, marc: User, julie: User, sophie: User, tom: User, ines: User}
+     */
+    protected function createTeam(): array
+    {
+        $admin = $this->createUser('Alice Admin', 'alice@demo.test', UserRole::Admin);
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager, $admin);
+        $julie = $this->createUser('Julie Manager', 'julie@demo.test', UserRole::Manager, $admin);
+        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
+        $tom = $this->createUser('Tom Salarié', 'tom@demo.test', UserRole::Employee, $marc);
+        $ines = $this->createUser('Inès Salariée', 'ines@demo.test', UserRole::Employee, $julie);
+
+        return ['admin' => $admin, 'marc' => $marc, 'julie' => $julie, 'sophie' => $sophie, 'tom' => $tom, 'ines' => $ines];
+    }
+
+    /**
+     * Vérifie qu'un horodatage ISO 8601 tombe dans la fenêtre [$before, $after] (à 2 s près).
+     */
+    protected function assertIsoBetween(mixed $iso, int $before, int $after): void
+    {
+        self::assertIsString($iso);
+        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $iso);
+        $ts = (new \DateTimeImmutable($iso))->getTimestamp();
+        self::assertGreaterThanOrEqual($before - 2, $ts);
+        self::assertLessThanOrEqual($after + 2, $ts);
     }
 
     /**

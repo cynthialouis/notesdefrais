@@ -6,7 +6,8 @@ use App\Enum\ExpenseStatus;
 use PHPUnit\Framework\TestCase;
 
 /**
- * ExpenseStatus::isEditable() dit seul quels états se modifient (plan de la spec 002, C5, C7, C12).
+ * ExpenseStatus::isEditable() dit seul quels états se modifient (plan de la spec 002, C5, C7, C12 ;
+ * spec 003 C8 : une note rejetée redevient modifiable).
  */
 final class ExpenseStatusTest extends TestCase
 {
@@ -19,7 +20,12 @@ final class ExpenseStatusTest extends TestCase
     {
         self::assertFalse(ExpenseStatus::Submitted->isEditable());
         self::assertFalse(ExpenseStatus::Approved->isEditable());
-        self::assertFalse(ExpenseStatus::Rejected->isEditable());
+    }
+
+    public function testC8UneNoteRejeteeEstModifiable(): void
+    {
+        // Spec 003 C8 : le propriétaire corrige puis resoumet une note rejetée.
+        self::assertTrue(ExpenseStatus::Rejected->isEditable());
     }
 
     public function testContratLesValeursCorrespondentAuContratDeLApi(): void

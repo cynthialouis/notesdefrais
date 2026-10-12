@@ -3,15 +3,18 @@
 namespace App\Dto;
 
 use App\Entity\Expense;
+use App\Entity\User;
 use App\Enum\ExpenseStatus;
 
 /**
- * Note de frais telle que renvoyée au front.
+ * Note de frais telle que renvoyée au front, pour un lecteur donné : `editable` et `decidable`
+ * disent ce que CE lecteur peut faire, le front n'a pas à recalculer ces règles.
  */
 final readonly class ExpenseView
 {
     public function __construct(
         public int $id,
+        public PersonRef $owner,
         public string $label,
         public int $amountCents,
         /** Date de la dépense, au format Y-m-d */
@@ -22,15 +25,23 @@ final readonly class ExpenseView
         public string $createdAt,
         /** Date et heure ISO 8601, null tant que la note n'est pas soumise */
         public ?string $submittedAt,
-        /** Vrai si le propriétaire peut encore la modifier ou la supprimer (ExpenseStatus::isEditable()) */
+        /** Date et heure ISO 8601 de la validation ou du rejet, null sinon */
+        public ?string $decidedAt,
+        public ?PersonRef $decidedBy,
+        /** Motif du rejet, null si la note n'est pas rejetée */
+        public ?string $rejectionReason,
+        /** Vrai si le lecteur est le propriétaire et peut encore la modifier ou la supprimer */
         public bool $editable,
+        /** Vrai si le lecteur est le responsable du propriétaire et peut la valider ou la rejeter */
+        public bool $decidable,
     ) {
     }
 
-    public static function fromEntity(Expense $expense): self
+    public static function fromEntity(Expense $expense, User $viewer): self
     {
         return new self(
             (int) $expense->getId(),
+            PersonRef::fromUser($expense->getOwner()),
             $expense->getLabel(),
             $expense->getAmountCents(),
             $expense->getDate()->format('Y-m-d'),
@@ -38,7 +49,11 @@ final readonly class ExpenseView
             $expense->getStatus(),
             $expense->getCreatedAt()->format(\DATE_ATOM),
             $expense->getSubmittedAt()?->format(\DATE_ATOM),
-            $expense->getStatus()->isEditable(),
+            $expense->getDecidedAt()?->format(\DATE_ATOM),
+            null !== $expense->getDecidedBy() ? PersonRef::fromUser($expense->getDecidedBy()) : null,
+            $expense->getRejectionReason(),
+            $expense->isOwnedBy($viewer) && $expense->getStatus()->isEditable(),
+            $expense->isDecidedBy($viewer) && ExpenseStatus::Submitted === $expense->getStatus(),
         );
     }
 }

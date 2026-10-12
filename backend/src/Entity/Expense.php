@@ -47,9 +47,30 @@ class Expense
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $submittedAt = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $decidedAt = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $decidedBy = null;
+
+    #[ORM\Column(length: 1000, nullable: true)]
+    private ?string $rejectionReason = null;
+
     public function __construct()
     {
-        $this->createdAt = Clock::get()->now();
+        $this->createdAt = self::utc(Clock::get()->now());
+    }
+
+    /**
+     * Les instants sont stockés en UTC : Doctrine écrit une date dans le fuseau de l'objet sans le
+     * décalage, puis la relit dans le fuseau par défaut (UTC). Une date en +02:00 serait décalée de 2 h.
+     *
+     * @return ($date is null ? null : \DateTimeImmutable)
+     */
+    private static function utc(?\DateTimeImmutable $date): ?\DateTimeImmutable
+    {
+        return $date?->setTimezone(new \DateTimeZone('UTC'));
     }
 
     public function getId(): ?int
@@ -67,6 +88,22 @@ class Expense
         $this->owner = $owner;
 
         return $this;
+    }
+
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->owner->getId() === $user->getId();
+    }
+
+    /**
+     * Seul endroit qui dit qui décide d'une note : le responsable direct de son propriétaire
+     * (spec 003). Utilisé par ExpenseVoter (droits) et ExpenseView (ce que le lecteur peut faire).
+     */
+    public function isDecidedBy(User $user): bool
+    {
+        $responsible = $this->owner->getManager();
+
+        return null !== $responsible && $responsible->getId() === $user->getId();
     }
 
     public function getCategory(): Category
@@ -145,7 +182,43 @@ class Expense
 
     public function setSubmittedAt(?\DateTimeImmutable $submittedAt): static
     {
-        $this->submittedAt = $submittedAt;
+        $this->submittedAt = self::utc($submittedAt);
+
+        return $this;
+    }
+
+    public function getDecidedAt(): ?\DateTimeImmutable
+    {
+        return $this->decidedAt;
+    }
+
+    public function setDecidedAt(?\DateTimeImmutable $decidedAt): static
+    {
+        $this->decidedAt = self::utc($decidedAt);
+
+        return $this;
+    }
+
+    public function getDecidedBy(): ?User
+    {
+        return $this->decidedBy;
+    }
+
+    public function setDecidedBy(?User $decidedBy): static
+    {
+        $this->decidedBy = $decidedBy;
+
+        return $this;
+    }
+
+    public function getRejectionReason(): ?string
+    {
+        return $this->rejectionReason;
+    }
+
+    public function setRejectionReason(?string $rejectionReason): static
+    {
+        $this->rejectionReason = $rejectionReason;
 
         return $this;
     }

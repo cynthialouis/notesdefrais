@@ -4,7 +4,7 @@ import { jsonResponse } from '../../test/fixtures'
 import { useExpensesStore, type ExpenseInput } from './expensesStore'
 
 const draft = {
-  id: 2, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
+  id: 2, owner: { id: 4, name: 'Léa' }, decidable: false, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
   status: 'draft', createdAt: '2026-10-06T10:00:00+02:00', submittedAt: null, editable: true,
 }
 const submitted = { ...draft, id: 1, label: 'Déjeuner', status: 'submitted', submittedAt: '2026-10-07T09:00:00+02:00', editable: false }
@@ -101,5 +101,60 @@ describe('expensesStore', () => {
     expect(url).toBe('/api/expenses/2')
     expect(init?.method).toBe('DELETE')
     expect(useExpensesStore.getState().list).toEqual({ status: 'ready', expenses: [] })
+  })
+})
+
+describe('expensesStore – décisions', () => {
+  const submittedByLea = { ...submitted, decidable: true }
+  const approved = { ...submittedByLea, status: 'approved', decidedAt: '2026-10-08T09:00:00+02:00', decidedBy: { id: 2, name: 'Claire' }, decidable: false }
+
+  it('C1 – charge la liste à traiter dans l\'ordre du serveur', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, [submittedByLea]))
+
+    await useExpensesStore.getState().fetchTeamExpenses()
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/team/expenses')
+    expect(useExpensesStore.getState().teamList).toEqual({ status: 'ready', expenses: [submittedByLea] })
+  })
+
+  it('C3/C7 – validation puis relecture de la liste à traiter', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, approved)).mockResolvedValueOnce(jsonResponse(200, []))
+
+    const result = await useExpensesStore.getState().approve(1)
+
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/expenses/1/approve')
+    expect(result.status).toBe('approved')
+    expect(fetchMock.mock.calls[1]?.[0]).toBe('/api/team/expenses')
+    expect(useExpensesStore.getState().teamList).toEqual({ status: 'ready', expenses: [] })
+  })
+
+  it('C4 – rejet avec le motif dans le corps', async () => {
+    const rejected = { ...approved, status: 'rejected', rejectionReason: 'Reçu illisible' }
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, rejected)).mockResolvedValueOnce(jsonResponse(200, []))
+
+    await useExpensesStore.getState().reject(1, 'Reçu illisible')
+
+    const [url, init] = fetchMock.mock.calls[0] ?? []
+    expect(url).toBe('/api/expenses/1/reject')
+    expect(JSON.parse(String(init?.body))).toEqual({ reason: 'Reçu illisible' })
+  })
+
+  it('refuse une note rejetée sans motif (union discriminée)', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, [{ ...approved, status: 'rejected', rejectionReason: null }]))
+
+    await useExpensesStore.getState().fetchTeamExpenses()
+
+    expect(useExpensesStore.getState().teamList).toEqual({ status: 'error', message: 'Réponse inattendue du serveur.' })
+  })
+
+  it('C11 – lit l\'historique d\'une note', async () => {
+    const events = [
+      { type: 'created', actor: { id: 4, name: 'Léa' }, comment: null, createdAt: '2026-10-01T10:00:00+00:00' },
+      { type: 'rejected', actor: { id: 2, name: 'Claire' }, comment: 'Reçu illisible', createdAt: '2026-10-02T10:00:00+00:00' },
+    ]
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, events))
+
+    expect(await useExpensesStore.getState().fetchEvents(1)).toEqual(events)
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/expenses/1/events')
   })
 })

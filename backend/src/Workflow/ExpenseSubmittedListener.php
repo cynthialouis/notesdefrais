@@ -8,7 +8,8 @@ use Symfony\Component\Workflow\Attribute\AsEnteredListener;
 use Symfony\Component\Workflow\Event\EnteredEvent;
 
 /**
- * Date la soumission d'une note au moment où elle entre dans l'état « submitted » (C6).
+ * Entrée dans « submitted » : date la soumission (002, C6) et efface la décision précédente
+ * d'une note rejetée puis resoumise ; le motif reste dans l'historique (003, C8).
  */
 #[AsEnteredListener(workflow: 'expense', place: 'submitted')]
 final class ExpenseSubmittedListener
@@ -22,6 +23,10 @@ final class ExpenseSubmittedListener
         $expense = $event->getSubject();
         \assert($expense instanceof Expense);
 
-        $expense->setSubmittedAt($this->clock->now());
+        $expense
+            ->setSubmittedAt($this->clock->now())
+            ->setDecidedAt(null)
+            ->setDecidedBy(null)
+            ->setRejectionReason(null);
     }
 }

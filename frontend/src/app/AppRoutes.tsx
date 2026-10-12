@@ -19,10 +19,11 @@ export function AppRoutes() {
           <Route element={<RequireRole role="employee" />}>
             <Route path="notes" element={<NotesPage />} />
             <Route path="notes/nouvelle" element={<NewExpensePage />} />
-            <Route path="notes/:id" element={<ExpenseDetailRoute />} />
+            <Route path="notes/:id" element={<ExpenseDetailRoute back={{ to: '/notes', label: 'Mes notes' }} />} />
           </Route>
           <Route element={<RequireRole role="manager" />}>
             <Route path="equipe" element={<TeamPage />} />
+            <Route path="equipe/:id" element={<ExpenseDetailRoute back={{ to: '/equipe', label: 'Équipe' }} />} />
           </Route>
           <Route element={<RequireRole role="admin" />}>
             <Route path="politique" element={<PolicyPage />} />

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { unicodeTrim } from '../../lib/unicodeTrim'
 import type { ExpenseInput } from './expensesStore'
 import { MAX_AMOUNT_CENTS, parseEurosToCents } from './money'
 
@@ -21,14 +22,18 @@ function isRealDate(value: string): boolean {
 }
 
 const expenseFormSchema = z.object({
-  // trim() retire les blancs Unicode, comme UnicodeTrim côté serveur ; la longueur se compte en
+  // unicodeTrim retire les mêmes blancs que UnicodeTrim côté serveur ; la longueur se compte en
   // caractères (points de code) et non en unités UTF-16, comme Symfony (un emoji compte pour 1)
   label: z
     .string()
-    .trim()
-    .min(1, 'Le libellé est obligatoire.')
-    .refine((value) => [...value].length >= 2, 'Le libellé doit faire au moins 2 caractères.')
-    .refine((value) => [...value].length <= 80, 'Le libellé doit faire au plus 80 caractères.'),
+    .transform(unicodeTrim)
+    .pipe(
+      z
+        .string()
+        .min(1, 'Le libellé est obligatoire.')
+        .refine((value) => [...value].length >= 2, 'Le libellé doit faire au moins 2 caractères.')
+        .refine((value) => [...value].length <= 80, 'Le libellé doit faire au plus 80 caractères.'),
+    ),
   amount: z
     .string()
     .trim()
