@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
@@ -124,7 +124,9 @@ describe('Note rejetée et historique', () => {
     await renderAt('/notes/3', lea)
 
     const items = await screen.findAllByRole('listitem')
-    expect(items.map((item) => item.querySelector('p')?.textContent)).toEqual(['Note créée', 'Note soumise', 'Note rejetée'])
+    expect(within(items[0]!).getByText('Note créée')).toBeInTheDocument()
+    expect(within(items[1]!).getByText('Note soumise')).toBeInTheDocument()
+    expect(within(items[2]!).getByText('Note rejetée')).toBeInTheDocument()
     expect(items[2]).toHaveTextContent('Claire Dubois, le 01/10/2026 10:00')
     expect(items[2]).toHaveTextContent('« Précisez le trajet. »')
   })

@@ -1,5 +1,6 @@
 import { Suspense, use, useActionState, useState, useTransition } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
+import type { z } from 'zod'
 import { ApiError } from '../../api/client'
 import { Alert } from '../../ui/Alert'
 import { Button } from '../../ui/Button'
@@ -201,7 +202,8 @@ function EditableExpense({ expense, categories }: { expense: Expense; categories
   )
 }
 
-type RejectState = { reason: string; error: string | null }
+/** Saisie du motif (déduite du schéma) et erreur à afficher sous le champ. */
+type RejectState = z.input<typeof rejectionSchema> & { error: string | null }
 
 /** Décision du responsable : valider, ou rejeter avec un motif (C3, C4, C5). */
 function DecisionCard({ expense, back }: { expense: Expense; back: BackLink }) {
