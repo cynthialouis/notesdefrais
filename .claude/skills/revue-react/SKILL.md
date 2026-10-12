@@ -34,6 +34,8 @@ Lance `npx tsc -b` et `npm run lint` dans `frontend/`. Rapporte leurs erreurs te
 
 Ne signale que ce que tu peux montrer dans le code : chaque remarque cite le fichier et la ligne. Pas de remarque de style ni de préférence personnelle.
 
+Un problème hors de ces dix règles peut être signalé, à part, s'il est vérifié : une option de configuration, un comportement par défaut ou une API dépendent de la version installée (par exemple, TypeScript 6 est strict sans `"strict": true`). Vérifie-le dans le code installé ou avec l'outil concerné avant de l'écrire, sinon ne le signale pas.
+
 ## 4. Rendre la revue
 
 Une liste par fichier, chaque remarque avec :
