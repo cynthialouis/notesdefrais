@@ -58,3 +58,19 @@ Aucune. Tranchées le 12/10 : managers rattachés à l'admin, admin sans respons
 - `docs/api.md` annonce `GET /expenses` filtré « manager : son équipe » ; la feature 002 en a fait la liste des notes personnelles. Les notes à traiter passent par une route dédiée (à décider au plan).
 - `docs/modele-donnees.md` : une personne sans responsable ne peut pas soumettre (C13) ; les managers ont l'admin pour responsable.
 - Feature 001 : les données de démo et leur test (`AppFixturesTest`) supposaient des managers sans responsable ; à adapter.
+
+## Plan
+
+- **Back** : `Expense` gagne `decidedAt`, `decidedBy`, `rejectionReason` ; `ExpenseStatus::isEditable()` inclut `Rejected` ; entité `ExpenseEvent` (type created / submitted / approved / rejected, auteur, commentaire, date). Workflow : `submit` depuis `draft` ou `rejected`, `approve`, `reject` ; listeners pour la décision, l'effacement du motif à la resoumission et l'écriture de l'historique. `ExpenseVoter` : `EXPENSE_VIEW` (propriétaire, ou son responsable hors brouillon), `EXPENSE_DECIDE` (responsable). `ExpenseManager::approve/reject`, refus de soumettre sans responsable. Routes `GET /api/team/expenses`, `POST /api/expenses/{id}/approve`, `POST /api/expenses/{id}/reject` (`RejectionInput`), `GET /api/expenses/{id}/events`. `ExpenseView` construite pour un lecteur (`owner`, décision, motif, `editable`, `decidable`). Démo : managers rattachés à l'admin.
+- **Front** : store étendu (liste à traiter, `approve`, `reject`, historique) ; composant `Textarea` ; page Équipe ; détail partagé `/notes/:id` et `/equipe/:id` avec carte Décision, motif d'un rejet, carte Historique.
+
+## Tâches
+
+1. Modèle : champs de décision, `ExpenseEvent`, `isEditable()` (C8, C9, C10)
+2. Workflow : transitions et listeners, historique (C3, C4, C8, C10)
+3. `ExpenseVoter` : lecture et décision (C12, autorisations)
+4. `ExpenseManager` et `RejectionInput` : décisions, refus sans responsable (C3 à C6, C13)
+5. Routes et vues : liste à traiter, décisions, historique, `ExpenseView` par lecteur (C1, C2, C7, C11, C12)
+6. Données de démo et `AppFixturesTest` (C13)
+7. Types régénérés et store (C1, C3, C4, C11)
+8. Écrans : Équipe, décision, motif, historique (C1, C2, C5, C7, C8, C11)
