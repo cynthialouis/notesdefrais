@@ -6,12 +6,12 @@ Entités Doctrine dans `backend/src/Entity/`, schéma versionné par Doctrine Mi
 
 | Entité | Champs principaux | Remarques |
 |---|---|---|
-| `User` | id, name, email, role (`employee` / `manager` / `admin`), manager | Comptes de démo créés par les fixtures |
+| `User` | id, name, email, role (`employee` / `manager` / `admin`), manager | Comptes de démo créés par les fixtures. Le `manager` est le responsable direct : les salariés ont leur manager, les managers l'admin, l'admin personne |
 | `Category` | id, slug, label | repas, transport, hébergement, matériel, autre ; données de référence **insérées par la migration** (présentes dans tous les environnements, jamais purgées par les fixtures : `make db`) |
 | `Policy` | id, category, maxAmountCents, receiptRequired | Une politique par catégorie |
 | `Expense` | id, owner, category, label, amountCents, date, status (enum `ExpenseStatus`), createdAt, submittedAt ; puis decidedAt, decidedBy, rejectionReason (003) | Montant en centimes entiers, jamais de flottant. `ExpenseStatus::isEditable()` est le seul endroit qui dit quels états se modifient et se suppriment |
 | `Receipt` | id, expense, filename, mimeType, sizeBytes, storagePath | Fichier sur disque (hors `public/`, ignoré par git), métadonnées en base |
-| `ExpenseEvent` | id, expense, actor, type, comment, createdAt | Historique : créée, soumise, validée, rejetée |
+| `ExpenseEvent` | id, expense, actor, type (enum `ExpenseEventType`), comment, createdAt | Historique : créée (écrit par `ExpenseManager::create()`), soumise, validée, rejetée (écrits par un listener `completed` du Workflow), motif d'un rejet en commentaire |
 
 ## Cycle de vie d'une note
 
@@ -22,11 +22,12 @@ draft ──submit──▶ submitted ──approve──▶ approved
 ```
 
 - Déclaré comme machine à états dans `backend/config/packages/workflow.yaml` (composant Workflow). Une transition invalide est refusée par le Workflow et renvoyée en 409.
-- Seul le propriétaire modifie un brouillon ou une note rejetée.
-- Seul le manager du propriétaire décide sur une note soumise (Voter).
+- Seul le propriétaire modifie un brouillon ou une note rejetée (`ExpenseStatus::isEditable()`).
+- Seul le responsable du propriétaire décide d'une note soumise (`ExpenseVoter`, attribut `DECIDE`) ; une personne sans responsable ne peut pas soumettre.
+- Les instants (`createdAt`, `submittedAt`, `decidedAt`) sont stockés en UTC : les setters des entités convertissent, car Doctrine perd le décalage horaire.
 - Une note `approved` est figée.
 - La date de soumission est posée par un listener du Workflow à l'entrée dans `submitted`.
-- Chaque transition écrira un `ExpenseEvent` à partir de la feature 003 (via les événements du Workflow).
+- Chaque transition écrit un `ExpenseEvent` ; la décision (auteur, date, motif) est posée à l'entrée dans `approved` ou `rejected`, et effacée à la resoumission (le motif reste dans l'historique).
 
 ## Entrées (back)
 
