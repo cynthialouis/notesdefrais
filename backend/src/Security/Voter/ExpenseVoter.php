@@ -38,21 +38,10 @@ final class ExpenseVoter extends Voter
         }
 
         return match ($attribute) {
-            self::OWNER => self::isOwner($subject, $user),
-            self::VIEW => self::isOwner($subject, $user) || (self::isResponsible($subject, $user) && ExpenseStatus::Draft !== $subject->getStatus()),
-            self::DECIDE => self::isResponsible($subject, $user),
+            self::OWNER => $subject->isOwnedBy($user),
+            self::VIEW => $subject->isOwnedBy($user) || ($subject->isDecidedBy($user) && ExpenseStatus::Draft !== $subject->getStatus()),
+            self::DECIDE => $subject->isDecidedBy($user),
             default => false,
         };
-    }
-
-    private static function isOwner(Expense $expense, User $user): bool
-    {
-        return $expense->getOwner()->getId() === $user->getId();
-    }
-
-    /** Le responsable direct du propriétaire (son manager, ou l'admin pour un manager). */
-    private static function isResponsible(Expense $expense, User $user): bool
-    {
-        return null !== $expense->getOwner()->getManager() && $expense->getOwner()->getManager()->getId() === $user->getId();
     }
 }

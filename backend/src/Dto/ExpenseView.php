@@ -39,13 +39,9 @@ final readonly class ExpenseView
 
     public static function fromEntity(Expense $expense, User $viewer): self
     {
-        $owner = $expense->getOwner();
-        $isOwner = $owner->getId() === $viewer->getId();
-        $isResponsible = null !== $owner->getManager() && $owner->getManager()->getId() === $viewer->getId();
-
         return new self(
             (int) $expense->getId(),
-            PersonRef::fromUser($owner),
+            PersonRef::fromUser($expense->getOwner()),
             $expense->getLabel(),
             $expense->getAmountCents(),
             $expense->getDate()->format('Y-m-d'),
@@ -56,8 +52,8 @@ final readonly class ExpenseView
             $expense->getDecidedAt()?->format(\DATE_ATOM),
             null !== $expense->getDecidedBy() ? PersonRef::fromUser($expense->getDecidedBy()) : null,
             $expense->getRejectionReason(),
-            $isOwner && $expense->getStatus()->isEditable(),
-            $isResponsible && ExpenseStatus::Submitted === $expense->getStatus(),
+            $expense->isOwnedBy($viewer) && $expense->getStatus()->isEditable(),
+            $expense->isDecidedBy($viewer) && ExpenseStatus::Submitted === $expense->getStatus(),
         );
     }
 }

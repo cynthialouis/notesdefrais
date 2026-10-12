@@ -90,6 +90,22 @@ class Expense
         return $this;
     }
 
+    public function isOwnedBy(User $user): bool
+    {
+        return $this->owner->getId() === $user->getId();
+    }
+
+    /**
+     * Seul endroit qui dit qui décide d'une note : le responsable direct de son propriétaire
+     * (spec 003). Utilisé par ExpenseVoter (droits) et ExpenseView (ce que le lecteur peut faire).
+     */
+    public function isDecidedBy(User $user): bool
+    {
+        $responsible = $this->owner->getManager();
+
+        return null !== $responsible && $responsible->getId() === $user->getId();
+    }
+
     public function getCategory(): Category
     {
         return $this->category;
