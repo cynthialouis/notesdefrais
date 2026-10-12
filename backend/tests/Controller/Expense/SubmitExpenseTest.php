@@ -199,6 +199,6 @@ final class SubmitExpenseTest extends ApiTestCase
         $this->client->request('POST', '/api/expenses/'.$expense->getId().'/submit');
 
         $error = $this->assertErrorResponse(409);
-        self::assertSame('Seul un brouillon peut être soumis.', $error['message']);
+        self::assertSame('Seule une note en brouillon ou rejetée peut être soumise.', $error['message']);
     }
 }
