@@ -319,7 +319,138 @@
                         "description": "Note inexistante ou d'un autre utilisateur"
                     },
                     "409": {
-                        "description": "La note n'est plus en brouillon"
+                        "description": "La note n'est ni en brouillon ni rejet\u00e9e, ou son propri\u00e9taire n'a pas de responsable"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/expenses/{id}/approve": {
+            "post": {
+                "summary": "Valider : 404 si la note n'est pas visible (existence non r\u00e9v\u00e9l\u00e9e), 403 pour le propri\u00e9taire.",
+                "operationId": "post_api_expenses_approve",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Note valid\u00e9e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Le propri\u00e9taire ne d\u00e9cide pas de sa propre note"
+                    },
+                    "404": {
+                        "description": "Note inexistante ou hors de l'\u00e9quipe"
+                    },
+                    "409": {
+                        "description": "La note n'est pas soumise"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/expenses/{id}/reject": {
+            "post": {
+                "operationId": "post_api_expenses_reject",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectionInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Note rejet\u00e9e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Motif invalide"
+                    },
+                    "403": {
+                        "description": "Le propri\u00e9taire ne d\u00e9cide pas de sa propre note"
+                    },
+                    "404": {
+                        "description": "Note inexistante ou hors de l'\u00e9quipe"
+                    },
+                    "409": {
+                        "description": "La note n'est pas soumise"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/expenses/{id}/events": {
+            "get": {
+                "operationId": "get_api_expenses_events",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Historique, du plus ancien au plus r\u00e9cent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExpenseEventView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Note inexistante ou non visible"
                     },
                     "401": {
                         "description": "Non connect\u00e9"
@@ -353,6 +484,32 @@
                     },
                     "401": {
                         "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/team/expenses": {
+            "get": {
+                "operationId": "get_api_team_expenses",
+                "responses": {
+                    "200": {
+                        "description": "Notes soumises de l'\u00e9quipe directe, les plus anciennes d'abord",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/ExpenseView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    },
+                    "403": {
+                        "description": "R\u00e9serv\u00e9 aux managers"
                     }
                 }
             }
@@ -410,6 +567,18 @@
                         "type": "string",
                         "nullable": true,
                         "default": null
+                    }
+                },
+                "type": "object"
+            },
+            "RejectionInput": {
+                "properties": {
+                    "reason": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null,
+                        "maxLength": 1000,
+                        "minLength": 5
                     }
                 },
                 "type": "object"
@@ -486,20 +655,40 @@
                 },
                 "type": "object"
             },
+            "PersonRef": {
+                "required": [
+                    "id",
+                    "name"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
             "ExpenseView": {
                 "required": [
                     "id",
+                    "owner",
                     "label",
                     "amountCents",
                     "date",
                     "category",
                     "status",
                     "createdAt",
-                    "editable"
+                    "editable",
+                    "decidable"
                 ],
                 "properties": {
                     "id": {
                         "type": "integer"
+                    },
+                    "owner": {
+                        "$ref": "#/components/schemas/PersonRef"
                     },
                     "label": {
                         "type": "string"
@@ -526,9 +715,65 @@
                         "type": "string",
                         "nullable": true
                     },
+                    "decidedAt": {
+                        "title": "Date et heure ISO 8601 de la validation ou du rejet, null sinon",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "decidedBy": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonRef"
+                            }
+                        ]
+                    },
+                    "rejectionReason": {
+                        "title": "Motif du rejet, null si la note n'est pas rejet\u00e9e",
+                        "type": "string",
+                        "nullable": true
+                    },
                     "editable": {
-                        "title": "Vrai si le propri\u00e9taire peut encore la modifier ou la supprimer (ExpenseStatus::isEditable())",
+                        "title": "Vrai si le lecteur est le propri\u00e9taire et peut encore la modifier ou la supprimer",
                         "type": "boolean"
+                    },
+                    "decidable": {
+                        "title": "Vrai si le lecteur est le responsable du propri\u00e9taire et peut la valider ou la rejeter",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "ExpenseEventType": {
+                "type": "string",
+                "enum": [
+                    "created",
+                    "submitted",
+                    "approved",
+                    "rejected"
+                ]
+            },
+            "ExpenseEventView": {
+                "required": [
+                    "type",
+                    "actor",
+                    "createdAt"
+                ],
+                "properties": {
+                    "type": {
+                        "$ref": "#/components/schemas/ExpenseEventType"
+                    },
+                    "actor": {
+                        "$ref": "#/components/schemas/PersonRef"
+                    },
+                    "comment": {
+                        "title": "Motif pour un rejet, null sinon",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "createdAt": {
+                        "title": "Date et heure ISO 8601",
+                        "type": "string"
                     }
                 },
                 "type": "object"

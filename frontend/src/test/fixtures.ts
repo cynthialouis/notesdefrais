@@ -15,6 +15,7 @@ export const categories = [
 
 export const draftExpense = {
   id: 2,
+  owner: { id: 4, name: 'Léa Bernard' },
   label: 'Train Paris – Lyon',
   amountCents: 8900,
   date: '2026-10-06',
@@ -23,6 +24,7 @@ export const draftExpense = {
   createdAt: '2026-10-06T10:00:00+02:00',
   submittedAt: null,
   editable: true,
+  decidable: false,
 }
 
 export const submittedExpense = {
@@ -36,3 +38,18 @@ export const submittedExpense = {
   submittedAt: '2026-09-30T09:00:00+02:00',
   editable: false,
 }
+
+export const rejectedExpense = {
+  ...draftExpense,
+  id: 3,
+  label: 'Taxi aéroport',
+  status: 'rejected',
+  submittedAt: '2026-09-28T10:00:00+02:00',
+  decidedAt: '2026-09-29T10:00:00+02:00',
+  decidedBy: { id: 2, name: 'Claire Dubois' },
+  rejectionReason: 'Précisez le trajet.',
+  editable: true,
+}
+
+/** Note soumise de Léa, vue par sa responsable Claire : décidable. */
+export const teamSubmittedExpense = { ...submittedExpense, editable: false, decidable: true }
