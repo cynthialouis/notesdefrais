@@ -13,8 +13,8 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 | GET | `/expenses` | connecté : ses propres notes | Liste filtrable (`?status=`, état inconnu → 400), triée par date décroissante puis id décroissant |
 | POST | `/expenses` | connecté (tous rôles) | Crée un brouillon → 201 |
 | GET | `/expenses/{id}` | propriétaire, ou son responsable hors brouillon | Lit une note ; la vue dit ce que le lecteur peut faire (`editable`, `decidable`) |
-| PATCH | `/expenses/{id}` | propriétaire | Remplace tous les champs d'un brouillon (corps complet, comme `POST`) ; 409 hors brouillon |
-| DELETE | `/expenses/{id}` | propriétaire | Supprime un brouillon → 204 ; 409 hors brouillon |
+| PATCH | `/expenses/{id}` | propriétaire | Remplace tous les champs d'une note en brouillon ou rejetée (corps complet, comme `POST`) ; 409 sinon |
+| DELETE | `/expenses/{id}` | propriétaire | Supprime une note en brouillon ou rejetée → 204 ; 409 sinon |
 | POST | `/expenses/{id}/submit` | propriétaire | `draft` ou `rejected` → `submitted` ; 409 sinon, ou si le propriétaire n'a pas de responsable (l'admin) |
 | GET | `/team/expenses` | manager et plus (403 sinon) | Notes soumises des personnes dont on est le responsable direct, les plus anciennes soumissions d'abord |
 | POST | `/expenses/{id}/approve` | responsable du propriétaire | `submitted` → `approved` ; 403 pour le propriétaire, 404 pour tout autre ; 409 si pas soumise |

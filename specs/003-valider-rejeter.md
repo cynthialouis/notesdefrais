@@ -13,7 +13,7 @@ Un manager doit traiter les notes de frais que lui soumettent les personnes de s
 - **C5** SI le motif de rejet fait moins de 5 caractères (espaces autour exclus), ALORS LE SYSTÈME DOIT refuser le rejet (400) en le signalant sur le champ motif, avant tout envoi côté écran.
 - **C6** SI la note n'est pas à l'état « soumise », ALORS LE SYSTÈME DOIT refuser sa validation et son rejet (409).
 - **C7** QUAND une note est décidée, LE SYSTÈME DOIT la retirer de la liste à traiter du manager.
-- **C8** TANT QUE sa note est rejetée, LE SYSTÈME DOIT montrer le motif à son propriétaire et lui permettre de la modifier puis de la resoumettre.
+- **C8** TANT QUE sa note est rejetée, LE SYSTÈME DOIT montrer le motif à son propriétaire et lui permettre de la modifier puis de la resoumettre, ou de la supprimer s'il y renonce (*précisé le 12/10 après la relecture à froid*).
 - **C9** TANT QU'une note est validée, LE SYSTÈME DOIT refuser sa modification, sa suppression, sa soumission et toute nouvelle décision.
 - **C10** QUAND une note est créée, soumise, validée ou rejetée, LE SYSTÈME DOIT l'inscrire dans son historique : action, auteur, date, et motif pour un rejet.
 - **C11** LE SYSTÈME DOIT permettre au propriétaire et à son manager de consulter l'historique d'une note, du plus ancien au plus récent.
@@ -29,7 +29,7 @@ Le responsable direct d'une personne décide de ses notes : les salariés sont r
 | Lister les notes à traiter | manager et plus | 401 non connecté ; 403 salarié |
 | Lire une note, consulter son historique | son propriétaire, le manager de son propriétaire | 404 (existence non révélée) |
 | Valider, rejeter | le manager du propriétaire | 403 pour le propriétaire lui-même ; 404 pour tout autre |
-| Modifier, resoumettre une note rejetée | son propriétaire | 404 |
+| Modifier, resoumettre, supprimer une note rejetée | son propriétaire | 404 |
 
 ## Cas limites et erreurs
 

@@ -545,7 +545,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description Brouillon supprimé */
+            /** @description Note en brouillon ou rejetée supprimée */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -566,7 +566,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description La note n'est plus en brouillon */
+            /** @description La note n'est ni en brouillon ni rejetée */
             409: {
                 headers: {
                     [name: string]: unknown;
@@ -590,7 +590,7 @@ export interface operations {
             };
         };
         responses: {
-            /** @description Brouillon modifié (tous les champs sont remplacés) */
+            /** @description Note en brouillon ou rejetée modifiée (tous les champs sont remplacés) */
             200: {
                 headers: {
                     [name: string]: unknown;
@@ -620,7 +620,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description La note n'est plus en brouillon */
+            /** @description La note n'est ni en brouillon ni rejetée */
             409: {
                 headers: {
                     [name: string]: unknown;

@@ -266,4 +266,20 @@ final class RejectExpenseTest extends ApiTestCase
         $this->assertErrorResponse(404);
         self::assertSame(ExpenseStatus::Draft, $this->findExpense($id)?->getStatus());
     }
+
+    public function testRelectureLeMotifSeCompteEnCaracteresEtSansBlancsUnicodeAutour(): void
+    {
+        $team = $this->createTeam();
+        $first = (int) $this->createExpense($team['sophie'], status: ExpenseStatus::Submitted)->getId();
+        $second = (int) $this->createExpense($team['sophie'], status: ExpenseStatus::Submitted)->getId();
+        $this->login($team['marc']);
+
+        // 5 emoji = 5 caractères : accepté, comme côté front
+        $this->jsonRequest('POST', '/api/expenses/'.$first.'/reject', ['reason' => str_repeat('🚕', 5)]);
+        self::assertResponseStatusCodeSame(200);
+
+        // U+0085 (fin de ligne) retiré comme les autres blancs : reste 4 caractères, refusé
+        $this->jsonRequest('POST', '/api/expenses/'.$second.'/reject', ['reason' => "\u{0085}abcd"]);
+        $this->assertValidationError('reason');
+    }
 }

@@ -228,13 +228,13 @@
                 ],
                 "responses": {
                     "204": {
-                        "description": "Brouillon supprim\u00e9"
+                        "description": "Note en brouillon ou rejet\u00e9e supprim\u00e9e"
                     },
                     "404": {
                         "description": "Note inexistante ou d'un autre utilisateur"
                     },
                     "409": {
-                        "description": "La note n'est plus en brouillon"
+                        "description": "La note n'est ni en brouillon ni rejet\u00e9e"
                     },
                     "401": {
                         "description": "Non connect\u00e9"
@@ -266,7 +266,7 @@
                 },
                 "responses": {
                     "200": {
-                        "description": "Brouillon modifi\u00e9 (tous les champs sont remplac\u00e9s)",
+                        "description": "Note en brouillon ou rejet\u00e9e modifi\u00e9e (tous les champs sont remplac\u00e9s)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -282,7 +282,7 @@
                         "description": "Note inexistante ou d'un autre utilisateur"
                     },
                     "409": {
-                        "description": "La note n'est plus en brouillon"
+                        "description": "La note n'est ni en brouillon ni rejet\u00e9e"
                     },
                     "401": {
                         "description": "Non connect\u00e9"

@@ -131,3 +131,21 @@ describe('Note rejetée et historique', () => {
     expect(items[2]).toHaveTextContent('« Précisez le trajet. »')
   })
 })
+
+describe('Resoumission d\'une note rejetée', () => {
+  it('C8 – « Soumettre la note » resoumet la note rejetée puis revient à la liste', async () => {
+    const fetchMock = stubApi({
+      'GET /api/expenses/3': json(200, rejectedExpense),
+      'GET /api/expenses/3/events': json(200, []),
+      'GET /api/categories': json(200, categories),
+      'POST /api/expenses/3/submit': json(200, { ...rejectedExpense, status: 'submitted', decidedAt: null, decidedBy: null, rejectionReason: null, editable: false }),
+      'GET /api/expenses': json(200, []),
+    })
+    await renderAt('/notes/3', lea)
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Soumettre la note' }))
+
+    expect(await screen.findByRole('heading', { name: 'Liste des notes' })).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([url, init]) => url === '/api/expenses/3/submit' && init?.method === 'POST')).toBe(true)
+  })
+})

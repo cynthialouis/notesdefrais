@@ -69,10 +69,10 @@ final class ExpenseController extends AbstractController
 
     #[Route('/{id}', name: 'api_expenses_update', requirements: ['id' => '\d+'], methods: ['PATCH'])]
     #[IsGranted(ExpenseVoter::OWNER, subject: 'expense', statusCode: Response::HTTP_NOT_FOUND)]
-    #[OA\Response(response: 200, description: 'Brouillon modifié (tous les champs sont remplacés)', content: new Model(type: ExpenseView::class))]
+    #[OA\Response(response: 200, description: 'Note en brouillon ou rejetée modifiée (tous les champs sont remplacés)', content: new Model(type: ExpenseView::class))]
     #[OA\Response(response: 400, description: 'Champ invalide')]
     #[OA\Response(response: 404, description: 'Note inexistante ou d\'un autre utilisateur')]
-    #[OA\Response(response: 409, description: 'La note n\'est plus en brouillon')]
+    #[OA\Response(response: 409, description: 'La note n\'est ni en brouillon ni rejetée')]
     public function update(
         #[CurrentUser] User $user,
         #[MapEntity(id: 'id')] Expense $expense,
@@ -133,9 +133,9 @@ final class ExpenseController extends AbstractController
 
     #[Route('/{id}', name: 'api_expenses_delete', requirements: ['id' => '\d+'], methods: ['DELETE'])]
     #[IsGranted(ExpenseVoter::OWNER, subject: 'expense', statusCode: Response::HTTP_NOT_FOUND)]
-    #[OA\Response(response: 204, description: 'Brouillon supprimé')]
+    #[OA\Response(response: 204, description: 'Note en brouillon ou rejetée supprimée')]
     #[OA\Response(response: 404, description: 'Note inexistante ou d\'un autre utilisateur')]
-    #[OA\Response(response: 409, description: 'La note n\'est plus en brouillon')]
+    #[OA\Response(response: 409, description: 'La note n\'est ni en brouillon ni rejetée')]
     public function delete(#[MapEntity(id: 'id')] Expense $expense): Response
     {
         $this->expenses->delete($expense);

@@ -28,6 +28,9 @@ final class SubmitWithoutResponsibleTest extends ApiTestCase
         // Message propre à ce cas : ni le message générique du 409, ni celui d'un mauvais état.
         self::assertNotSame('Action impossible dans l\'état actuel.', $error['message']);
         self::assertNotSame('Seul un brouillon peut être soumis.', $error['message']);
+        // Message propre à C13, distinct de celui d'un état qui ne permet pas la soumission
+        self::assertStringContainsString('pas de responsable', $error['message']);
+        self::assertNotSame('Seule une note en brouillon ou rejetée peut être soumise.', $error['message']);
 
         $stored = $this->findExpense($id);
         self::assertSame(ExpenseStatus::Draft, $stored?->getStatus());
