@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router'
+import { Alert } from '../../ui/Alert'
+import { ButtonLink } from '../../ui/Button'
+import { Card } from '../../ui/Card'
+import { EmptyState } from '../../ui/EmptyState'
+import { Select } from '../../ui/Field'
+import { PageHeader } from '../../ui/PageHeader'
+import { LoadingState } from '../../ui/Spinner'
+import { Table, Td, Th } from '../../ui/Table'
 import { useExpensesStore, type Expense, type ExpenseStatus } from './expensesStore'
 import { formatIsoDate } from './format'
 import { formatCents } from './money'
@@ -23,30 +31,40 @@ export function NotesPage() {
     void fetchExpenses()
   }, [fetchExpenses])
 
-  return (
-    <section>
-      <title>Mes notes – Notes de frais</title>
-      <div className="page-header">
-        <h1>Mes notes</h1>
-        <Link to="/notes/nouvelle" className="button">
-          Nouvelle note
-        </Link>
-      </div>
-
-      <label htmlFor="status-filter">État</label>{' '}
-      <select id="status-filter" value={filter} onChange={(event) => setFilter(toFilter(event.target.value))}>
+  const filterControl = (
+    <div className="flex items-center gap-2">
+      <label htmlFor="status-filter" className="text-sm text-gray-600">
+        État
+      </label>
+      <Select id="status-filter" className="w-auto" value={filter} onChange={(event) => setFilter(toFilter(event.target.value))}>
         <option value="all">Tous</option>
         {allStatuses.map((status) => (
           <option key={status} value={status}>
             {statusLabels[status]}
           </option>
         ))}
-      </select>
+      </Select>
+    </div>
+  )
 
-      {list.status === 'error' && <p role="alert">{list.message}</p>}
-      {(list.status === 'idle' || list.status === 'loading') && <p role="status">Chargement des notes…</p>}
-      {list.status === 'ready' && <ExpenseTable expenses={list.expenses} filter={filter} />}
-    </section>
+  return (
+    <>
+      <title>Mes notes – Notes de frais</title>
+      <PageHeader
+        title="Mes notes"
+        description="Vos notes de frais, des plus récentes aux plus anciennes."
+        actions={
+          <ButtonLink to="/notes/nouvelle" variant="primary">
+            Nouvelle note
+          </ButtonLink>
+        }
+      />
+      <Card actions={filterControl}>
+        {list.status === 'error' && <Alert>{list.message}</Alert>}
+        {(list.status === 'idle' || list.status === 'loading') && <LoadingState label="Chargement des notes…" />}
+        {list.status === 'ready' && <ExpenseTable expenses={list.expenses} filter={filter} />}
+      </Card>
+    </>
   )
 }
 
@@ -55,38 +73,50 @@ function ExpenseTable({ expenses, filter }: { expenses: readonly Expense[]; filt
   const visible = filter === 'all' ? expenses : expenses.filter((expense) => expense.status === filter)
 
   if (expenses.length === 0) {
-    return <p>Vous n'avez encore aucune note.</p>
+    return (
+      <EmptyState
+        title="Vous n'avez encore aucune note."
+        description="Créez un brouillon, vous pourrez le modifier avant de le soumettre."
+        action={
+          <ButtonLink to="/notes/nouvelle" variant="primary">
+            Créer une note
+          </ButtonLink>
+        }
+      />
+    )
   }
   if (visible.length === 0) {
-    return <p>Aucune note dans cet état.</p>
+    return <EmptyState title="Aucune note dans cet état." description="Choisissez un autre état ou « Tous »." />
   }
 
   return (
-    <table className="expense-table">
+    <Table>
       <thead>
         <tr>
-          <th scope="col">Libellé</th>
-          <th scope="col">Date</th>
-          <th scope="col">Catégorie</th>
-          <th scope="col">Montant</th>
-          <th scope="col">État</th>
+          <Th>Libellé</Th>
+          <Th>Date</Th>
+          <Th>Catégorie</Th>
+          <Th align="right">Montant</Th>
+          <Th>État</Th>
         </tr>
       </thead>
-      <tbody>
+      <tbody className="divide-y divide-gray-100">
         {visible.map((expense) => (
-          <tr key={expense.id}>
-            <td>
-              <Link to={`/notes/${expense.id}`}>{expense.label}</Link>
-            </td>
-            <td>{formatIsoDate(expense.date)}</td>
-            <td>{expense.category.label}</td>
-            <td className="amount">{formatCents(expense.amountCents)}</td>
-            <td>
+          <tr key={expense.id} className="hover:bg-gray-50">
+            <Td className="font-medium text-gray-900">
+              <Link to={`/notes/${expense.id}`} className="rounded-xs hover:text-brand-700 hover:underline focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500">
+                {expense.label}
+              </Link>
+            </Td>
+            <Td>{formatIsoDate(expense.date)}</Td>
+            <Td>{expense.category.label}</Td>
+            <Td align="right">{formatCents(expense.amountCents)}</Td>
+            <Td>
               <StatusBadge status={expense.status} />
-            </td>
+            </Td>
           </tr>
         ))}
       </tbody>
-    </table>
+    </Table>
   )
 }

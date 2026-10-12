@@ -1,6 +1,11 @@
 import { Suspense, use, useState, useTransition } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { ApiError } from '../../api/client'
+import { Alert } from '../../ui/Alert'
+import { Button } from '../../ui/Button'
+import { Card } from '../../ui/Card'
+import { PageHeader } from '../../ui/PageHeader'
+import { LoadingState } from '../../ui/Spinner'
 import { loadCategories, type CategoriesResult } from './categories'
 import { ExpenseForm } from './ExpenseForm'
 import { useExpensesStore, type Expense, type ExpenseInput } from './expensesStore'
@@ -30,45 +35,58 @@ function ExpenseDetailPage({ id }: { id: number }) {
   const [categories] = useState(loadCategories)
 
   return (
-    <section>
+    <>
       <title>Note de frais – Notes de frais</title>
-      <p>
-        <Link to="/notes">← Mes notes</Link>
+      <p className="mb-4">
+        <Link to="/notes" className="rounded-xs text-sm font-medium text-gray-600 hover:text-gray-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500">
+          ← Mes notes
+        </Link>
       </p>
-      <Suspense fallback={<p role="status">Chargement…</p>}>
+      <Suspense fallback={<LoadingState />}>
         <ExpenseDetail expense={expense} categories={categories} />
       </Suspense>
-    </section>
+    </>
   )
 }
 
 function ExpenseDetail({ expense: expensePromise, categories }: { expense: Promise<ExpenseResult>; categories: Promise<CategoriesResult> }) {
   const result = use(expensePromise)
   if (!result.ok) {
-    return <p role="alert">{result.message}</p>
+    return <Alert>{result.message}</Alert>
   }
   const { expense } = result
 
   return (
     <>
-      <h1>
-        {expense.label} <StatusBadge status={expense.status} />
-      </h1>
+      <PageHeader
+        title={
+          <span className="flex flex-wrap items-center gap-3">
+            {expense.label} <StatusBadge status={expense.status} />
+          </span>
+        }
+      />
       {expense.editable ? <EditableExpense expense={expense} categories={categories} /> : <ReadOnlyExpense expense={expense} />}
     </>
   )
 }
 
 function ReadOnlyExpense({ expense }: { expense: Expense }) {
+  const rows = [
+    ['Montant', formatCents(expense.amountCents)],
+    ['Date', formatIsoDate(expense.date)],
+    ['Catégorie', expense.category.label],
+  ]
   return (
-    <dl className="expense-details">
-      <dt>Montant</dt>
-      <dd>{formatCents(expense.amountCents)}</dd>
-      <dt>Date</dt>
-      <dd>{formatIsoDate(expense.date)}</dd>
-      <dt>Catégorie</dt>
-      <dd>{expense.category.label}</dd>
-    </dl>
+    <Card className="max-w-2xl">
+      <dl className="divide-y divide-gray-100">
+        {rows.map(([term, value]) => (
+          <div key={term} className="grid grid-cols-3 gap-4 py-3 text-sm">
+            <dt className="font-medium text-gray-600">{term}</dt>
+            <dd className="col-span-2 text-gray-900">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
   )
 }
 
@@ -105,22 +123,27 @@ function EditableExpense({ expense, categories }: { expense: Expense; categories
   }
 
   return (
-    <>
-      <ExpenseForm
-        categories={categories}
-        initialValues={{ label: expense.label, amount: centsToEurosInput(expense.amountCents), date: expense.date, categorySlug: expense.category.slug }}
-        submitLabel="Enregistrer les modifications"
-        onSave={save}
-      />
-      <div className="draft-actions">
-        <button type="button" disabled={isPending} onClick={() => runAction(() => submit(expense.id))}>
-          Soumettre la note
-        </button>
-        <button type="button" className="danger" disabled={isPending} onClick={handleDelete}>
-          Supprimer le brouillon
-        </button>
-      </div>
-      {actionError && <p role="alert">{actionError}</p>}
-    </>
+    <div className="flex max-w-2xl flex-col gap-6">
+      <Card title="Modifier le brouillon">
+        <ExpenseForm
+          categories={categories}
+          initialValues={{ label: expense.label, amount: centsToEurosInput(expense.amountCents), date: expense.date, categorySlug: expense.category.slug }}
+          submitLabel="Enregistrer les modifications"
+          onSave={save}
+        />
+      </Card>
+      <Card title="Soumission">
+        <p className="text-sm text-gray-600">Une fois soumise, la note est transmise pour validation et ne peut plus être modifiée.</p>
+        {actionError && <Alert className="mt-4">{actionError}</Alert>}
+        <div className="mt-5 flex flex-wrap justify-between gap-3">
+          <Button variant="danger" disabled={isPending} onClick={handleDelete}>
+            Supprimer le brouillon
+          </Button>
+          <Button variant="primary" pending={isPending} onClick={() => runAction(() => submit(expense.id))}>
+            Soumettre la note
+          </Button>
+        </div>
+      </Card>
+    </div>
   )
 }
