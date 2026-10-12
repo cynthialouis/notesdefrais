@@ -9,7 +9,7 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 | POST | `/auth/login` | public | `{ userId }` → ouvre (ou remplace) la session et renvoie l'utilisateur courant ; 400 si le corps est invalide, 401 si le compte n'existe pas, 415 si le corps n'est pas du JSON |
 | POST | `/auth/logout` | connecté | Ferme la session (204) ; GET refusé (405) |
 | GET | `/me` | connecté | Utilisateur courant : `id`, `name`, `email`, `role`, `accessibleRoles` (rôles atteints par la hiérarchie) |
-| GET | `/categories` | connecté | Catégories `{ slug, label }` (la politique associée arrive avec la feature 004) |
+| GET | `/categories` | connecté | Catégories et leur politique : `{ slug, label, maxAmountCents (null = aucun plafond), receiptRequired }` |
 | GET | `/expenses` | connecté : ses propres notes | Liste filtrable (`?status=`, état inconnu → 400), triée par date décroissante puis id décroissant |
 | POST | `/expenses` | connecté (tous rôles) | Crée un brouillon → 201 |
 | GET | `/expenses/{id}` | propriétaire, ou son responsable hors brouillon | Lit une note ; la vue dit ce que le lecteur peut faire (`editable`, `decidable`) |
@@ -21,9 +21,11 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 | POST | `/expenses/{id}/reject` | responsable du propriétaire | `submitted` → `rejected`, motif de 5 à 1000 caractères (`RejectionInput`) ; mêmes 403 / 404 / 409 |
 | POST | `/expenses/{id}/receipts` | propriétaire | Upload (≤ 5 Mo, jpg / png / pdf) |
 | GET | `/expenses/{id}/events` | propriétaire, ou son responsable hors brouillon | Historique (type, auteur, commentaire, date), du plus ancien au plus récent |
-| PUT | `/policies/{categoryId}` | admin | Modifie plafond / justificatif obligatoire |
+| PUT | `/policies/{slug}` | admin (403 sinon) | `{ maxAmountCents: int de 1 à 1 000 000 ou null, receiptRequired: bool }` → catégorie mise à jour ; 404 si la catégorie est inconnue |
 | GET | `/stats` | salarié / manager | Agrégats pour le tableau de bord, calculés côté serveur |
 | GET | `/exports/expenses.csv` | manager | Export des notes validées (`text/csv`) |
+
+Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents, receiptRequired }`, calculé par `PolicyChecker` (hors politique quand `overLimitByCents` n'est pas null).
 
 ## Conventions
 
