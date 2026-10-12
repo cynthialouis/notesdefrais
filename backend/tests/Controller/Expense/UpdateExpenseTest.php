@@ -86,7 +86,7 @@ final class UpdateExpenseTest extends ApiTestCase
     {
         yield 'soumise' => ['submitted'];
         yield 'validée' => ['approved'];
-        yield 'rejetée' => ['rejected'];
+        // Spec 003 C8 : une note rejetée se modifie, se supprime et se resoumet (RejectedExpenseTest).
     }
 
     #[DataProvider('nonEditableStatuses')]

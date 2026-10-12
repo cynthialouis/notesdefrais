@@ -53,7 +53,7 @@ final class DeleteExpenseTest extends ApiTestCase
     {
         yield 'soumise' => ['submitted'];
         yield 'validée' => ['approved'];
-        yield 'rejetée' => ['rejected'];
+        // Spec 003 C8 : une note rejetée se modifie, se supprime et se resoumet (RejectedExpenseTest).
     }
 
     #[DataProvider('nonEditableStatuses')]
@@ -75,7 +75,9 @@ final class DeleteExpenseTest extends ApiTestCase
 
     public function testC12UneNoteSoumiseParLApiNeSeSupprimePlus(): void
     {
-        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee);
+        // Spec 003 C13 : seule une personne qui a un responsable peut soumettre.
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
+        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
         $id = $this->createExpense($sophie)->getId();
         $this->login($sophie);
         $this->client->request('POST', '/api/expenses/'.$id.'/submit');

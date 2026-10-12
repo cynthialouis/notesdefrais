@@ -14,7 +14,9 @@ final class SubmitExpenseTest extends ApiTestCase
 {
     public function testC6SoumettreUnBrouillonLePasseASoumiseEtDateLaSoumission(): void
     {
-        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee);
+        // Spec 003 C13 : seule une personne qui a un responsable peut soumettre.
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
+        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
         $id = $this->createExpense($sophie, 'Déjeuner client', 1250, '2026-10-01', 'repas')->getId();
         $this->login($sophie);
         $before = time();
@@ -43,7 +45,9 @@ final class SubmitExpenseTest extends ApiTestCase
 
     public function testC6LaNoteSoumiseApparaitDansLeFiltreSoumises(): void
     {
-        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee);
+        // Spec 003 C13 : seule une personne qui a un responsable peut soumettre.
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
+        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
         $id = $this->createExpense($sophie)->getId();
         $this->login($sophie);
 
@@ -58,7 +62,9 @@ final class SubmitExpenseTest extends ApiTestCase
 
     public function testC7SoumettreDeuxFoisRenvoie409EtNeChangePasLaDateDeSoumission(): void
     {
-        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee);
+        // Spec 003 C13 : seule une personne qui a un responsable peut soumettre.
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
+        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
         $id = $this->createExpense($sophie)->getId();
         $this->login($sophie);
         $this->client->request('POST', '/api/expenses/'.$id.'/submit');
@@ -88,13 +94,15 @@ final class SubmitExpenseTest extends ApiTestCase
     {
         yield 'soumise' => ['submitted'];
         yield 'validée' => ['approved'];
-        yield 'rejetée' => ['rejected'];
+        // Spec 003 C8 : une note rejetée se modifie, se supprime et se resoumet (RejectedExpenseTest).
     }
 
     #[DataProvider('nonEditableStatuses')]
     public function testC7SoumettreUneNoteQuiNEstPlusEnBrouillonRenvoie409(string $status): void
     {
-        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee);
+        // Spec 003 C13 : seule une personne qui a un responsable peut soumettre.
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
+        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
         $id = $this->createExpense($sophie, 'Déjeuner client', 1250, '2026-10-01', 'repas', ExpenseStatus::from($status))->getId();
         $this->login($sophie);
 
@@ -110,7 +118,9 @@ final class SubmitExpenseTest extends ApiTestCase
 
     public function testC7ApresSoumissionLaModificationEstRefusee(): void
     {
-        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee);
+        // Spec 003 C13 : seule une personne qui a un responsable peut soumettre.
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
+        $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
         $id = $this->createExpense($sophie, 'Déjeuner client', 1250, '2026-10-01', 'repas')->getId();
         $this->login($sophie);
         $this->client->request('POST', '/api/expenses/'.$id.'/submit');
@@ -180,7 +190,9 @@ final class SubmitExpenseTest extends ApiTestCase
 
     public function testRevueLe409ExpliqueQueSeulUnBrouillonPeutEtreSoumis(): void
     {
-        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee);
+        // Spec 003 C13 : Léa a un responsable, le 409 vient bien de l'état de la note.
+        $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
+        $lea = $this->createUser('Léa', 'lea@demo.test', UserRole::Employee, $marc);
         $expense = $this->createExpense($lea, status: ExpenseStatus::Submitted);
         $this->login($lea);
 

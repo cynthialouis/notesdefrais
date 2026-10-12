@@ -10,6 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
  * Comptes de démo décrits dans le besoin de la spec 001 : 1 admin, 2 managers, 4 salariés rattachés chacun à un manager.
+ * Spec 003 (C13) : les managers sont rattachés à l'admin, seul l'admin n'a pas de responsable.
  */
 final class AppFixturesTest extends KernelTestCase
 {
@@ -31,8 +32,9 @@ final class AppFixturesTest extends KernelTestCase
         foreach ($byRole['employee'] as $employee) {
             self::assertSame(UserRole::Manager, $employee->getManager()?->getRole(), $employee->getName().' doit être rattaché à un manager.');
         }
-        foreach ([...$byRole['admin'], ...$byRole['manager']] as $user) {
-            self::assertNull($user->getManager());
+        foreach ($byRole['manager'] as $manager) {
+            self::assertSame($byRole['admin'][0], $manager->getManager(), $manager->getName().' doit être rattaché à l\'admin.');
         }
+        self::assertNull($byRole['admin'][0]->getManager());
     }
 }

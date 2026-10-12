@@ -63,11 +63,12 @@ final class ShowExpenseTest extends ApiTestCase
         self::assertSame((string) $this->client->getResponse()->getContent(), $otherBody);
     }
 
-    public function testAutorisationLeManagerNeLitPasLaNoteDeSonEquipeDansCetteFeature(): void
+    public function testAutorisationLeManagerNeLitPasLeBrouillonDeSonEquipe(): void
     {
+        // Spec 003 C12 : le manager lit les notes soumises de son équipe (TeamExpenseAccessTest), jamais un brouillon.
         $marc = $this->createUser('Marc Manager', 'marc@demo.test', UserRole::Manager);
         $sophie = $this->createUser('Sophie Salariée', 'sophie@demo.test', UserRole::Employee, $marc);
-        $expense = $this->createExpense($sophie, 'Note de Sophie', 100, '2026-10-01', 'repas', ExpenseStatus::Submitted);
+        $expense = $this->createExpense($sophie, 'Note de Sophie', 100, '2026-10-01', 'repas', ExpenseStatus::Draft);
         $this->login($marc);
 
         $this->client->request('GET', '/api/expenses/'.$expense->getId());
