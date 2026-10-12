@@ -46,3 +46,20 @@ Aucune. Tranchées le 12/10 : l'obligation de justificatif se règle et s'affich
 ## Écarts avec les docs
 
 - `docs/api.md` : `GET /categories` renvoie désormais la politique associée (prévu, reporté depuis 002) ; route de modification `PUT /policies/{categoryId}` à préciser au plan.
+
+## Plan
+
+- **Back** : la politique est portée par `Category` (`maxAmountCents` nullable, `receiptRequired`) ; `Expense.limitAtApprovalCents` fige le plafond à la validation. Service `PolicyChecker` (plafond applicable, écart, justificatif obligatoire ; égal = conforme). `ExpenseView.policy` et `CategoryView` avec la politique. `PUT /api/policies/{slug}` (admin, `PolicyInput`). Démo : politiques de C10 et notes hors plafond.
+- **Front** : `checkPolicy.ts` (seule version front du dépassement) ; alerte en direct et aide « justificatif obligatoire » dans le formulaire ; `PolicyBadge` dans les listes, alerte sur le détail ; page Politique éditable par ligne.
+
+## Tâches
+
+1. Modèle : politique sur `Category`, plafond figé sur `Expense` (C2, C9)
+2. `PolicyChecker` et figement à la validation (C5, C7, C9)
+3. Vues : `policy` dans `ExpenseView`, politique dans `CategoryView` (C6, C8)
+4. `PUT /api/policies/{slug}` et `PolicyInput` (C2, C3)
+5. Données de démo (C10)
+6. Types, `checkPolicy.ts`, store (C4, C5)
+7. Formulaire : alerte en direct, justificatif obligatoire (C4, C8)
+8. Signalement dans les listes et sur le détail (C6)
+9. Page Politique (C1, C2, C3)
