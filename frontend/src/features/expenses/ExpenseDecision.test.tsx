@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { json, stubApi } from '../../test/api'
-import { categories, rejectedExpense, teamSubmittedExpense } from '../../test/fixtures'
+import { categories, overLimitExpense, rejectedExpense, teamSubmittedExpense } from '../../test/fixtures'
 import { renderAsync } from '../../test/render'
 import { useSessionStore } from '../auth/sessionStore'
 import { ExpenseDetailRoute } from './ExpenseDetailPage'
@@ -147,5 +147,18 @@ describe('Resoumission d\'une note rejetée', () => {
 
     expect(await screen.findByRole('heading', { name: 'Liste des notes' })).toBeInTheDocument()
     expect(fetchMock.mock.calls.some(([url, init]) => url === '/api/expenses/3/submit' && init?.method === 'POST')).toBe(true)
+  })
+})
+
+describe('Détail – politique', () => {
+  it('C6 – le responsable voit le plafond et l\'écart sur le détail', async () => {
+    stubApi({
+      'GET /api/expenses/5': json(200, { ...overLimitExpense, editable: false, decidable: true }),
+      'GET /api/expenses/5/events': json(200, []),
+      'GET /api/categories': json(200, categories),
+    })
+    await renderAt('/equipe/5', claire)
+
+    expect(await screen.findByText(/Hors politique/)).toHaveTextContent(/plafond de 50,00\s€ pour la catégorie Repas est dépassé de 12,00\s€/)
   })
 })

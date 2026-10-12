@@ -55,3 +55,12 @@ export const rejectedExpense = {
 
 /** Note soumise de Léa, vue par sa responsable Claire : décidable. */
 export const teamSubmittedExpense = { ...submittedExpense, editable: false, decidable: true }
+
+/** Note de repas de 62 € pour un plafond de 50 € : hors politique de 12 €. */
+export const overLimitExpense = {
+  ...submittedExpense,
+  id: 5,
+  label: 'Dîner client Martin',
+  amountCents: 6200,
+  policy: { limitCents: 5000, overLimitByCents: 1200, receiptRequired: false },
+}

@@ -9,6 +9,7 @@ import { Table, Td, Th } from '../../ui/Table'
 import { useExpensesStore, type Expense } from '../expenses/expensesStore'
 import { formatIsoDate, formatIsoDay } from '../expenses/format'
 import { formatCents } from '../expenses/money'
+import { PolicyBadge } from '../policies/PolicyBadge'
 
 /** Notes soumises de l'équipe directe, à valider ou rejeter (spec 003, C1, C2). */
 export function TeamPage() {
@@ -61,7 +62,12 @@ function TeamTable({ expenses }: { expenses: readonly Expense[] }) {
             </Td>
             <Td>{formatIsoDate(expense.date)}</Td>
             <Td>{expense.category.label}</Td>
-            <Td align="right">{formatCents(expense.amountCents)}</Td>
+            <Td align="right">
+              <span className="inline-flex items-center gap-2">
+                <PolicyBadge expense={expense} />
+                {formatCents(expense.amountCents)}
+              </span>
+            </Td>
             <Td>{expense.submittedAt ? formatIsoDay(expense.submittedAt) : '—'}</Td>
           </tr>
         ))}

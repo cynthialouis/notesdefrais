@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { json, stubApi } from '../../test/api'
-import { draftExpense, submittedExpense } from '../../test/fixtures'
+import { draftExpense, overLimitExpense, submittedExpense } from '../../test/fixtures'
 import { renderAsync } from '../../test/render'
 import { useExpensesStore } from './expensesStore'
 import { NotesPage } from './NotesPage'
@@ -75,5 +75,16 @@ describe('NotesPage', () => {
     await renderNotes()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Serveur injoignable.')
+  })
+})
+
+describe('NotesPage – politique', () => {
+  it('C6 – signale une note hors politique à côté de son état, et seulement elle', async () => {
+    stubApi({ 'GET /api/expenses': json(200, [overLimitExpense, draftExpense]) })
+    await renderNotes()
+    await screen.findByRole('table')
+
+    expect(screen.getAllByText('Hors politique')).toHaveLength(1)
+    expect(rows()[0]?.[4]).toBe('SoumiseHors politique')
   })
 })

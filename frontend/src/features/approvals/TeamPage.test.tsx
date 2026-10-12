@@ -2,7 +2,7 @@ import { screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { json, stubApi } from '../../test/api'
-import { teamSubmittedExpense } from '../../test/fixtures'
+import { overLimitExpense, teamSubmittedExpense } from '../../test/fixtures'
 import { renderAsync } from '../../test/render'
 import { useExpensesStore } from '../expenses/expensesStore'
 import { TeamPage } from './TeamPage'
@@ -49,5 +49,14 @@ describe('TeamPage', () => {
     await renderTeam()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Accès refusé.')
+  })
+})
+
+describe('TeamPage – politique', () => {
+  it('C6 – le responsable voit le signalement hors politique', async () => {
+    stubApi({ 'GET /api/team/expenses': json(200, [{ ...overLimitExpense, editable: false, decidable: true }]) })
+    await renderTeam()
+
+    expect(await screen.findByText('Hors politique')).toBeInTheDocument()
   })
 })

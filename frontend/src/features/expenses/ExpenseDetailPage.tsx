@@ -90,6 +90,7 @@ function ExpenseDetail({
       />
       <div className="flex max-w-2xl flex-col gap-6">
         <DecisionSummary expense={expense} />
+        <PolicySummary expense={expense} />
         {expense.editable ? <EditableExpense expense={expense} categories={categories} /> : <ReadOnlyExpense expense={expense} />}
         {expense.decidable && <DecisionCard expense={expense} back={back} />}
         <Suspense fallback={<LoadingState label="Chargement de l'historique…" />}>
@@ -97,6 +98,19 @@ function ExpenseDetail({
         </Suspense>
       </div>
     </>
+  )
+}
+
+/** Signalement hors politique avec le plafond et l'écart (spec 004, C6). */
+function PolicySummary({ expense }: { expense: Expense }) {
+  const { limitCents, overLimitByCents } = expense.policy
+  if (overLimitByCents == null || limitCents == null) {
+    return null
+  }
+  return (
+    <Alert tone="warning">
+      Hors politique : le plafond de {formatCents(limitCents)} pour la catégorie {expense.category.label} est dépassé de {formatCents(overLimitByCents)}.
+    </Alert>
   )
 }
 
