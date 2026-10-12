@@ -1,4 +1,4 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react'
+import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 import { cx } from './cx'
 
 /** Attributs que Field fournit au contrôle : identifiant et liaisons ARIA. */
@@ -73,4 +73,8 @@ export function Input({ suffix, className, ...props }: InputProps) {
 
 export function Select({ className, ...props }: SelectHTMLAttributes<HTMLSelectElement>) {
   return <select className={cx(control, 'pr-8', className)} {...props} />
+}
+
+export function Textarea({ className, rows = 3, ...props }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea rows={rows} className={cx(control, 'py-2', className)} {...props} />
 }

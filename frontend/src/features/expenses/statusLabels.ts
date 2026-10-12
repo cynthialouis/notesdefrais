@@ -1,4 +1,4 @@
-import type { ExpenseStatus } from './expensesStore'
+import type { ExpenseEvent, ExpenseStatus } from './expensesStore'
 
 export const statusLabels: Record<ExpenseStatus, string> = {
   draft: 'Brouillon',
@@ -8,3 +8,10 @@ export const statusLabels: Record<ExpenseStatus, string> = {
 }
 
 export const allStatuses: readonly ExpenseStatus[] = ['draft', 'submitted', 'approved', 'rejected']
+
+export const eventLabels: Record<ExpenseEvent['type'], string> = {
+  created: 'Note créée',
+  submitted: 'Note soumise',
+  approved: 'Note validée',
+  rejected: 'Note rejetée',
+}
