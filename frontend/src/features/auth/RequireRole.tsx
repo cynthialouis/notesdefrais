@@ -1,4 +1,6 @@
 import { Navigate, Outlet } from 'react-router'
+import { EmptyState } from '../../ui/EmptyState'
+import { LoadingState } from '../../ui/Spinner'
 import { canAccess, useSessionStore, type Role } from './sessionStore'
 
 type Props = {
@@ -14,18 +16,17 @@ export function RequireRole({ role }: Props) {
   const session = useSessionStore((state) => state.session)
 
   if (session.status === 'loading') {
-    return <p role="status">Chargement…</p>
+    return <LoadingState />
   }
   if (session.status === 'anonymous') {
     return <Navigate to="/login" replace />
   }
   if (role !== undefined && !canAccess(session, role)) {
     return (
-      <section>
+      <>
         <title>Accès refusé – Notes de frais</title>
-        <h1>Accès refusé</h1>
-        <p>Cette page n'est pas accessible avec votre rôle.</p>
-      </section>
+        <EmptyState headingLevel={1} title="Accès refusé" description="Cette page n'est pas accessible avec votre rôle." />
+      </>
     )
   }
   return <Outlet />
