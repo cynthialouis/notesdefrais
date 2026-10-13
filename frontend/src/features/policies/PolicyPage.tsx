@@ -45,7 +45,8 @@ function PolicyList({ categories }: { categories: Promise<CategoriesResult> }) {
   )
 }
 
-type RowState = { values: PolicyFormValues; error: string | null; saved: boolean }
+/** `fieldError` porte sur le plafond ; `message` sur la ligne entière (droits, réseau). */
+type RowState = { values: PolicyFormValues; fieldError: string | null; message: string | null; saved: boolean }
 
 function PolicyRow({ category }: { category: Category }) {
   const [state, formAction, isPending] = useActionState(
@@ -54,7 +55,7 @@ function PolicyRow({ category }: { category: Category }) {
       const values: PolicyFormValues = { maxAmount: typeof raw === 'string' ? raw : '', receiptRequired: formData.get('receiptRequired') === 'on' }
       const parsed = policyFormSchema.safeParse(values)
       if (!parsed.success) {
-        return { values, error: parsed.error.issues[0]?.message ?? 'Plafond invalide.', saved: false }
+        return { values, fieldError: parsed.error.issues[0]?.message ?? 'Plafond invalide.', message: null, saved: false }
       }
       try {
         await apiFetch(`/policies/${category.slug}`, {
@@ -62,17 +63,20 @@ function PolicyRow({ category }: { category: Category }) {
           body: JSON.stringify({ maxAmountCents: parsed.data.maxAmount, receiptRequired: parsed.data.receiptRequired }),
         })
       } catch (error) {
-        const message = error instanceof ApiError ? (error.fields.maxAmountCents ?? error.message) : 'Enregistrement impossible.'
-        return { values, error: message, saved: false }
+        if (error instanceof ApiError && error.fields.maxAmountCents) {
+          return { values, fieldError: error.fields.maxAmountCents, message: null, saved: false }
+        }
+        return { values, fieldError: null, message: error instanceof ApiError ? error.message : 'Enregistrement impossible.', saved: false }
       }
-      return { values, error: null, saved: true }
+      return { values, fieldError: null, message: null, saved: true }
     },
     {
       values: {
         maxAmount: category.maxAmountCents != null ? centsToEurosInput(category.maxAmountCents) : '',
         receiptRequired: category.receiptRequired,
       },
-      error: null,
+      fieldError: null,
+      message: null,
       saved: false,
     },
   )
@@ -81,7 +85,7 @@ function PolicyRow({ category }: { category: Category }) {
     <form action={formAction} noValidate className="py-4 first:pt-0 last:pb-0">
       <fieldset className="grid items-start gap-4 sm:grid-cols-[10rem_1fr_auto_auto]">
         <legend className="mb-2 text-sm font-semibold text-gray-900 sm:float-left sm:mb-0 sm:pt-2">{category.label}</legend>
-        <Field label="Plafond (€)" error={state.error ?? undefined} hint="Vide : aucun plafond.">
+        <Field label="Plafond (€)" error={state.fieldError ?? undefined} hint="Vide : aucun plafond.">
           {(control) => <Input {...control} name="maxAmount" inputMode="decimal" defaultValue={state.values.maxAmount} placeholder="Aucun" />}
         </Field>
         <label className="flex items-center gap-2 pt-7 text-sm text-gray-700">
@@ -94,6 +98,7 @@ function PolicyRow({ category }: { category: Category }) {
           </Button>
         </div>
       </fieldset>
+      {state.message && <Alert className="mt-3">{state.message}</Alert>}
       {state.saved && (
         <Alert tone="info" className="mt-3">
           Politique enregistrée pour {category.label}.

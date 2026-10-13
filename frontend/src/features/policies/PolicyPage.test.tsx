@@ -75,4 +75,35 @@ describe('PolicyPage', () => {
     expect(group('Repas').getByLabelText('Plafond (€)')).toHaveAttribute('aria-invalid', 'true')
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'PUT')).toBe(false)
   })
+
+  it('C3 – un refus du serveur sur le plafond est affiché sous le champ', async () => {
+    stubApi({
+      'GET /api/categories': json(200, categories),
+      'PUT /api/policies/repas': json(400, {
+        error: { code: 'validation_failed', message: 'Données invalides.', fields: { maxAmountCents: 'Le plafond ne peut pas dépasser 10 000,00 €.' } },
+      }),
+    })
+    await renderAsync(<PolicyPage />)
+    await screen.findByRole('group', { name: 'Repas' })
+
+    await userEvent.click(group('Repas').getByRole('button', { name: 'Enregistrer' }))
+
+    expect(await group('Repas').findByText('Le plafond ne peut pas dépasser 10 000,00 €.')).toBeInTheDocument()
+    expect(group('Repas').getByLabelText('Plafond (€)')).toHaveAttribute('aria-invalid', 'true')
+  })
+
+  it('une erreur qui ne porte pas sur le plafond est annoncée sans marquer le champ invalide', async () => {
+    stubApi({
+      'GET /api/categories': json(200, categories),
+      'PUT /api/policies/repas': json(403, { error: { code: 'forbidden', message: 'Accès refusé.' } }),
+    })
+    await renderAsync(<PolicyPage />)
+    await screen.findByRole('group', { name: 'Repas' })
+
+    await userEvent.click(group('Repas').getByRole('button', { name: 'Enregistrer' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Accès refusé.')
+    expect(group('Repas').getByLabelText('Plafond (€)')).not.toHaveAttribute('aria-invalid')
+    expect(screen.queryByText('Politique enregistrée pour Repas.')).not.toBeInTheDocument()
+  })
 })
