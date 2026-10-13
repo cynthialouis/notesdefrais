@@ -46,6 +46,14 @@ describe('NewExpensePage', () => {
     expect([...select.querySelectorAll('option')].map((option) => option.textContent)).toEqual(['Choisir une catégorie', 'Repas', 'Transport', 'Hébergement'])
   })
 
+  it('refuse des catégories mal formées au lieu de calculer l\'alerte avec', async () => {
+    stubApi({ 'GET /api/categories': json(200, [{ slug: 'repas', label: 'Repas', maxAmountCents: '5000', receiptRequired: false }]) })
+    await renderPage()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Réponse inattendue du serveur.')
+    expect(screen.queryByLabelText('Catégorie')).not.toBeInTheDocument()
+  })
+
   it('C4 – affiche chaque erreur sous son champ, sans rien envoyer', async () => {
     const fetchMock = stubApi({ 'GET /api/categories': json(200, categories) })
     await renderPage()
