@@ -6,6 +6,7 @@ use App\Dto\ExpenseEventView;
 use App\Dto\ExpenseInput;
 use App\Dto\ExpenseListQuery;
 use App\Dto\ExpenseView;
+use App\Dto\ExpenseViewFactory;
 use App\Dto\RejectionInput;
 use App\Entity\Expense;
 use App\Entity\User;
@@ -33,8 +34,10 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[OA\Response(response: 401, description: 'Non connecté')]
 final class ExpenseController extends AbstractController
 {
-    public function __construct(private readonly ExpenseManager $expenses)
-    {
+    public function __construct(
+        private readonly ExpenseManager $expenses,
+        private readonly ExpenseViewFactory $views,
+    ) {
     }
 
     #[Route('', name: 'api_expenses_list', methods: ['GET'])]
@@ -45,7 +48,7 @@ final class ExpenseController extends AbstractController
         ExpenseRepository $repository,
         #[MapQueryString(validationFailedStatusCode: Response::HTTP_BAD_REQUEST, mapWhenEmpty: true)] ExpenseListQuery $query,
     ): JsonResponse {
-        return $this->json(array_map(static fn (Expense $expense): ExpenseView => ExpenseView::fromEntity($expense, $user), $repository->findForOwner($user, $query->status)));
+        return $this->json(array_map(fn (Expense $expense): ExpenseView => $this->views->create($expense, $user), $repository->findForOwner($user, $query->status)));
     }
 
     #[Route('', name: 'api_expenses_create', methods: ['POST'])]
@@ -55,7 +58,7 @@ final class ExpenseController extends AbstractController
         #[CurrentUser] User $user,
         #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)] ExpenseInput $input,
     ): JsonResponse {
-        return $this->json(ExpenseView::fromEntity($this->expenses->create($user, $input), $user), Response::HTTP_CREATED);
+        return $this->json($this->views->create($this->expenses->create($user, $input), $user), Response::HTTP_CREATED);
     }
 
     #[Route('/{id}', name: 'api_expenses_show', requirements: ['id' => '\d+'], methods: ['GET'])]
@@ -64,7 +67,7 @@ final class ExpenseController extends AbstractController
     #[OA\Response(response: 404, description: 'Note inexistante ou d\'un autre utilisateur')]
     public function show(#[CurrentUser] User $user, #[MapEntity(id: 'id')] Expense $expense): JsonResponse
     {
-        return $this->json(ExpenseView::fromEntity($expense, $user));
+        return $this->json($this->views->create($expense, $user));
     }
 
     #[Route('/{id}', name: 'api_expenses_update', requirements: ['id' => '\d+'], methods: ['PATCH'])]
@@ -78,7 +81,7 @@ final class ExpenseController extends AbstractController
         #[MapEntity(id: 'id')] Expense $expense,
         #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)] ExpenseInput $input,
     ): JsonResponse {
-        return $this->json(ExpenseView::fromEntity($this->expenses->update($expense, $input), $user));
+        return $this->json($this->views->create($this->expenses->update($expense, $input), $user));
     }
 
     #[Route('/{id}/submit', name: 'api_expenses_submit', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -88,7 +91,7 @@ final class ExpenseController extends AbstractController
     #[OA\Response(response: 409, description: 'La note n\'est ni en brouillon ni rejetée, ou son propriétaire n\'a pas de responsable')]
     public function submit(#[CurrentUser] User $user, #[MapEntity(id: 'id')] Expense $expense): JsonResponse
     {
-        return $this->json(ExpenseView::fromEntity($this->expenses->submit($expense), $user));
+        return $this->json($this->views->create($this->expenses->submit($expense), $user));
     }
 
     /** Valider : 404 si la note n'est pas visible (existence non révélée), 403 pour le propriétaire. */
@@ -101,7 +104,7 @@ final class ExpenseController extends AbstractController
     #[OA\Response(response: 409, description: 'La note n\'est pas soumise')]
     public function approve(#[CurrentUser] User $user, #[MapEntity(id: 'id')] Expense $expense): JsonResponse
     {
-        return $this->json(ExpenseView::fromEntity($this->expenses->approve($expense), $user));
+        return $this->json($this->views->create($this->expenses->approve($expense), $user));
     }
 
     #[Route('/{id}/reject', name: 'api_expenses_reject', requirements: ['id' => '\d+'], methods: ['POST'])]
@@ -119,7 +122,7 @@ final class ExpenseController extends AbstractController
     ): JsonResponse {
         \assert(null !== $input->reason);
 
-        return $this->json(ExpenseView::fromEntity($this->expenses->reject($expense, $input->reason), $user));
+        return $this->json($this->views->create($this->expenses->reject($expense, $input->reason), $user));
     }
 
     #[Route('/{id}/events', name: 'api_expenses_events', requirements: ['id' => '\d+'], methods: ['GET'])]

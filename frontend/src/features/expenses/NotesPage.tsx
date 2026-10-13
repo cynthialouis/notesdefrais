@@ -11,6 +11,7 @@ import { Table, Td, Th } from '../../ui/Table'
 import { useExpensesStore, type Expense, type ExpenseStatus } from './expensesStore'
 import { formatIsoDate } from './format'
 import { formatCents } from './money'
+import { PolicyBadge } from '../policies/PolicyBadge'
 import { StatusBadge } from './StatusBadge'
 import { allStatuses, statusLabels } from './statusLabels'
 
@@ -112,7 +113,10 @@ function ExpenseTable({ expenses, filter }: { expenses: readonly Expense[]; filt
             <Td>{expense.category.label}</Td>
             <Td align="right">{formatCents(expense.amountCents)}</Td>
             <Td>
-              <StatusBadge status={expense.status} />
+              <span className="flex flex-wrap gap-1.5">
+                <StatusBadge status={expense.status} />
+                <PolicyBadge expense={expense} />
+              </span>
             </Td>
           </tr>
         ))}

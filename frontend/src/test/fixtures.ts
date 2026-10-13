@@ -9,8 +9,9 @@ export function jsonResponse(status: number, body?: unknown): Response {
 }
 
 export const categories = [
-  { slug: 'repas', label: 'Repas' },
-  { slug: 'transport', label: 'Transport' },
+  { slug: 'repas', label: 'Repas', maxAmountCents: 5000, receiptRequired: false },
+  { slug: 'transport', label: 'Transport', maxAmountCents: 30000, receiptRequired: false },
+  { slug: 'hebergement', label: 'Hébergement', maxAmountCents: 15000, receiptRequired: true },
 ]
 
 export const draftExpense = {
@@ -25,6 +26,7 @@ export const draftExpense = {
   submittedAt: null,
   editable: true,
   decidable: false,
+  policy: { limitCents: 30000, overLimitByCents: null, receiptRequired: false },
 }
 
 export const submittedExpense = {
@@ -53,3 +55,12 @@ export const rejectedExpense = {
 
 /** Note soumise de Léa, vue par sa responsable Claire : décidable. */
 export const teamSubmittedExpense = { ...submittedExpense, editable: false, decidable: true }
+
+/** Note de repas de 62 € pour un plafond de 50 € : hors politique de 12 €. */
+export const overLimitExpense = {
+  ...submittedExpense,
+  id: 5,
+  label: 'Dîner client Martin',
+  amountCents: 6200,
+  policy: { limitCents: 5000, overLimitByCents: 1200, receiptRequired: false },
+}

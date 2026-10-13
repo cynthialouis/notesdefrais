@@ -9,7 +9,8 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 - feature 001 (connexion par rôle) en place : session de démo, rôles hiérarchisés, pages protégées
 - feature 002 (soumettre une note) en place : brouillon, modification, soumission, suppression, liste filtrable
 - feature 003 (valider / rejeter) en place : liste à traiter du responsable, décision motivée, resoumission, historique
-- à venir : politique (004), justificatifs (005), tableau de bord (006)
+- feature 004 (politique de dépenses) en place : plafond et justificatif par catégorie, signalement hors politique
+- à venir : justificatifs (005), tableau de bord (006)
 
 ## Documentation
 

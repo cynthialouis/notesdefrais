@@ -5,6 +5,7 @@ namespace App\Dto;
 use App\Entity\Expense;
 use App\Entity\User;
 use App\Enum\ExpenseStatus;
+use App\Service\PolicyCheck;
 
 /**
  * Note de frais telle que renvoyée au front, pour un lecteur donné : `editable` et `decidable`
@@ -19,7 +20,7 @@ final readonly class ExpenseView
         public int $amountCents,
         /** Date de la dépense, au format Y-m-d */
         public string $date,
-        public CategoryView $category,
+        public ExpenseCategoryRef $category,
         public ExpenseStatus $status,
         /** Date et heure ISO 8601 */
         public string $createdAt,
@@ -34,10 +35,12 @@ final readonly class ExpenseView
         public bool $editable,
         /** Vrai si le lecteur est le responsable du propriétaire et peut la valider ou la rejeter */
         public bool $decidable,
+        /** Contrôle de la politique de dépense, calculé par le serveur (spec 004) */
+        public PolicyCheck $policy,
     ) {
     }
 
-    public static function fromEntity(Expense $expense, User $viewer): self
+    public static function fromEntity(Expense $expense, User $viewer, PolicyCheck $policy): self
     {
         return new self(
             (int) $expense->getId(),
@@ -45,7 +48,7 @@ final readonly class ExpenseView
             $expense->getLabel(),
             $expense->getAmountCents(),
             $expense->getDate()->format('Y-m-d'),
-            new CategoryView($expense->getCategory()->getSlug(), $expense->getCategory()->getLabel()),
+            ExpenseCategoryRef::fromEntity($expense->getCategory()),
             $expense->getStatus(),
             $expense->getCreatedAt()->format(\DATE_ATOM),
             $expense->getSubmittedAt()?->format(\DATE_ATOM),
@@ -54,6 +57,7 @@ final readonly class ExpenseView
             $expense->getRejectionReason(),
             $expense->isOwnedBy($viewer) && $expense->getStatus()->isEditable(),
             $expense->isDecidedBy($viewer) && ExpenseStatus::Submitted === $expense->getStatus(),
+            $policy,
         );
     }
 }

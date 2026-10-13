@@ -4,7 +4,7 @@ import { jsonResponse } from '../../test/fixtures'
 import { useExpensesStore, type ExpenseInput } from './expensesStore'
 
 const draft = {
-  id: 2, owner: { id: 4, name: 'Léa' }, decidable: false, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
+  id: 2, owner: { id: 4, name: 'Léa' }, decidable: false, policy: { limitCents: null, overLimitByCents: null, receiptRequired: false }, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
   status: 'draft', createdAt: '2026-10-06T10:00:00+02:00', submittedAt: null, editable: true,
 }
 const submitted = { ...draft, id: 1, label: 'Déjeuner', status: 'submitted', submittedAt: '2026-10-07T09:00:00+02:00', editable: false }

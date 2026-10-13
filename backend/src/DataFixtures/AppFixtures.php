@@ -32,10 +32,19 @@ class AppFixtures extends Fixture
         $ines = $this->user($manager, 'Inès Moreau', 'ines.moreau@demo.test', UserRole::Employee, $hugo);
         $this->user($manager, 'Noah Laurent', 'noah.laurent@demo.test', UserRole::Employee, $hugo);
 
+        // Politiques de départ (spec 004, C10) ; les catégories sont des données de référence déjà en base
+        foreach (['repas' => [5000, false], 'hebergement' => [15000, true], 'transport' => [30000, false], 'materiel' => [50000, true], 'autre' => [null, false]] as $slug => [$max, $receipt]) {
+            $this->category($manager, $slug)->setMaxAmountCents($max)->setReceiptRequired($receipt);
+        }
+
         // Notes de Léa : un exemple de chaque état
         $this->expense($manager, $lea, 'Formation sécurité', 25000, 30, 'autre', [[ExpenseEventType::Submitted, $lea, 29], [ExpenseEventType::Approved, $claire, 27]]);
         $this->expense($manager, $lea, 'Taxi aéroport', 6200, 15, 'transport', [[ExpenseEventType::Submitted, $lea, 14], [ExpenseEventType::Rejected, $claire, 13, 'Précisez le trajet et joignez le reçu du taxi.']]);
         $this->expense($manager, $lea, 'Déjeuner client Dupont', 4250, 12, 'repas', [[ExpenseEventType::Submitted, $lea, 11]]);
+        $this->expense($manager, $lea, 'Dîner client Martin', 6800, 6, 'repas', [[ExpenseEventType::Submitted, $lea, 5]]); // hors plafond (50 €)
+        // Validée quand le plafond repas était de 80 € : reste conforme malgré le plafond actuel de 50 € (C9)
+        $this->expense($manager, $lea, 'Repas d\'équipe fin de projet', 7200, 40, 'repas', [[ExpenseEventType::Submitted, $lea, 39], [ExpenseEventType::Approved, $claire, 38]])
+            ->setLimitAtApprovalCents(8000);
         $this->expense($manager, $lea, 'Train Paris – Lyon', 8900, 5, 'transport');
         $this->expense($manager, $lea, 'Clavier de remplacement', 3999, 2, 'materiel');
 
@@ -54,10 +63,9 @@ class AppFixtures extends Fixture
      *
      * @param list<array{0: ExpenseEventType, 1: User, 2: int, 3?: string}> $steps
      */
-    private function expense(ObjectManager $manager, User $owner, string $label, int $amountCents, int $daysAgo, string $categorySlug, array $steps = []): void
+    private function expense(ObjectManager $manager, User $owner, string $label, int $amountCents, int $daysAgo, string $categorySlug, array $steps = []): Expense
     {
-        $category = $manager->getRepository(Category::class)->findOneBy(['slug' => $categorySlug]);
-        \assert($category instanceof Category, 'Catégorie absente : lancer les migrations avant les fixtures.');
+        $category = $this->category($manager, $categorySlug);
 
         $expense = (new Expense())
             ->setOwner($owner)
@@ -73,12 +81,22 @@ class AppFixtures extends Fixture
             $at = new \DateTimeImmutable(\sprintf('-%d days 10:00', $stepDaysAgo), new \DateTimeZone('Europe/Paris'));
             match ($type) {
                 ExpenseEventType::Submitted => $expense->setStatus(ExpenseStatus::Submitted)->setSubmittedAt($at),
-                ExpenseEventType::Approved => $expense->setStatus(ExpenseStatus::Approved)->setDecidedAt($at)->setDecidedBy($actor),
+                ExpenseEventType::Approved => $expense->setStatus(ExpenseStatus::Approved)->setDecidedAt($at)->setDecidedBy($actor)->setLimitAtApprovalCents($category->getMaxAmountCents()),
                 ExpenseEventType::Rejected => $expense->setStatus(ExpenseStatus::Rejected)->setDecidedAt($at)->setDecidedBy($actor)->setRejectionReason($step[3] ?? null),
                 ExpenseEventType::Created => null,
             };
             $this->event($manager, $expense, $type, $actor, $stepDaysAgo, $step[3] ?? null);
         }
+
+        return $expense;
+    }
+
+    private function category(ObjectManager $manager, string $slug): Category
+    {
+        $category = $manager->getRepository(Category::class)->findOneBy(['slug' => $slug]);
+        \assert($category instanceof Category, 'Catégorie absente : lancer les migrations avant les fixtures.');
+
+        return $category;
     }
 
     private function event(ObjectManager $manager, Expense $expense, ExpenseEventType $type, User $actor, int $daysAgo, ?string $comment = null): void

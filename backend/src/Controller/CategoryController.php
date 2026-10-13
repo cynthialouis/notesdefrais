@@ -18,7 +18,7 @@ final class CategoryController extends AbstractController
     public function __invoke(CategoryRepository $categories): JsonResponse
     {
         return $this->json(array_map(
-            static fn ($category): CategoryView => new CategoryView($category->getSlug(), $category->getLabel()),
+            CategoryView::fromEntity(...),
             $categories->findAllOrdered(),
         ));
     }

@@ -224,7 +224,7 @@ abstract class ApiTestCase extends WebTestCase
 
     /**
      * Vérifie le format de sortie d'une note (ExpenseView), étendu par la spec 003
-     * (owner, decidedAt, decidedBy, rejectionReason, decidable).
+     * (owner, decidedAt, decidedBy, rejectionReason, decidable) puis par la spec 004 (policy).
      *
      * @param array<mixed> $view
      */
@@ -232,7 +232,7 @@ abstract class ApiTestCase extends WebTestCase
     {
         self::assertEqualsCanonicalizing(
             ['id', 'label', 'amountCents', 'date', 'category', 'status', 'createdAt', 'submittedAt', 'editable',
-                'owner', 'decidedAt', 'decidedBy', 'rejectionReason', 'decidable'],
+                'owner', 'decidedAt', 'decidedBy', 'rejectionReason', 'decidable', 'policy'],
             array_keys($view),
         );
         self::assertIsInt($view['id']);
@@ -260,6 +260,43 @@ abstract class ApiTestCase extends WebTestCase
         if (null !== $view['rejectionReason']) {
             self::assertIsString($view['rejectionReason']);
         }
+        $this->assertPolicyShape($view['policy']);
+    }
+
+    /**
+     * Signalement d'une note (spec 004) : { limitCents: int|null, overLimitByCents: int|null, receiptRequired: bool }.
+     */
+    protected function assertPolicyShape(mixed $policy): void
+    {
+        self::assertIsArray($policy);
+        self::assertEqualsCanonicalizing(['limitCents', 'overLimitByCents', 'receiptRequired'], array_keys($policy));
+        foreach (['limitCents', 'overLimitByCents'] as $key) {
+            if (null !== $policy[$key]) {
+                self::assertIsInt($policy[$key]);
+            }
+        }
+        self::assertIsBool($policy['receiptRequired']);
+    }
+
+    /**
+     * Règle la politique d'une catégorie directement en base (spec 004 : null = aucun plafond).
+     */
+    protected function setPolicy(string $slug, ?int $maxAmountCents, bool $receiptRequired = false): void
+    {
+        $category = $this->category($slug);
+        $category->setMaxAmountCents($maxAmountCents);
+        $category->setReceiptRequired($receiptRequired);
+        $this->entityManager()->flush();
+    }
+
+    /**
+     * Relit une catégorie en base, sans passer par le cache de l'EntityManager.
+     */
+    protected function findCategory(string $slug): Category
+    {
+        $this->entityManager()->clear();
+
+        return $this->category($slug);
     }
 
     /**

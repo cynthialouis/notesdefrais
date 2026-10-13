@@ -15,6 +15,12 @@ const expenseBaseSchema = z.object({
   /** Ce que le lecteur peut faire, décidé par le serveur : le front ne recalcule pas ces règles. */
   editable: z.boolean(),
   decidable: z.boolean(),
+  /** Contrôle de la politique de dépense, calculé par le serveur (spec 004). */
+  policy: z.object({
+    limitCents: z.number().int().nullable().optional(),
+    overLimitByCents: z.number().int().nullable().optional(),
+    receiptRequired: z.boolean(),
+  }),
 })
 
 const undecided = { decidedAt: z.null().optional(), decidedBy: z.null().optional(), rejectionReason: z.null().optional() }

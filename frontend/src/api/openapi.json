@@ -488,6 +488,55 @@
                 }
             }
         },
+        "/api/policies/{slug}": {
+            "put": {
+                "operationId": "put_api_policies_update",
+                "parameters": [
+                    {
+                        "name": "slug",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/PolicyInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Politique enregistr\u00e9e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CategoryView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Plafond ou justificatif invalide"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    },
+                    "403": {
+                        "description": "R\u00e9serv\u00e9 \u00e0 l'admin"
+                    },
+                    "404": {
+                        "description": "Cat\u00e9gorie inconnue"
+                    }
+                }
+            }
+        },
         "/api/team/expenses": {
             "get": {
                 "operationId": "get_api_team_expenses",
@@ -583,6 +632,27 @@
                 },
                 "type": "object"
             },
+            "PolicyInput": {
+                "required": [
+                    "receiptRequired"
+                ],
+                "properties": {
+                    "maxAmountCents": {
+                        "description": "Plafond en centimes ; null = aucun plafond",
+                        "type": "integer",
+                        "nullable": true,
+                        "default": null,
+                        "maximum": 1000000,
+                        "minimum": 0,
+                        "exclusiveMinimum": true
+                    },
+                    "receiptRequired": {
+                        "type": "boolean",
+                        "default": null
+                    }
+                },
+                "type": "object"
+            },
             "UserRole": {
                 "type": "string",
                 "enum": [
@@ -643,7 +713,8 @@
             "CategoryView": {
                 "required": [
                     "slug",
-                    "label"
+                    "label",
+                    "receiptRequired"
                 ],
                 "properties": {
                     "slug": {
@@ -651,6 +722,14 @@
                     },
                     "label": {
                         "type": "string"
+                    },
+                    "maxAmountCents": {
+                        "title": "Plafond par note en centimes ; null = aucun plafond",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "receiptRequired": {
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
@@ -670,6 +749,42 @@
                 },
                 "type": "object"
             },
+            "ExpenseCategoryRef": {
+                "required": [
+                    "slug",
+                    "label"
+                ],
+                "properties": {
+                    "slug": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "PolicyCheck": {
+                "required": [
+                    "receiptRequired"
+                ],
+                "properties": {
+                    "limitCents": {
+                        "title": "Plafond applicable, en centimes ; null = aucun plafond",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "overLimitByCents": {
+                        "title": "D\u00e9passement en centimes ; null si la note est conforme (montant \u2264 plafond) ou sans plafond",
+                        "type": "integer",
+                        "nullable": true
+                    },
+                    "receiptRequired": {
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
             "ExpenseView": {
                 "required": [
                     "id",
@@ -681,7 +796,8 @@
                     "status",
                     "createdAt",
                     "editable",
-                    "decidable"
+                    "decidable",
+                    "policy"
                 ],
                 "properties": {
                     "id": {
@@ -701,7 +817,7 @@
                         "type": "string"
                     },
                     "category": {
-                        "$ref": "#/components/schemas/CategoryView"
+                        "$ref": "#/components/schemas/ExpenseCategoryRef"
                     },
                     "status": {
                         "$ref": "#/components/schemas/ExpenseStatus"
@@ -740,6 +856,9 @@
                     "decidable": {
                         "title": "Vrai si le lecteur est le responsable du propri\u00e9taire et peut la valider ou la rejeter",
                         "type": "boolean"
+                    },
+                    "policy": {
+                        "$ref": "#/components/schemas/PolicyCheck"
                     }
                 },
                 "type": "object"

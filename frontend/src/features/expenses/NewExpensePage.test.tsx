@@ -43,7 +43,7 @@ describe('NewExpensePage', () => {
     await renderPage()
 
     const select = await screen.findByLabelText('Catégorie')
-    expect([...select.querySelectorAll('option')].map((option) => option.textContent)).toEqual(['Choisir une catégorie', 'Repas', 'Transport'])
+    expect([...select.querySelectorAll('option')].map((option) => option.textContent)).toEqual(['Choisir une catégorie', 'Repas', 'Transport', 'Hébergement'])
   })
 
   it('C4 – affiche chaque erreur sous son champ, sans rien envoyer', async () => {
@@ -91,5 +91,40 @@ describe('NewExpensePage', () => {
 
     expect(await screen.findByText('La date ne peut pas être dans le futur.')).toBeInTheDocument()
     expect(screen.getByLabelText('Date')).toHaveAccessibleDescription('La date ne peut pas être dans le futur.')
+  })
+})
+
+describe('NewExpensePage – politique de dépenses', () => {
+  it('C4 – un montant au-dessus du plafond affiche l\'alerte dès la saisie, sans bloquer', async () => {
+    stubApi({ 'GET /api/categories': json(200, categories) })
+    await renderPage()
+    await screen.findByLabelText('Catégorie')
+
+    await userEvent.selectOptions(screen.getByLabelText('Catégorie'), 'Repas')
+    await userEvent.type(screen.getByLabelText('Montant (€)'), '62')
+
+    expect(screen.getByText(/Hors politique/)).toHaveTextContent(/plafond de 50,00\s€.*dépassé de 12,00\s€/)
+    expect(screen.getByRole('button', { name: 'Enregistrer le brouillon' })).toBeEnabled()
+  })
+
+  it('C5 – un montant égal au plafond n\'affiche pas d\'alerte', async () => {
+    stubApi({ 'GET /api/categories': json(200, categories) })
+    await renderPage()
+    await screen.findByLabelText('Catégorie')
+
+    await userEvent.selectOptions(screen.getByLabelText('Catégorie'), 'Repas')
+    await userEvent.type(screen.getByLabelText('Montant (€)'), '50,00')
+
+    expect(screen.queryByText(/Hors politique/)).not.toBeInTheDocument()
+  })
+
+  it('C8 – indique qu\'un justificatif est obligatoire pour la catégorie choisie', async () => {
+    stubApi({ 'GET /api/categories': json(200, categories) })
+    await renderPage()
+    await screen.findByLabelText('Catégorie')
+
+    await userEvent.selectOptions(screen.getByLabelText('Catégorie'), 'Hébergement')
+
+    expect(screen.getByLabelText('Catégorie')).toHaveAccessibleDescription('Justificatif obligatoire pour cette catégorie.')
   })
 })

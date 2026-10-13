@@ -57,6 +57,10 @@ class Expense
     #[ORM\Column(length: 1000, nullable: true)]
     private ?string $rejectionReason = null;
 
+    /** Plafond de la catégorie au moment de la validation (spec 004, C9) ; null sinon ou sans plafond. */
+    #[ORM\Column(nullable: true)]
+    private ?int $limitAtApprovalCents = null;
+
     public function __construct()
     {
         $this->createdAt = self::utc(Clock::get()->now());
@@ -207,6 +211,18 @@ class Expense
     public function setDecidedBy(?User $decidedBy): static
     {
         $this->decidedBy = $decidedBy;
+
+        return $this;
+    }
+
+    public function getLimitAtApprovalCents(): ?int
+    {
+        return $this->limitAtApprovalCents;
+    }
+
+    public function setLimitAtApprovalCents(?int $limitAtApprovalCents): static
+    {
+        $this->limitAtApprovalCents = $limitAtApprovalCents;
 
         return $this;
     }
