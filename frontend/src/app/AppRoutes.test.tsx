@@ -109,9 +109,15 @@ describe('menu', () => {
 })
 
 describe('session', () => {
-  it('C13 – un utilisateur connecté qui ouvre la connexion arrive au tableau de bord', () => {
-    renderAt('/login', employee)
-    expect(screen.getByRole('heading', { name: 'Tableau de bord' })).toBeInTheDocument()
+  it('C13 – un utilisateur connecté qui ouvre la connexion arrive au tableau de bord', async () => {
+    // Rendu asynchrone : le tableau de bord charge ses totaux avec use() depuis la spec 006
+    useSessionStore.setState({ session: { status: 'authenticated', user: employee } })
+    await renderAsync(
+      <MemoryRouter initialEntries={['/login']}>
+        <AppRoutes />
+      </MemoryRouter>,
+    )
+    expect(await screen.findByRole('heading', { name: 'Tableau de bord' })).toBeInTheDocument()
   })
 
   it('C4 – la déconnexion ferme la session et ramène à la connexion', async () => {
