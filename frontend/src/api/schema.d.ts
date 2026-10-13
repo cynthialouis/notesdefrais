@@ -291,7 +291,7 @@ export interface components {
             slug: string;
             label: string;
             /** Plafond par note en centimes ; null = aucun plafond */
-            maxAmountCents?: number | null;
+            maxAmountCents: number | null;
             receiptRequired: boolean;
         };
         PersonRef: {
@@ -304,9 +304,9 @@ export interface components {
         };
         PolicyCheck: {
             /** Plafond applicable, en centimes ; null = aucun plafond */
-            limitCents?: number | null;
+            limitCents: number | null;
             /** Dépassement en centimes ; null si la note est conforme (montant ≤ plafond) ou sans plafond */
-            overLimitByCents?: number | null;
+            overLimitByCents: number | null;
             receiptRequired: boolean;
         };
         ExpenseView: {
@@ -321,12 +321,12 @@ export interface components {
             /** Date et heure ISO 8601 */
             createdAt: string;
             /** Date et heure ISO 8601, null tant que la note n'est pas soumise */
-            submittedAt?: string | null;
+            submittedAt: string | null;
             /** Date et heure ISO 8601 de la validation ou du rejet, null sinon */
-            decidedAt?: string | null;
-            decidedBy?: components["schemas"]["PersonRef"] | null;
+            decidedAt: string | null;
+            decidedBy: components["schemas"]["PersonRef"] | null;
             /** Motif du rejet, null si la note n'est pas rejetée */
-            rejectionReason?: string | null;
+            rejectionReason: string | null;
             /** Vrai si le lecteur est le propriétaire et peut encore la modifier ou la supprimer */
             editable: boolean;
             /** Vrai si le lecteur est le responsable du propriétaire et peut la valider ou la rejeter */
@@ -339,7 +339,7 @@ export interface components {
             type: components["schemas"]["ExpenseEventType"];
             actor: components["schemas"]["PersonRef"];
             /** Motif pour un rejet, null sinon */
-            comment?: string | null;
+            comment: string | null;
             /** Date et heure ISO 8601 */
             createdAt: string;
         };

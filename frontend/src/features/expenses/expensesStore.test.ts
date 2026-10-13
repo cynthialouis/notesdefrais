@@ -5,7 +5,7 @@ import { useExpensesStore, type ExpenseInput } from './expensesStore'
 
 const draft = {
   id: 2, owner: { id: 4, name: 'Léa' }, decidable: false, policy: { limitCents: null, overLimitByCents: null, receiptRequired: false }, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
-  status: 'draft', createdAt: '2026-10-06T10:00:00+02:00', submittedAt: null, editable: true,
+  status: 'draft', createdAt: '2026-10-06T10:00:00+02:00', submittedAt: null, decidedAt: null, decidedBy: null, rejectionReason: null, editable: true,
 }
 const submitted = { ...draft, id: 1, label: 'Déjeuner', status: 'submitted', submittedAt: '2026-10-07T09:00:00+02:00', editable: false }
 const input: ExpenseInput = { label: 'Train', amountCents: 8900, date: '2026-10-06', categorySlug: 'transport' }
@@ -35,6 +35,15 @@ describe('expensesStore', () => {
 
   it('refuse une note soumise sans date de soumission (union discriminée)', async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(200, [{ ...submitted, submittedAt: null }]))
+
+    await useExpensesStore.getState().fetchExpenses()
+
+    expect(useExpensesStore.getState().list).toEqual({ status: 'error', message: 'Réponse inattendue du serveur.' })
+  })
+
+  it('refuse une note à qui manque un champ nullable, toujours envoyé par le serveur', async () => {
+    const { decidedAt: _omitted, ...withoutDecidedAt } = draft
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, [withoutDecidedAt]))
 
     await useExpensesStore.getState().fetchExpenses()
 

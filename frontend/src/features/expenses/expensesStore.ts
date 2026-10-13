@@ -17,13 +17,14 @@ const expenseBaseSchema = z.object({
   decidable: z.boolean(),
   /** Contrôle de la politique de dépense, calculé par le serveur (spec 004). */
   policy: z.object({
-    limitCents: z.number().int().nullable().optional(),
-    overLimitByCents: z.number().int().nullable().optional(),
+    limitCents: z.number().int().nullable(),
+    overLimitByCents: z.number().int().nullable(),
     receiptRequired: z.boolean(),
   }),
 })
 
-const undecided = { decidedAt: z.null().optional(), decidedBy: z.null().optional(), rejectionReason: z.null().optional() }
+// Les champs nullables sont toujours présents (null) : le contrat les déclare obligatoires
+const undecided = { decidedAt: z.null(), decidedBy: z.null(), rejectionReason: z.null() }
 
 /**
  * Note de frais en union discriminée sur l'état : une note soumise a une date de soumission, une note
@@ -31,14 +32,14 @@ const undecided = { decidedAt: z.null().optional(), decidedBy: z.null().optional
  * l'exprimer, Zod le vérifie à la réception.
  */
 const expenseSchema = z.discriminatedUnion('status', [
-  expenseBaseSchema.extend({ status: z.literal('draft'), submittedAt: z.null().optional(), ...undecided }),
+  expenseBaseSchema.extend({ status: z.literal('draft'), submittedAt: z.null(), ...undecided }),
   expenseBaseSchema.extend({ status: z.literal('submitted'), submittedAt: z.string(), ...undecided }),
   expenseBaseSchema.extend({
     status: z.literal('approved'),
     submittedAt: z.string(),
     decidedAt: z.string(),
     decidedBy: personSchema,
-    rejectionReason: z.null().optional(),
+    rejectionReason: z.null(),
   }),
   expenseBaseSchema.extend({
     status: z.literal('rejected'),
@@ -52,7 +53,7 @@ const expenseSchema = z.discriminatedUnion('status', [
 const expenseEventSchema = z.object({
   type: z.enum(['created', 'submitted', 'approved', 'rejected']),
   actor: personSchema,
-  comment: z.string().nullable().optional(),
+  comment: z.string().nullable(),
   createdAt: z.string(),
 })
 
