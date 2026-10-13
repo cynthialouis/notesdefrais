@@ -32,6 +32,16 @@ final class ReceiptStorage
         return $this->directory.'/'.basename($storageName);
     }
 
+    /** Vide le stockage de l'environnement (données de démo rechargées : make db). */
+    public function purge(): void
+    {
+        foreach (glob($this->directory.'/*') ?: [] as $path) {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+    }
+
     /** Efface le fichier s'il existe encore (effacer deux fois n'est pas une erreur). */
     public function delete(string $storageName): void
     {
