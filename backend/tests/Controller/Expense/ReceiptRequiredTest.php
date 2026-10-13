@@ -129,7 +129,8 @@ final class ReceiptRequiredTest extends ApiTestCase
 
         $this->client->request('GET', '/api/expenses/'.$id.'/events');
         self::assertResponseStatusCodeSame(200);
-        self::assertSame(['created'], array_column($this->responseJson(), 'type'));
+        // La note de test est écrite en base sans événement « created » : le refus n'ajoute rien
+        self::assertSame([], array_column($this->responseJson(), 'type'));
     }
 
     public function testC8AvecSonJustificatifLaNoteSeSoumet(): void
@@ -161,7 +162,8 @@ final class ReceiptRequiredTest extends ApiTestCase
         $this->client->request('POST', '/api/expenses/'.$id.'/submit');
 
         self::assertResponseStatusCodeSame(200);
-        self::assertNull($this->responseJson()['receipt'] ?? 'absent');
+        self::assertArrayHasKey('receipt', $this->responseJson());
+        self::assertNull($this->responseJson()['receipt']);
         self::assertSame(ExpenseStatus::Submitted, $this->findExpense($id)?->getStatus());
     }
 

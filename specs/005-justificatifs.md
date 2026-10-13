@@ -33,7 +33,7 @@ Pour être remboursé, un salarié doit souvent prouver sa dépense : il joint �
 - Fichier `.pdf` dont le contenu est une image PNG : accepté comme PNG ; fichier `.jpg` dont le contenu est du texte : refusé.
 - Aucun fichier dans la requête : 400.
 - Ouvrir le justificatif d'une note qui n'en a pas : 404.
-- Nom d'origine avec des caractères spéciaux ou un chemin (`../`) : conservé pour l'affichage seulement, jamais utilisé pour stocker le fichier.
+- Nom d'origine avec des caractères spéciaux ou un chemin (`../`) : réduit à son nom de fichier, sans le chemin, et conservé pour l'affichage seulement, jamais utilisé pour stocker le fichier. *Précisé le 13/10 : le framework retire le chemin à la réception.*
 - Note rejetée puis corrigée : le justificatif peut être remplacé avant la resoumission, et C8 s'applique à la resoumission.
 - La politique change après la soumission : les notes déjà soumises ne sont pas affectées ; C8 s'applique à la soumission suivante.
 

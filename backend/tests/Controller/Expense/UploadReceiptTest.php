@@ -103,7 +103,8 @@ final class UploadReceiptTest extends ApiTestCase
         $this->client->request('GET', '/api/expenses');
         $byId = array_column($this->responseJson(), null, 'id');
         self::assertSame('recu.png', $byId[$id]['receipt']['name'] ?? null);
-        self::assertNull($byId[$other]['receipt'] ?? 'absent');
+        self::assertArrayHasKey('receipt', $byId[$other]);
+        self::assertNull($byId[$other]['receipt']);
     }
 
     // --- C2 : type détecté d'après le contenu ----------------------------------------------
@@ -439,18 +440,21 @@ final class UploadReceiptTest extends ApiTestCase
     }
 
     /**
-     * @return iterable<string, array{string}>
+     * Nom envoyé, nom conservé pour l'affichage : le chemin est retiré à la réception (UploadedFile),
+     * spec amendée le 13/10.
+     *
+     * @return iterable<string, array{string, string}>
      */
     public static function hostileNames(): iterable
     {
-        yield 'remontée de dossier' => ['../../public/evil.png'];
-        yield 'remontée profonde' => ['../../../../../../tmp/evil-receipt.png'];
-        yield 'caractères spéciaux' => ['Reçu « hôtel » #1 & co ;$(rm).png'];
-        yield 'séparateur Windows' => ['..\\..\\public\\evil.png'];
+        yield 'remontée de dossier' => ['../../public/evil.png', 'evil.png'];
+        yield 'remontée profonde' => ['../../../../../../tmp/evil-receipt.png', 'evil-receipt.png'];
+        yield 'caractères spéciaux' => ['Reçu « hôtel » #1 & co ;$(rm).png', 'Reçu « hôtel » #1 & co ;$(rm).png'];
+        yield 'séparateur Windows' => ['..\\..\\public\\evil.png', 'evil.png'];
     }
 
     #[DataProvider('hostileNames')]
-    public function testCasLimiteUnNomDOrigineHostileEstConservePourLAffichageSeulement(string $originalName): void
+    public function testCasLimiteUnNomDOrigineHostileEstConservePourLAffichageSeulement(string $originalName, string $displayedName): void
     {
         $projectDir = \dirname(__DIR__, 3);
         $team = $this->createTeam();
@@ -460,10 +464,10 @@ final class UploadReceiptTest extends ApiTestCase
         $this->uploadReceipt($id, $this->uploadedFile($this->pngBytes(), $originalName, 'image/png'));
 
         self::assertResponseStatusCodeSame(200);
-        self::assertSame($originalName, $this->responseJson()['receipt']['name'] ?? null);
+        self::assertSame($displayedName, $this->responseJson()['receipt']['name'] ?? null);
         $receipt = $this->findExpense($id)?->getReceipt();
         self::assertNotNull($receipt);
-        self::assertSame($originalName, $receipt->getOriginalName());
+        self::assertSame($displayedName, $receipt->getOriginalName());
         $storageName = $receipt->getStorageName();
         self::assertNotSame($originalName, $storageName);
         self::assertStringNotContainsString('..', $storageName);
