@@ -35,6 +35,7 @@ Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents,
 - Autorisation par Voter, sur la ressource précise et pas seulement sur le rôle : un manager ne décide que pour les salariés de son équipe. Pour une ressource d'un autre utilisateur, le refus est un 404 (`#[IsGranted(..., statusCode: 404)]`), indiscernable d'une ressource inexistante.
 - Transitions de statut uniquement via le Workflow ; transition impossible → 409.
 - Erreurs au format unique : `{ error: { code, message, fields? } }`, construit uniquement par `App\Http\ApiError` (utilisé par le listener d'exceptions et par la sécurité).
+- Réponses : un champ nullable est toujours présent (valeur `null`), jamais omis. Nelmio ne le déclare pas obligatoire de lui-même : chaque vue renvoyée le précise avec `#[OA\Schema(required: [...])]`, et `ApiDocTest` vérifie que tous les champs des vues sont obligatoires dans `/api/doc.json` (une nouvelle vue s'ajoute à sa liste).
 - Codes HTTP : 400 validation, 401 non connecté, 403 interdit, 404 introuvable, 405 méthode non autorisée (ex. déconnexion en GET), 409 transition impossible, 415 corps non JSON (ex. connexion, contre le CSRF de connexion).
 - Schéma de base modifié uniquement par migration (`make:migration` puis `doctrine:migrations:migrate`).
 - Configuration : `.env` committé ne contient que des valeurs par défaut ; les secrets vont dans `.env.local` (ignoré) ou dans le coffre Symfony (`secrets:set`).

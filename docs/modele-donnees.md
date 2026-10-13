@@ -53,4 +53,6 @@ export type Expense =
   | (ExpenseBase & { status: 'rejected'; submittedAt: string; decidedAt: string; decidedBy: string; rejectionReason: string })
 ```
 
+Les catégories et leur politique (`GET /api/categories`) sont aussi validées par Zod à la réception (`features/expenses/categories.ts`), avec le même contrôle à la compilation contre le type généré. Les champs nullables y sont exigés (`.nullable()` sans `.optional()`) : le serveur les envoie toujours.
+
 Les schémas Zod des formulaires reprennent les contraintes des DTO ci-dessus. L'alerte « hors politique » du formulaire a sa propre version de la règle de politique, testée, alimentée par les politiques renvoyées par `GET /api/categories`.
