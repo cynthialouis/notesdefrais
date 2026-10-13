@@ -1,0 +1,53 @@
+# 006 — Tableau de bord
+
+## Besoin
+
+En arrivant dans l'application, chacun doit voir d'un coup d'œil où en sont ses dépenses : un salarié, combien il a en brouillon, en attente, validé ou rejeté ; un manager, ce que coûte son équipe, par catégorie et par mois, pour suivre son budget. Le manager doit aussi pouvoir récupérer les notes validées de son équipe dans un tableur, pour la comptabilité.
+
+## Critères d'acceptation
+
+- **C1** QUAND un utilisateur ouvre le tableau de bord, LE SYSTÈME DOIT afficher, pour chaque état (brouillon, soumise, validée, rejetée), le nombre de ses propres notes et leur montant total.
+- **C2** LE SYSTÈME DOIT afficher chaque état, même sans note (0 note, 0,00 €).
+- **C3** QUAND un manager ouvre le tableau de bord, LE SYSTÈME DOIT afficher en plus le total des notes validées des personnes dont il est le responsable direct, par catégorie, sur la période.
+- **C4** QUAND un manager ouvre le tableau de bord, LE SYSTÈME DOIT afficher le total des notes validées de son équipe pour chaque mois de la période, y compris les mois sans note (0,00 €).
+- **C5** LE SYSTÈME DOIT calculer tous les totaux côté serveur, en centimes entiers ; le front ne fait que les afficher.
+- **C6** QUAND un manager demande l'export, LE SYSTÈME DOIT fournir un fichier CSV des notes validées de son équipe sur la période, une ligne par note.
+- **C7** LE SYSTÈME DOIT produire un CSV lisible directement par un tableur français : séparateur point-virgule, encodage UTF-8 avec BOM, montants en euros avec virgule décimale, dates au format JJ/MM/AAAA.
+- **C8** LE SYSTÈME DOIT exclure des totaux d'équipe et de l'export les notes du manager lui-même et celles des personnes qu'il n'encadre pas directement.
+- **C9** SI l'équipe n'a aucune note validée sur la période, ALORS LE SYSTÈME DOIT l'indiquer par un message au lieu de tableaux vides, et l'export DOIT contenir seulement la ligne d'en-tête.
+
+Période (C3, C4, C6) : les 12 derniers mois civils, mois en cours compris, d'après la date de la dépense (et non la date de validation), en heure de Paris.
+
+Colonnes de l'export (C6) : date de la dépense, salarié, libellé, catégorie, montant, date de validation, validée par.
+
+## Autorisations
+
+| Action | Qui peut | Sinon |
+|---|---|---|
+| Ses propres totaux par état | connecté | 401 |
+| Totaux de l'équipe, export CSV | manager et plus (sur ses subordonnés directs) | 401 non connecté ; 403 salarié |
+
+## Cas limites et erreurs
+
+- Utilisateur sans aucune note : tous les états à 0.
+- Note validée datée d'il y a 12 mois pile (premier jour du mois le plus ancien de la période) : incluse ; datée du mois précédent : exclue.
+- Libellé contenant un point-virgule, un guillemet ou un retour à la ligne : échappé dans le CSV, la ligne reste une seule note.
+- Libellé commençant par `=`, `+`, `-` ou `@` : neutralisé dans le CSV (injection de formule dans le tableur).
+- Admin : responsable des managers, il voit leurs totaux d'équipe comme un manager voit ceux de ses salariés.
+
+## Règles recalculées côté front
+
+Aucune. Les totaux, la période et le contenu du CSV viennent du serveur ; le front ne fait que formater les montants en euros.
+
+## Hors périmètre
+
+Graphiques interactifs et bibliothèque de graphiques (barres dessinées en CSS dans un tableau), choix de la période, filtres, totaux de l'équipe hors validées (en attente, rejetées), statistiques hors politique ou justificatifs, équipe indirecte (subordonnés des subordonnés), export d'autres formats (Excel, PDF), envoi automatique à la comptabilité.
+
+## Questions ouvertes
+
+Aucune. Tranchées le 13/10 : période fixe des 12 derniers mois civils, mois en cours compris (C3, C4, C6) ; mois de la date de la dépense ; tableau accessible avec barres en CSS, sans bibliothèque de graphiques ; totaux d'équipe sur les seules notes validées ; CSV au format de C7.
+
+## Écarts avec les docs
+
+- `docs/api.md` : `GET /stats` « salarié / manager » et `GET /exports/expenses.csv` « manager » ; à préciser au plan (une ou deux routes de statistiques, admin inclus comme manager).
+- `docs/produit.md` : « totaux de l'équipe » ne précisait ni la période ni les états comptés : 12 derniers mois civils, notes validées.
