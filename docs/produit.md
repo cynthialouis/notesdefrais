@@ -49,7 +49,7 @@ Vraie authentification (mot de passe, OAuth), remboursement / paiement, multi-de
 | Route | Rôle | Contenu |
 |---|---|---|
 | `/login` | tous | Choix du compte de démo |
-| `/` | tous | Tableau de bord selon le rôle |
+| `/` | tous | Tableau de bord : ses totaux par état ; pour un manager, notes validées de l'équipe par catégorie et par mois sur 12 mois, export CSV |
 | `/notes` | salarié et plus | Mes notes, filtre par statut (state local), bouton « Nouvelle note » |
 | `/notes/nouvelle`, `/notes/:id` | salarié | Formulaire (`useActionState` + `expenseInputSchema.safeParse`), justificatif, alerte hors politique calculée en direct |
 | `/equipe` | manager et plus | Notes soumises de l'équipe, valider / rejeter (motif), historique |
