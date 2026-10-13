@@ -56,3 +56,21 @@ Aucune. Tranchées le 13/10 : un seul justificatif par note, remplaçable (C1, C
 - `docs/api.md` : seule la route de dépôt est prévue ; il faut aussi l'ouverture et le retrait (routes à préciser au plan), et le refus de soumission de C8 (409).
 - `docs/modele-donnees.md` : `Receipt` est prévu sans dire combien par note ; ce sera un seul.
 - Feature 002 (C1) : après la création, retour à la liste ; remplacé par l'ouverture du détail (C13), test du front de 002 à adapter.
+
+## Plan
+
+- **Back** : entité `Receipt` (un-à-un avec `Expense`, nom d'origine, type, taille, nom de stockage généré) ; service `ReceiptStorage` (`var/receipts/<env>`, hors `public/`) ; `PolicyCheck.receiptMissing` (C9) ; `ExpenseManager` : dépôt, remplacement, retrait (409 si non modifiable), refus de soumission sans justificatif obligatoire (409, après les refus d'état et de responsable), effacement du fichier à la suppression. Routes `POST`, `GET`, `DELETE /api/expenses/{id}/receipt` (dépôt multipart validé par `MapUploadedFile` et `Assert\File`, 400 ; ouverture en `inline` avec `nosniff`). `ExpenseView.receipt`. Nouvelle dépendance : `symfony/mime` (type détecté d'après le contenu, C2). Démo : justificatifs générés, un brouillon d'hébergement sans justificatif.
+- **Front** : store (`receipt`, `receiptMissing`, `uploadReceipt`, `removeReceipt`) ; `apiFetch` accepte un `FormData` ; `receiptValidation.ts` (seule version front du contrôle de type et de taille) ; carte Justificatif sur le détail ; bouton de soumission désactivé et expliqué ; ouverture du détail après la création.
+
+## Tâches
+
+1. Modèle : `Receipt`, migration (C1, C12)
+2. `ReceiptStorage` (C11, C12)
+3. `ExpenseManager` et `PolicyChecker` : dépôt, remplacement, retrait, refus de soumission (C6 à C9, C11)
+4. Routes et vues : dépôt, ouverture, retrait, `ExpenseView.receipt` (C1 à C3, C5 à C7)
+5. Données de démo (C9, C10)
+6. Types, store, `apiFetch` multipart
+7. `receiptValidation.ts` (C4)
+8. Carte Justificatif sur le détail (C4 à C6)
+9. Soumission désactivée et expliquée (C10)
+10. Ouverture du détail après la création (C13)
