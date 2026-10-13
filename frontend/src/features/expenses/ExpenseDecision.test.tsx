@@ -161,4 +161,15 @@ describe('Détail – politique', () => {
 
     expect(await screen.findByText(/Hors politique/)).toHaveTextContent(/plafond de 50,00\s€ pour la catégorie Repas est dépassé de 12,00\s€/)
   })
+
+  it('C6 – le propriétaire voit aussi le plafond et l\'écart sur le détail', async () => {
+    stubApi({
+      'GET /api/expenses/5': json(200, overLimitExpense),
+      'GET /api/expenses/5/events': json(200, []),
+      'GET /api/categories': json(200, categories),
+    })
+    await renderAt('/notes/5', lea)
+
+    expect(await screen.findByText(/Hors politique/)).toHaveTextContent(/plafond de 50,00\s€ pour la catégorie Repas est dépassé de 12,00\s€/)
+  })
 })

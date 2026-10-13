@@ -84,7 +84,10 @@ describe('NotesPage – politique', () => {
     await renderNotes()
     await screen.findByRole('table')
 
-    expect(screen.getAllByText('Hors politique')).toHaveLength(1)
-    expect(rows()[0]?.[4]).toBe('SoumiseHors politique')
+    const badges = screen.getAllByText(/^Hors politique/)
+    expect(badges).toHaveLength(1)
+    expect(badges[0]).toHaveTextContent(/^Hors politique · \+12,00\s€$/)
+    expect(badges[0]).toHaveAttribute('title', expect.stringMatching(/^Plafond de 50,00\s€ dépassé de 12,00\s€$/))
+    expect(rows()[0]?.[4]).toMatch(/^SoumiseHors politique · \+12,00\s€$/)
   })
 })

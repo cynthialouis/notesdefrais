@@ -57,6 +57,6 @@ describe('TeamPage – politique', () => {
     stubApi({ 'GET /api/team/expenses': json(200, [{ ...overLimitExpense, editable: false, decidable: true }]) })
     await renderTeam()
 
-    expect(await screen.findByText('Hors politique')).toBeInTheDocument()
+    expect(await screen.findByText(/^Hors politique/)).toHaveTextContent(/^Hors politique · \+12,00\s€$/)
   })
 })

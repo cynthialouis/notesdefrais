@@ -12,9 +12,9 @@ const tones: Record<BadgeTone, string> = {
 }
 
 /** Étiquette de statut : le texte porte l'information, la couleur ne fait que la renforcer. */
-export function Badge({ tone = 'neutral', children }: { tone?: BadgeTone; children: ReactNode }) {
+export function Badge({ tone = 'neutral', title, children }: { tone?: BadgeTone; title?: string; children: ReactNode }) {
   return (
-    <span className={cx('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset whitespace-nowrap', tones[tone])}>
+    <span title={title} className={cx('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset whitespace-nowrap', tones[tone])}>
       {children}
     </span>
   )
