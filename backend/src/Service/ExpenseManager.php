@@ -143,9 +143,10 @@ final class ExpenseManager
     {
         $this->assertEditable($expense);
         $receipt = $expense->getReceipt() ?? throw new NotFoundHttpException('Aucun justificatif sur cette note.');
+        $storageName = $receipt->getStorageName(); // lu avant le flush : la ligne est supprimée (orphanRemoval)
         $expense->setReceipt(null);
         $this->em->flush();
-        $this->receipts->delete($receipt->getStorageName());
+        $this->receipts->delete($storageName);
 
         return $expense;
     }
