@@ -14,6 +14,7 @@ function renderPage() {
       <Routes>
         <Route path="notes/nouvelle" element={<NewExpensePage />} />
         <Route path="notes" element={<h1>Liste des notes</h1>} />
+        <Route path="notes/:id" element={<h1>Détail de la note</h1>} />
       </Routes>
     </MemoryRouter>,
   )
@@ -69,7 +70,8 @@ describe('NewExpensePage', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1) // seulement le chargement des catégories
   })
 
-  it('C1/C2 – enregistre le brouillon avec le montant en centimes puis revient à la liste', async () => {
+  // Spec 005, C13 : ouvre le détail de la note créée (002 revenait à la liste)
+  it('C1/C2 – enregistre le brouillon avec le montant en centimes puis ouvre son détail', async () => {
     const fetchMock = stubApi({
       'GET /api/categories': json(200, categories),
       'POST /api/expenses': json(201, draftExpense),
@@ -81,7 +83,7 @@ describe('NewExpensePage', () => {
     await fill({ label: '  Train Paris – Lyon  ', amount: '89', date: '2026-10-06', category: 'Transport' })
     await userEvent.click(screen.getByRole('button', { name: 'Enregistrer le brouillon' }))
 
-    expect(await screen.findByRole('heading', { name: 'Liste des notes' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Détail de la note' })).toBeInTheDocument()
     const post = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST')
     expect(JSON.parse(String(post?.[1]?.body))).toEqual({ label: 'Train Paris – Lyon', amountCents: 8900, date: '2026-10-06', categorySlug: 'transport' })
   })
