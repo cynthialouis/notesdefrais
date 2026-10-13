@@ -633,6 +633,9 @@
                 "type": "object"
             },
             "PolicyInput": {
+                "required": [
+                    "receiptRequired"
+                ],
                 "properties": {
                     "maxAmountCents": {
                         "description": "Plafond en centimes ; null = aucun plafond",
@@ -645,7 +648,6 @@
                     },
                     "receiptRequired": {
                         "type": "boolean",
-                        "nullable": true,
                         "default": null
                     }
                 },

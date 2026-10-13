@@ -9,6 +9,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Corps de PUT /api/policies/{slug}. Le plafond est reçu tel quel (mixed) pour qu'un flottant ou
  * une chaîne soit refusé par Assert\Type plutôt que converti (comme ExpenseInput::$amountCents).
  */
+#[OA\Schema(required: ['receiptRequired'])]
 final readonly class PolicyInput
 {
     public function __construct(
@@ -19,7 +20,7 @@ final readonly class PolicyInput
         public mixed $maxAmountCents = null,
         #[Assert\NotNull(message: 'Indiquez si un justificatif est obligatoire.')]
         #[Assert\Type(type: 'bool', message: 'Valeur invalide.')]
-        #[OA\Property(type: 'boolean')]
+        #[OA\Property(type: 'boolean', nullable: false)]
         public mixed $receiptRequired = null,
     ) {
     }

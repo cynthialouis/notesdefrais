@@ -271,7 +271,7 @@ export interface components {
              */
             maxAmountCents: number | null;
             /** @default null */
-            receiptRequired: boolean | null;
+            receiptRequired: boolean;
         };
         /** @enum {string} */
         UserRole: "employee" | "manager" | "admin";
