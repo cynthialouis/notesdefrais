@@ -504,6 +504,90 @@ abstract class ApiTestCase extends WebTestCase
         self::assertLessThanOrEqual($after + 2, $ts);
     }
 
+    // --- Tableau de bord (spec 006) -------------------------------------------------------
+
+    /**
+     * Crée une note validée (status approved) avec sa date de soumission, sa date de validation et son décideur,
+     * directement en base (préparation d'un test, sans le Workflow).
+     */
+    protected function createApprovedExpense(
+        User $owner,
+        User $decider,
+        string $label = 'Note validée',
+        int $amountCents = 1000,
+        string $date = '2026-10-01',
+        string $categorySlug = 'repas',
+        string $decidedAt = '2026-10-05T10:00:00+02:00',
+    ): Expense {
+        $expense = $this->createExpense($owner, $label, $amountCents, $date, $categorySlug, ExpenseStatus::Approved, '2026-10-02T09:00:00+02:00');
+        $managedDecider = $this->entityManager()->find(User::class, $decider->getId());
+        self::assertInstanceOf(User::class, $managedDecider);
+        $expense->setDecidedAt(new \DateTimeImmutable($decidedAt));
+        $expense->setDecidedBy($managedDecider);
+        $this->entityManager()->flush();
+
+        return $expense;
+    }
+
+    /**
+     * Corps brut de la dernière réponse, y compris pour une StreamedResponse (contenu capturé par le client).
+     */
+    protected function responseBody(): string
+    {
+        return (string) $this->client->getInternalResponse()->getContent();
+    }
+
+    /**
+     * Découpe un CSV (séparateur « ; », fins de ligne \r\n, guillemets RFC 4180) en lignes de champs.
+     * Le BOM éventuel doit avoir été retiré. Une fin de fichier \r\n ne produit pas de ligne vide.
+     *
+     * @return list<list<string>>
+     */
+    protected function parseCsv(string $csv): array
+    {
+        $rows = [];
+        $row = [];
+        $field = '';
+        $quoted = false;
+        $length = \strlen($csv);
+        for ($i = 0; $i < $length; ++$i) {
+            $char = $csv[$i];
+            if ($quoted) {
+                if ('"' === $char) {
+                    if ($i + 1 < $length && '"' === $csv[$i + 1]) {
+                        $field .= '"';
+                        ++$i;
+                    } else {
+                        $quoted = false;
+                    }
+                } else {
+                    $field .= $char;
+                }
+                continue;
+            }
+            if ('"' === $char && '' === $field) {
+                $quoted = true;
+            } elseif (';' === $char) {
+                $row[] = $field;
+                $field = '';
+            } elseif ("\r" === $char && $i + 1 < $length && "\n" === $csv[$i + 1]) {
+                $row[] = $field;
+                $rows[] = $row;
+                $row = [];
+                $field = '';
+                ++$i;
+            } else {
+                $field .= $char;
+            }
+        }
+        if ('' !== $field || [] !== $row) {
+            $row[] = $field;
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
     /**
      * Vérifie une erreur de validation 400 portant au moins sur les champs donnés, et renvoie les erreurs par champ.
      *

@@ -16,7 +16,9 @@ final class ApiDocTest extends ApiTestCase
      */
     public static function responseSchemas(): iterable
     {
-        foreach (['UserView', 'DemoUserView', 'PersonRef', 'CategoryView', 'ExpenseCategoryRef', 'PolicyCheck', 'ExpenseView', 'ExpenseEventView', 'ReceiptView'] as $schema) {
+        foreach (['UserView', 'DemoUserView', 'PersonRef', 'CategoryView', 'ExpenseCategoryRef', 'PolicyCheck', 'ExpenseView', 'ExpenseEventView', 'ReceiptView',
+            // Spec 006 : tableau de bord
+            'MyStatsView', 'StatusTotalView', 'TeamStatsView', 'CategoryTotalView', 'MonthTotalView'] as $schema) {
             yield $schema => [$schema];
         }
     }
@@ -51,5 +53,20 @@ final class ApiDocTest extends ApiTestCase
         }
         $expenseView = $this->responseJson()['components']['schemas']['ExpenseView']['properties'] ?? [];
         self::assertArrayHasKey('receipt', $expenseView);
+    }
+
+    /**
+     * Spec 006 : les deux routes de statistiques et l'export CSV sont décrits dans le contrat.
+     */
+    public function testC1C3C6LesRoutesDuTableauDeBordSontDecrites(): void
+    {
+        $this->client->request('GET', '/api/doc.json');
+        self::assertResponseIsSuccessful();
+
+        $paths = $this->responseJson()['paths'] ?? [];
+        foreach (['/api/stats/me', '/api/stats/team', '/api/exports/team-expenses.csv'] as $path) {
+            self::assertArrayHasKey($path, $paths, "Route $path absente du contrat.");
+            self::assertArrayHasKey('get', $paths[$path], "GET $path absent du contrat.");
+        }
     }
 }
