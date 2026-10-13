@@ -57,6 +57,11 @@ class Expense
     #[ORM\Column(length: 1000, nullable: true)]
     private ?string $rejectionReason = null;
 
+    /** Justificatif (spec 005) : un seul par note ; le remplacer ou le retirer supprime l'ancien (orphanRemoval). */
+    #[ORM\OneToOne(cascade: ['persist', 'remove'], orphanRemoval: true)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?Receipt $receipt = null;
+
     /** Plafond de la catégorie au moment de la validation (spec 004, C9) ; null sinon ou sans plafond. */
     #[ORM\Column(nullable: true)]
     private ?int $limitAtApprovalCents = null;
@@ -211,6 +216,18 @@ class Expense
     public function setDecidedBy(?User $decidedBy): static
     {
         $this->decidedBy = $decidedBy;
+
+        return $this;
+    }
+
+    public function getReceipt(): ?Receipt
+    {
+        return $this->receipt;
+    }
+
+    public function setReceipt(?Receipt $receipt): static
+    {
+        $this->receipt = $receipt;
 
         return $this;
     }
