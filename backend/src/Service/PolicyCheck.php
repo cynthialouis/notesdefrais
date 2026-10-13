@@ -2,9 +2,12 @@
 
 namespace App\Service;
 
+use OpenApi\Attributes as OA;
+
 /**
  * Résultat du contrôle d'une note par rapport à la politique de dépense (spec 004).
  */
+#[OA\Schema(required: ['limitCents', 'overLimitByCents'])] // nullable mais toujours présent (Nelmio ne le déduit pas)
 final readonly class PolicyCheck
 {
     public function __construct(

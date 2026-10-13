@@ -6,11 +6,13 @@ use App\Entity\Expense;
 use App\Entity\User;
 use App\Enum\ExpenseStatus;
 use App\Service\PolicyCheck;
+use OpenApi\Attributes as OA;
 
 /**
  * Note de frais telle que renvoyée au front, pour un lecteur donné : `editable` et `decidable`
  * disent ce que CE lecteur peut faire, le front n'a pas à recalculer ces règles.
  */
+#[OA\Schema(required: ['submittedAt', 'decidedAt', 'decidedBy', 'rejectionReason'])] // nullable mais toujours présent (Nelmio ne le déduit pas)
 final readonly class ExpenseView
 {
     public function __construct(

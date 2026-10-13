@@ -714,6 +714,7 @@
                 "required": [
                     "slug",
                     "label",
+                    "maxAmountCents",
                     "receiptRequired"
                 ],
                 "properties": {
@@ -766,6 +767,8 @@
             },
             "PolicyCheck": {
                 "required": [
+                    "limitCents",
+                    "overLimitByCents",
                     "receiptRequired"
                 ],
                 "properties": {
@@ -795,6 +798,10 @@
                     "category",
                     "status",
                     "createdAt",
+                    "submittedAt",
+                    "decidedAt",
+                    "decidedBy",
+                    "rejectionReason",
                     "editable",
                     "decidable",
                     "policy"
@@ -876,6 +883,7 @@
                 "required": [
                     "type",
                     "actor",
+                    "comment",
                     "createdAt"
                 ],
                 "properties": {
