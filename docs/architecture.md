@@ -43,6 +43,7 @@ Les styles de variantes passent par `cx()` et `buttonStyles.ts`, sans dépendanc
 - **Deux processus en dev** : `symfony serve` dans `backend/` (port 8000), `npm run dev` dans `frontend/` (port 5173).
 - **Proxy Vite** : le front appelle `/api/...`, Vite redirige vers `http://127.0.0.1:8000`. Pas de CORS, pas d'URL de serveur en dur.
 - **Base de données** : SQLite via Doctrine, un fichier par environnement (`backend/var/data_dev.db`, `data_test.db`). Aucune installation.
+- **Justificatifs** : fichiers dans `backend/var/receipts/<env>` (hors `public/`, ignoré par git), servis par l'API. Limite d'upload de PHP relevée dans `backend/php.ini` (lu par `symfony serve`) et passée à PHPUnit par `make test-back`. Le type est détecté d'après le contenu (`symfony/mime`).
 - **Session** : Symfony Security avec la session PHP native (cookie `httponly`, `samesite=lax`). Connexion de démo par l'authenticator `DemoLoginAuthenticator` (spec 001). Côté front, la session vit dans un store Zustand (`features/auth/sessionStore.ts`), lue une fois au démarrage dans `main.tsx`.
 
 ## Contrat front / back

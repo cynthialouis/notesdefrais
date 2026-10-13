@@ -9,7 +9,7 @@ Entités Doctrine dans `backend/src/Entity/`, schéma versionné par Doctrine Mi
 | `User` | id, name, email, role (`employee` / `manager` / `admin`), manager | Comptes de démo créés par les fixtures. Le `manager` est le responsable direct : les salariés ont leur manager, les managers l'admin, l'admin personne |
 | `Category` | id, slug, label, maxAmountCents (null = aucun plafond), receiptRequired | repas, transport, hébergement, matériel, autre ; données de référence **insérées par la migration** (présentes dans tous les environnements, jamais purgées par les fixtures : `make db`) |
 | `Expense` | id, owner, category, label, amountCents, date, status (enum `ExpenseStatus`), createdAt, submittedAt ; puis decidedAt, decidedBy, rejectionReason (003) | Montant en centimes entiers, jamais de flottant. `ExpenseStatus::isEditable()` est le seul endroit qui dit quels états se modifient et se suppriment |
-| `Receipt` | id, expense, filename, mimeType, sizeBytes, storagePath | Fichier sur disque (hors `public/`, ignoré par git), métadonnées en base |
+| `Receipt` | id, originalName, mimeType, sizeBytes, storageName, uploadedAt | Un seul par note (`Expense.receipt`, un-à-un ; remplacer ou retirer supprime l'ancien). Fichier sur disque dans `var/receipts/<env>` (hors `public/`, ignoré par git), sous un nom généré par le serveur (`ReceiptStorage`) ; nom d'origine sans chemin, pour l'affichage ; type détecté d'après le contenu |
 | `ExpenseEvent` | id, expense, actor, type (enum `ExpenseEventType`), comment, createdAt | Historique : créée (écrit par `ExpenseManager::create()`), soumise, validée, rejetée (écrits par un listener `completed` du Workflow), motif d'un rejet en commentaire |
 
 ## Cycle de vie d'une note
@@ -38,7 +38,7 @@ Un DTO `readonly` par entrée, validé par des attributs `#[Assert\...]` et reç
 | `RejectionInput` | reason : au moins 5 caractères utiles (« Le motif doit être explicite ») |
 | `PolicyInput` | maxAmountCents : entier > 0 ; receiptRequired : booléen |
 
-La politique d'une catégorie (plafond, justificatif obligatoire) est portée par `Category`. `PolicyChecker` est le seul endroit côté serveur qui contrôle une note : plafond applicable (celui figé dans `Expense.limitAtApprovalCents` à la validation, sinon celui de la catégorie), écart en centimes (égal au plafond = conforme), justificatif obligatoire. Le front n'en duplique que le calcul du dépassement (`features/policies/checkPolicy.ts`), pour l'alerte à la saisie. Le refus de soumettre une note sans justificatif obligatoire arrive avec la feature 005.
+La politique d'une catégorie (plafond, justificatif obligatoire) est portée par `Category`. `PolicyChecker` est le seul endroit côté serveur qui contrôle une note : plafond applicable (celui figé dans `Expense.limitAtApprovalCents` à la validation, sinon celui de la catégorie), écart en centimes (égal au plafond = conforme), justificatif obligatoire. Le front n'en duplique que le calcul du dépassement (`features/policies/checkPolicy.ts`), pour l'alerte à la saisie. Il dit aussi si un justificatif obligatoire manque (`receiptMissing`) : `ExpenseManager::submit()` refuse alors la soumission (409, spec 005). Les fichiers sont effacés après l'écriture en base (remplacement, retrait, suppression de la note).
 
 ## Types côté front
 

@@ -10,7 +10,8 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 - feature 002 (soumettre une note) en place : brouillon, modification, soumission, suppression, liste filtrable
 - feature 003 (valider / rejeter) en place : liste à traiter du responsable, décision motivée, resoumission, historique
 - feature 004 (politique de dépenses) en place : plafond et justificatif par catégorie, signalement hors politique
-- à venir : justificatifs (005), tableau de bord (006)
+- feature 005 (justificatifs) en place : un justificatif par note, stocké hors `public/`, soumission bloquée s'il est obligatoire et absent
+- à venir : tableau de bord (006)
 
 ## Documentation
 
