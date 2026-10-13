@@ -4,7 +4,7 @@ import { jsonResponse } from '../../test/fixtures'
 import { useExpensesStore, type ExpenseInput } from './expensesStore'
 
 const draft = {
-  id: 2, owner: { id: 4, name: 'Léa' }, decidable: false, policy: { limitCents: null, overLimitByCents: null, receiptRequired: false }, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
+  id: 2, owner: { id: 4, name: 'Léa' }, decidable: false, policy: { limitCents: null, overLimitByCents: null, receiptRequired: false, receiptMissing: false }, receipt: null, label: 'Train', amountCents: 8900, date: '2026-10-06', category: { slug: 'transport', label: 'Transport' },
   status: 'draft', createdAt: '2026-10-06T10:00:00+02:00', submittedAt: null, decidedAt: null, decidedBy: null, rejectionReason: null, editable: true,
 }
 const submitted = { ...draft, id: 1, label: 'Déjeuner', status: 'submitted', submittedAt: '2026-10-07T09:00:00+02:00', editable: false }
@@ -165,5 +165,35 @@ describe('expensesStore – décisions', () => {
 
     expect(await useExpensesStore.getState().fetchEvents(1)).toEqual(events)
     expect(fetchMock.mock.calls[0]?.[0]).toBe('/api/expenses/1/events')
+  })
+})
+
+describe('expensesStore – justificatif', () => {
+  const withReceipt = { ...draft, receipt: { name: 'recu.pdf', mimeType: 'application/pdf', sizeBytes: 1200 } }
+
+  it('C1 – envoie le fichier en multipart, sans forcer le JSON, et renvoie la note à jour', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, withReceipt)).mockResolvedValueOnce(jsonResponse(200, [withReceipt]))
+    const file = new File(['%PDF-1.4'], 'recu.pdf', { type: 'application/pdf' })
+
+    const updated = await useExpensesStore.getState().uploadReceipt(2, file)
+
+    expect(updated.receipt).toEqual({ name: 'recu.pdf', mimeType: 'application/pdf', sizeBytes: 1200 })
+    const [url, init] = fetchMock.mock.calls[0] ?? []
+    expect(url).toBe('/api/expenses/2/receipt')
+    expect(init?.method).toBe('POST')
+    const body = init?.body
+    expect(body instanceof FormData && body.get('file')).toBe(file)
+    expect(new Headers(init?.headers).has('Content-Type')).toBe(false)
+  })
+
+  it('C6 – retire le justificatif', async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(200, draft)).mockResolvedValueOnce(jsonResponse(200, [draft]))
+
+    const updated = await useExpensesStore.getState().removeReceipt(2)
+
+    expect(updated.receipt).toBeNull()
+    const [url, init] = fetchMock.mock.calls[0] ?? []
+    expect(url).toBe('/api/expenses/2/receipt')
+    expect(init?.method).toBe('DELETE')
   })
 })
