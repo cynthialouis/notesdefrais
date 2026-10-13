@@ -51,3 +51,20 @@ Aucune. Tranchées le 13/10 : période fixe des 12 derniers mois civils, mois en
 
 - `docs/api.md` : `GET /stats` « salarié / manager » et `GET /exports/expenses.csv` « manager » ; à préciser au plan (une ou deux routes de statistiques, admin inclus comme manager).
 - `docs/produit.md` : « totaux de l'équipe » ne précisait ni la période ni les états comptés : 12 derniers mois civils, notes validées.
+
+## Plan
+
+- **Back** : `StatsPeriod` (12 mois civils depuis l'horloge, Europe/Paris) ; `ExpenseRepository` : totaux par état d'un propriétaire, notes validées des subordonnés directs sur la période ; service `DashboardStats` (états, mois et catégories toujours présents, à 0 si besoin). Routes `GET /api/stats/me` (connecté), `GET /api/stats/team` et `GET /api/exports/team-expenses.csv` (manager et plus, 403 sinon). Service `TeamExpensesCsv` (BOM, `;`, échappement, neutralisation des formules). Démo : notes validées sur plusieurs mois, une hors période. Aucune dépendance.
+- **Front** : `statsApi.ts` (Zod, contrôle contre le contrat) ; composant `ui/Bar` (barre décorative, valeur en texte) ; tableau de bord : cartes par état pour tous, partie équipe pour les managers (par catégorie, par mois, export).
+
+## Tâches
+
+1. `StatsPeriod` et requêtes d'agrégats (C3, C4, C8)
+2. `DashboardStats` (C1 à C5, C8)
+3. Routes `stats/me` et `stats/team`, vues (C1 à C5, autorisations)
+4. Export CSV (C6 à C9)
+5. Données de démo (C3, C4)
+6. Types, `statsApi.ts`
+7. Composant `ui/Bar`
+8. Tableau de bord : partie personnelle (C1, C2)
+9. Tableau de bord : partie équipe et export (C3, C4, C6, C9)
