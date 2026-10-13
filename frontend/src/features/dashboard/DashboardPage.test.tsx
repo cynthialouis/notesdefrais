@@ -75,8 +75,9 @@ const months = ['2025-11', '2025-12', '2026-01', '2026-02', '2026-03', '2026-04'
 const teamStats = {
   from: '2025-11-01',
   to: '2026-10-31',
-  count: 3,
-  totalCents: 48100,
+  // Total volontairement différent de la somme des lignes : le front doit afficher celui du serveur (C5)
+  count: 5,
+  totalCents: 50000,
   byCategory: [
     { category: { slug: 'repas', label: 'Repas' }, count: 1, totalCents: 4200 },
     { category: { slug: 'transport', label: 'Transport' }, count: 0, totalCents: 0 },
@@ -105,7 +106,7 @@ describe('DashboardPage – équipe', () => {
       ['Transport', '0', expect.stringMatching(/^0,00\s€$/)],
       ['Matériel', '2', expect.stringMatching(/^439,00\s€$/)],
     ])
-    expect(screen.getByText(/De novembre 2025 à octobre 2026/)).toHaveTextContent(/481,00\s€, 3 notes/)
+    expect(screen.getByText(/De novembre 2025 à octobre 2026/)).toHaveTextContent(/500,00\s€, 5 notes/)
   })
 
   it('C4 – le manager voit les 12 mois de la période, y compris les mois sans note', async () => {

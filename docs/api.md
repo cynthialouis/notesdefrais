@@ -26,7 +26,7 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 | PUT | `/policies/{slug}` | admin (403 sinon) | `{ maxAmountCents: int de 1 à 1 000 000 ou null, receiptRequired: bool }` → catégorie mise à jour ; 404 si la catégorie est inconnue |
 | GET | `/stats/me` | connecté | Ses totaux par état : `{ byStatus: [{ status, count, totalCents }] }`, les quatre états toujours présents |
 | GET | `/stats/team` | manager et plus (403 sinon) | Notes validées des subordonnés directs sur les 12 derniers mois civils (date de la dépense, heure de Paris) : `{ from, to, count, totalCents, byCategory, byMonth }`, catégories et mois toujours présents |
-| GET | `/exports/team-expenses.csv` | manager et plus (403 sinon) | Les mêmes notes en CSV pour tableur français : BOM UTF-8, `;`, CRLF, montants à virgule, dates JJ/MM/AAAA ; échappement RFC 4180, formules neutralisées (`'` devant `=`, `+`, `-`, `@`) |
+| GET | `/exports/team-expenses.csv` | manager et plus (403 sinon) | Les mêmes notes en CSV pour tableur français : BOM UTF-8, `;`, CRLF, montants à virgule, dates JJ/MM/AAAA ; échappement RFC 4180, formules neutralisées (`'` devant `=`, `+`, `-`, `@`, une tabulation ou un retour chariot) |
 
 Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents, receiptRequired, receiptMissing }`, calculé par `PolicyChecker` (hors politique quand `overLimitByCents` n'est pas null ; soumission refusée quand `receiptMissing` est vrai, ce qui n'arrive que pour une note modifiable), et `receipt` : `{ name, mimeType, sizeBytes }` ou null.
 

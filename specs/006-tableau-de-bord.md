@@ -37,7 +37,7 @@ Colonnes de l'export (C6) : date de la dépense, salarié, libellé, catégorie,
 
 ## Règles recalculées côté front
 
-Aucune. Les totaux, la période et le contenu du CSV viennent du serveur ; le front ne fait que formater les montants en euros.
+Aucune règle métier. Les totaux, la période et le contenu du CSV viennent du serveur ; le front formate les montants en euros et calcule seulement l'échelle des barres (plus grand total de la série), décorative et toujours accompagnée de la valeur écrite. *Précisé le 13/10 après la relecture à froid.*
 
 ## Hors périmètre
 
