@@ -164,6 +164,24 @@ describe('Justificatif sur le détail', () => {
     expect(card().getByRole('button', { name: 'Joindre' })).toBeInTheDocument()
   })
 
+  it('C7 – un refus du serveur au dépôt (409) est affiché, sans changer le justificatif', async () => {
+    stubApi({
+      'GET /api/expenses/2': json(200, hotelDraft),
+      'GET /api/expenses/2/events': json(200, []),
+      'GET /api/categories': json(200, categories),
+      'POST /api/expenses/2/receipt': json(409, { error: { code: 'conflict', message: 'Cette note n\'est plus modifiable.' } }),
+    })
+    await renderAt('/notes/2', employee)
+    await screen.findByRole('heading', { name: 'Justificatif' })
+
+    await userEvent.upload(card().getByLabelText('Fichier'), pdf())
+    await userEvent.click(card().getByRole('button', { name: 'Joindre' }))
+
+    expect(await card().findByRole('alert')).toHaveTextContent('Cette note n\'est plus modifiable.')
+    expect(card().getByLabelText('Fichier')).not.toHaveAttribute('aria-invalid')
+    expect(card().getByText(/Aucun justificatif/)).toBeInTheDocument()
+  })
+
   it('C7 – un refus du serveur au retrait (409) est affiché', async () => {
     stubApi({
       'GET /api/expenses/2': json(200, hotelDraftWithReceipt),

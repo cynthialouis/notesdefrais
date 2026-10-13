@@ -136,6 +136,25 @@ final class ShowReceiptTest extends ApiTestCase
         $this->assertErrorResponse(404);
     }
 
+    /** Relecture F7 : un nom non ASCII (accents, guillemets) s'ouvre, avec un repli ASCII dans l'en-tête. */
+    public function testRelectureUnNomNonAsciiSOuvreAvecSonNomEncode(): void
+    {
+        $team = $this->createTeam();
+        $id = (int) $this->createExpense($team['sophie'])->getId();
+        $this->login($team['sophie']);
+        $content = $this->pngBytes();
+        $this->uploadReceipt($id, $this->uploadedFile($content, 'Reçu « hôtel » "n°1".png', 'image/png'));
+        self::assertResponseStatusCodeSame(200);
+
+        $this->client->request('GET', '/api/expenses/'.$id.'/receipt');
+
+        self::assertResponseStatusCodeSame(200);
+        $disposition = (string) $this->client->getResponse()->headers->get('Content-Disposition');
+        self::assertStringStartsWith('inline', $disposition);
+        self::assertStringContainsString("filename*=utf-8''".rawurlencode('Reçu « hôtel » "n°1".png'), $disposition);
+        self::assertSame($content, $this->client->getInternalResponse()->getContent());
+    }
+
     /** Revue F6 : un fichier absent du disque (données rechargées à la main) répond 404, pas 500. */
     public function testRevueUnFichierAbsentDuStockageRenvoie404(): void
     {

@@ -202,6 +202,8 @@ final class DeleteReceiptTest extends ApiTestCase
         self::assertCount(1, $files);
         self::assertStringEndsWith($keptStorageName, $files[0]);
         self::assertSame('garde.png', $this->findExpense($kept)?->getReceipt()?->getOriginalName());
+        // Relecture F7 : la ligne du justificatif disparaît aussi de la base (cascade)
+        self::assertSame(1, $this->entityManager()->getRepository(\App\Entity\Receipt::class)->count([]));
     }
 
     public function testC11UneSuppressionRefuseeConserveLeJustificatif(): void
