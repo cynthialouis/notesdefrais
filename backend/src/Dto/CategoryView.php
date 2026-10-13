@@ -3,10 +3,12 @@
 namespace App\Dto;
 
 use App\Entity\Category;
+use OpenApi\Attributes as OA;
 
 /**
  * Catégorie et sa politique de dépense (GET /api/categories, PUT /api/policies/{slug}).
  */
+#[OA\Schema(required: ['maxAmountCents'])] // nullable mais toujours présent (Nelmio ne le déduit pas)
 final readonly class CategoryView
 {
     public function __construct(

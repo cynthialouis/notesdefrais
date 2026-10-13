@@ -4,10 +4,12 @@ namespace App\Dto;
 
 use App\Entity\ExpenseEvent;
 use App\Enum\ExpenseEventType;
+use OpenApi\Attributes as OA;
 
 /**
  * Entrée de l'historique d'une note.
  */
+#[OA\Schema(required: ['comment'])] // nullable mais toujours présent (Nelmio ne le déduit pas)
 final readonly class ExpenseEventView
 {
     public function __construct(
