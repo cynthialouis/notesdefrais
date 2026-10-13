@@ -120,7 +120,8 @@ function TeamTotals({ stats }: { stats: Promise<StatsResult<TeamStats>> }) {
       <p className="text-sm text-gray-600">
         {period} : <span className="font-semibold text-gray-900 tabular-nums">{formatCents(totalCents)}</span>, {noteCount(count).toLowerCase()}.
       </p>
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Écart horizontal plus large que les débords des deux tableaux (-mx-5 chacun) : pas de chevauchement */}
+      <div className="grid gap-6 lg:grid-cols-2 lg:gap-x-12">
         <Table label="Par catégorie">
           <thead>
             <tr>
