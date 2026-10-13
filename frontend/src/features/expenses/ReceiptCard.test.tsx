@@ -180,3 +180,50 @@ describe('Justificatif sur le détail', () => {
     expect(card().getByText('facture-hotel.pdf')).toBeInTheDocument()
   })
 })
+
+describe('Soumission et justificatif obligatoire', () => {
+  it('C10 – sans le justificatif obligatoire, le bouton de soumission est désactivé et expliqué', async () => {
+    stubApi({
+      'GET /api/expenses/2': json(200, hotelDraft),
+      'GET /api/expenses/2/events': json(200, []),
+      'GET /api/categories': json(200, categories),
+    })
+    await renderAt('/notes/2', employee)
+
+    const submit = await screen.findByRole('button', { name: 'Soumettre la note' })
+    expect(submit).toBeDisabled()
+    expect(submit).toHaveAccessibleDescription('Joignez le justificatif, obligatoire pour la catégorie Hébergement, avant de soumettre la note.')
+  })
+
+  it('C10 – une fois le justificatif joint, la note peut être soumise', async () => {
+    stubApi({
+      'GET /api/expenses/2': json(200, hotelDraft),
+      'GET /api/expenses/2/events': json(200, []),
+      'GET /api/categories': json(200, categories),
+      'POST /api/expenses/2/receipt': json(200, hotelDraftWithReceipt),
+      'GET /api/expenses': json(200, [hotelDraftWithReceipt]),
+    })
+    await renderAt('/notes/2', employee)
+    await screen.findByRole('heading', { name: 'Justificatif' })
+
+    await userEvent.upload(card().getByLabelText('Fichier'), pdf())
+    await userEvent.click(card().getByRole('button', { name: 'Joindre' }))
+
+    await card().findByText('facture-hotel.pdf')
+    const submit = screen.getByRole('button', { name: 'Soumettre la note' })
+    expect(submit).toBeEnabled()
+    expect(submit).not.toHaveAccessibleDescription()
+  })
+
+  it('C10 – une catégorie sans justificatif obligatoire ne bloque pas la soumission', async () => {
+    stubApi({
+      'GET /api/expenses/2': json(200, draftExpense),
+      'GET /api/expenses/2/events': json(200, []),
+      'GET /api/categories': json(200, categories),
+    })
+    await renderAt('/notes/2', employee)
+
+    expect(await screen.findByRole('button', { name: 'Soumettre la note' })).toBeEnabled()
+  })
+})
+

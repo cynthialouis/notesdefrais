@@ -1,4 +1,4 @@
-import { Suspense, use, useActionState, useState, useTransition } from 'react'
+import { Suspense, use, useActionState, useId, useState, useTransition } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import type { z } from 'zod'
 import { ApiError } from '../../api/client'
@@ -166,6 +166,9 @@ function EditableExpense({ expense, categories }: { expense: Expense; categories
   const [isPending, startTransition] = useTransition()
   const [actionError, setActionError] = useState<string | null>(null)
   const isRejected = expense.status === 'rejected'
+  // Indiqué par le serveur (spec 005, C9) : la soumission serait refusée, le bouton l'explique (C10)
+  const { receiptMissing } = expense.policy
+  const receiptHintId = useId()
 
   async function save(input: ExpenseInput) {
     await update(expense.id, input)
@@ -206,12 +209,23 @@ function EditableExpense({ expense, categories }: { expense: Expense; categories
             ? 'Après correction, soumettez la note à nouveau : elle repart pour validation.'
             : 'Une fois soumise, la note est transmise pour validation et ne peut plus être modifiée.'}
         </p>
+        {receiptMissing && (
+          <p id={receiptHintId} className="mt-3 text-sm font-medium text-amber-800">
+            Joignez le justificatif, obligatoire pour la catégorie {expense.category.label}, avant de soumettre la note.
+          </p>
+        )}
         {actionError && <Alert className="mt-4">{actionError}</Alert>}
         <div className="mt-5 flex flex-wrap justify-between gap-3">
           <Button variant="danger" disabled={isPending} onClick={handleDelete}>
             {isRejected ? 'Supprimer la note' : 'Supprimer le brouillon'}
           </Button>
-          <Button variant="primary" pending={isPending} onClick={() => runAction(() => submit(expense.id))}>
+          <Button
+            variant="primary"
+            pending={isPending}
+            disabled={receiptMissing}
+            aria-describedby={receiptMissing ? receiptHintId : undefined}
+            onClick={() => runAction(() => submit(expense.id))}
+          >
             Soumettre la note
           </Button>
         </div>
