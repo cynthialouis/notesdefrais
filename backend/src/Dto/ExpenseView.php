@@ -12,7 +12,7 @@ use OpenApi\Attributes as OA;
  * Note de frais telle que renvoyée au front, pour un lecteur donné : `editable` et `decidable`
  * disent ce que CE lecteur peut faire, le front n'a pas à recalculer ces règles.
  */
-#[OA\Schema(required: ['submittedAt', 'decidedAt', 'decidedBy', 'rejectionReason'])] // nullable mais toujours présent (Nelmio ne le déduit pas)
+#[OA\Schema(required: ['submittedAt', 'decidedAt', 'decidedBy', 'rejectionReason', 'receipt'])] // nullable mais toujours présent (Nelmio ne le déduit pas)
 final readonly class ExpenseView
 {
     public function __construct(
@@ -39,6 +39,8 @@ final readonly class ExpenseView
         public bool $decidable,
         /** Contrôle de la politique de dépense, calculé par le serveur (spec 004) */
         public PolicyCheck $policy,
+        /** Justificatif joint (spec 005), null s'il n'y en a pas */
+        public ?ReceiptView $receipt,
     ) {
     }
 
@@ -60,6 +62,7 @@ final readonly class ExpenseView
             $expense->isOwnedBy($viewer) && $expense->getStatus()->isEditable(),
             $expense->isDecidedBy($viewer) && ExpenseStatus::Submitted === $expense->getStatus(),
             $policy,
+            null !== $expense->getReceipt() ? ReceiptView::fromEntity($expense->getReceipt()) : null,
         );
     }
 }

@@ -195,7 +195,7 @@ final class PolicyControllerTest extends ApiTestCase
         self::assertResponseStatusCodeSame(200);
         $view = $this->responseJson();
         $this->assertExpenseView($view);
-        self::assertSame(['limitCents' => 15000, 'overLimitByCents' => 3000, 'receiptRequired' => true], $view['policy']);
+        self::assertSame(['limitCents' => 15000, 'overLimitByCents' => 3000, 'receiptRequired' => true, 'receiptMissing' => true], $view['policy']);
     }
 
     public function testC2SupprimerLePlafondLeveLeSignalement(): void
@@ -212,7 +212,7 @@ final class PolicyControllerTest extends ApiTestCase
         $this->client->request('GET', '/api/expenses/'.$id);
 
         self::assertResponseStatusCodeSame(200);
-        self::assertSame(['limitCents' => null, 'overLimitByCents' => null, 'receiptRequired' => false], $this->responseJson()['policy'] ?? null);
+        self::assertSame(['limitCents' => null, 'overLimitByCents' => null, 'receiptRequired' => false, 'receiptMissing' => false], $this->responseJson()['policy'] ?? null);
     }
 
     public function testC3LaRouteNeModifiePasLesNotesExistantes(): void

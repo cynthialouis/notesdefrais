@@ -17,7 +17,7 @@ final class AppFixturesTest extends KernelTestCase
     public function testLesComptesDeDemoCorrespondentALaSpec(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        (new AppFixtures())->load($em);
+        static::getContainer()->get(AppFixtures::class)->load($em); // service : ses dépendances sont injectées (spec 005, justificatifs de démo)
 
         $users = $em->getRepository(User::class)->findAll();
         $byRole = [];

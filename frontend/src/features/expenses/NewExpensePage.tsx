@@ -16,14 +16,14 @@ export function NewExpensePage() {
   const navigate = useNavigate()
 
   async function save(input: ExpenseInput) {
-    await create(input) // C1
-    await navigate('/notes')
+    const created = await create(input) // C1
+    await navigate(`/notes/${created.id}`) // spec 005, C13 : le justificatif se joint sur le détail
   }
 
   return (
     <>
       <title>Nouvelle note – Notes de frais</title>
-      <PageHeader title="Nouvelle note" description="La note est enregistrée en brouillon : vous pourrez la modifier avant de la soumettre." />
+      <PageHeader title="Nouvelle note" description="La note est enregistrée en brouillon : vous pourrez ensuite joindre le justificatif, la modifier et la soumettre." />
       <Card className="max-w-2xl">
         <Suspense fallback={<LoadingState />}>
           <ExpenseForm categories={categories} initialValues={emptyValues} submitLabel="Enregistrer le brouillon" onSave={save} />

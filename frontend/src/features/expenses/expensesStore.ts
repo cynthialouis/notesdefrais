@@ -20,7 +20,11 @@ const expenseBaseSchema = z.object({
     limitCents: z.number().int().nullable(),
     overLimitByCents: z.number().int().nullable(),
     receiptRequired: z.boolean(),
+    /** Justificatif obligatoire et absent : la soumission sera refusée (spec 005, C9). */
+    receiptMissing: z.boolean(),
   }),
+  /** Justificatif joint (spec 005), à ouvrir par receiptUrl(). */
+  receipt: z.object({ name: z.string(), mimeType: z.string(), sizeBytes: z.number().int() }).nullable(),
 })
 
 // Les champs nullables sont toujours présents (null) : le contrat les déclare obligatoires
@@ -103,7 +107,14 @@ type ExpensesStore = {
   reject: (id: number, reason: string) => Promise<Expense>
   /** Historique d'une note, du plus ancien au plus récent (non mis en cache). */
   fetchEvents: (id: number) => Promise<ExpenseEvent[]>
+  /** Joint ou remplace le justificatif ; renvoie la note à jour (spec 005). */
+  uploadReceipt: (id: number, file: File) => Promise<Expense>
+  /** Retire le justificatif ; renvoie la note à jour (spec 005). */
+  removeReceipt: (id: number) => Promise<Expense>
 }
+
+/** Adresse du justificatif, ouvert par le navigateur dans un nouvel onglet (spec 005, C5). */
+export const receiptUrl = (id: number): string => `/api/expenses/${id}/receipt`
 
 export const useExpensesStore = create<ExpensesStore>()((set, get) => {
   /** Après une écriture, la liste est relue : l'ordre reste celui du serveur, sans le recalculer ici. */
@@ -164,6 +175,14 @@ export const useExpensesStore = create<ExpensesStore>()((set, get) => {
       afterWrite(toExpense(await apiFetch<unknown>(`/expenses/${id}`, { method: 'PATCH', body: JSON.stringify(input) }))),
 
     submit: async (id) => afterWrite(toExpense(await apiFetch<unknown>(`/expenses/${id}/submit`, { method: 'POST' }))),
+
+    uploadReceipt: async (id, file) => {
+      const body = new FormData()
+      body.append('file', file)
+      return afterWrite(toExpense(await apiFetch<unknown>(`/expenses/${id}/receipt`, { method: 'POST', body })))
+    },
+
+    removeReceipt: async (id) => afterWrite(toExpense(await apiFetch<unknown>(`/expenses/${id}/receipt`, { method: 'DELETE' }))),
 
     remove: async (id) => {
       await apiFetch<void>(`/expenses/${id}`, { method: 'DELETE' })

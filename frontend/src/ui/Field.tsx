@@ -1,4 +1,4 @@
-import { useId, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
+import { useId, type ComponentProps, type ReactNode, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react'
 import { cx } from './cx'
 
 /** Attributs que Field fournit au contrôle : identifiant et liaisons ARIA. */
@@ -52,7 +52,8 @@ const control =
   'placeholder:text-gray-400 focus:border-brand-500 focus:outline-hidden focus:ring-2 focus:ring-brand-500/30 ' +
   'aria-invalid:border-red-500 aria-invalid:focus:ring-red-500/30'
 
-type InputProps = InputHTMLAttributes<HTMLInputElement> & {
+// ComponentProps inclut ref (prop ordinaire en React 19), transmise à l'input par la décomposition
+type InputProps = ComponentProps<'input'> & {
   /** Unité affichée à droite du champ (ex. « € »), décorative. */
   suffix?: string
 }

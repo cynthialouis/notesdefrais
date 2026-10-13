@@ -537,6 +537,138 @@
                 }
             }
         },
+        "/api/expenses/{id}/receipt": {
+            "get": {
+                "tags": [
+                    "Justificatifs"
+                ],
+                "operationId": "get_api_receipt_show",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Le fichier, affich\u00e9 par le navigateur (inline)",
+                        "content": {
+                            "image/jpeg": {},
+                            "image/png": {},
+                            "application/pdf": {}
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    },
+                    "404": {
+                        "description": "Note inexistante ou non visible"
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Justificatifs"
+                ],
+                "operationId": "post_api_receipt_upload",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Justificatif joint ou remplac\u00e9",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Fichier absent, vide, trop lourd ou d'un type refus\u00e9"
+                    },
+                    "409": {
+                        "description": "La note n'est ni en brouillon ni rejet\u00e9e"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    },
+                    "404": {
+                        "description": "Note inexistante ou non visible"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Justificatifs"
+                ],
+                "operationId": "delete_api_receipt_delete",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Justificatif retir\u00e9",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ExpenseView"
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "La note n'est ni en brouillon ni rejet\u00e9e"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    },
+                    "404": {
+                        "description": "Note inexistante ou non visible"
+                    }
+                }
+            }
+        },
         "/api/team/expenses": {
             "get": {
                 "operationId": "get_api_team_expenses",
@@ -769,7 +901,8 @@
                 "required": [
                     "limitCents",
                     "overLimitByCents",
-                    "receiptRequired"
+                    "receiptRequired",
+                    "receiptMissing"
                 ],
                 "properties": {
                     "limitCents": {
@@ -784,6 +917,30 @@
                     },
                     "receiptRequired": {
                         "type": "boolean"
+                    },
+                    "receiptMissing": {
+                        "title": "Justificatif obligatoire et absent : la note ne peut pas \u00eatre soumise (spec 005, C8, C9)",
+                        "type": "boolean"
+                    }
+                },
+                "type": "object"
+            },
+            "ReceiptView": {
+                "required": [
+                    "name",
+                    "mimeType",
+                    "sizeBytes"
+                ],
+                "properties": {
+                    "name": {
+                        "title": "Nom d'origine, pour l'affichage",
+                        "type": "string"
+                    },
+                    "mimeType": {
+                        "type": "string"
+                    },
+                    "sizeBytes": {
+                        "type": "integer"
                     }
                 },
                 "type": "object"
@@ -804,7 +961,8 @@
                     "rejectionReason",
                     "editable",
                     "decidable",
-                    "policy"
+                    "policy",
+                    "receipt"
                 ],
                 "properties": {
                     "id": {
@@ -866,6 +1024,15 @@
                     },
                     "policy": {
                         "$ref": "#/components/schemas/PolicyCheck"
+                    },
+                    "receipt": {
+                        "title": "Justificatif joint (spec 005), null s'il n'y en a pas",
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/ReceiptView"
+                            }
+                        ]
                     }
                 },
                 "type": "object"
@@ -906,5 +1073,10 @@
                 "type": "object"
             }
         }
-    }
+    },
+    "tags": [
+        {
+            "name": "Justificatifs"
+        }
+    ]
 }

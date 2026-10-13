@@ -86,7 +86,7 @@ Trois points précis méritent d'être explicités, car on se trompe facilement 
 
 Installer `symfony/test-pack` s'il ne l'est pas déjà. Les tests fonctionnels / HTTP
 étendent `WebTestCase` ; les tests de services étendent `KernelTestCase`. Lancer
-`php bin/phpunit` (ou à défaut `vendor/bin/phpunit`). Une fonctionnalité n'est pas
+`make test-back` depuis la racine du dépôt (PHPUnit avec les limites d'upload de `php.ini`). Une fonctionnalité n'est pas
 terminée tant qu'un test ne l'exerce pas comme le ferait un appelant : une requête
 HTTP pour un contrôleur, un appel de service pour un service, et pas seulement
 « ça n'a pas levé d'exception ».

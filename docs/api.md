@@ -15,17 +15,19 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 | GET | `/expenses/{id}` | propriétaire, ou son responsable hors brouillon | Lit une note ; la vue dit ce que le lecteur peut faire (`editable`, `decidable`) |
 | PATCH | `/expenses/{id}` | propriétaire | Remplace tous les champs d'une note en brouillon ou rejetée (corps complet, comme `POST`) ; 409 sinon |
 | DELETE | `/expenses/{id}` | propriétaire | Supprime une note en brouillon ou rejetée → 204 ; 409 sinon |
-| POST | `/expenses/{id}/submit` | propriétaire | `draft` ou `rejected` → `submitted` ; 409 sinon, ou si le propriétaire n'a pas de responsable (l'admin) |
+| POST | `/expenses/{id}/submit` | propriétaire | `draft` ou `rejected` → `submitted` ; 409 sinon, si le propriétaire n'a pas de responsable (l'admin), ou si un justificatif obligatoire manque (dans cet ordre) |
 | GET | `/team/expenses` | manager et plus (403 sinon) | Notes soumises des personnes dont on est le responsable direct, les plus anciennes soumissions d'abord |
 | POST | `/expenses/{id}/approve` | responsable du propriétaire | `submitted` → `approved` ; 403 pour le propriétaire, 404 pour tout autre ; 409 si pas soumise |
 | POST | `/expenses/{id}/reject` | responsable du propriétaire | `submitted` → `rejected`, motif de 5 à 1000 caractères (`RejectionInput`) ; mêmes 403 / 404 / 409 |
-| POST | `/expenses/{id}/receipts` | propriétaire | Upload (≤ 5 Mo, jpg / png / pdf) |
+| POST | `/expenses/{id}/receipt` | propriétaire (404 sinon) | Joint ou remplace le justificatif (multipart, champ `file`) : JPEG, PNG ou PDF d'après le contenu, 1 octet à 5 000 000 octets ; 400 sinon (`fields.file`) ; 409 si la note n'est pas modifiable → note mise à jour |
+| GET | `/expenses/{id}/receipt` | propriétaire, ou son responsable hors brouillon | Le fichier, `inline`, type stocké, `X-Content-Type-Options: nosniff` ; 404 sans justificatif |
+| DELETE | `/expenses/{id}/receipt` | propriétaire (404 sinon) | Retire le justificatif ; 404 s'il n'y en a pas ; 409 si la note n'est pas modifiable → note mise à jour |
 | GET | `/expenses/{id}/events` | propriétaire, ou son responsable hors brouillon | Historique (type, auteur, commentaire, date), du plus ancien au plus récent |
 | PUT | `/policies/{slug}` | admin (403 sinon) | `{ maxAmountCents: int de 1 à 1 000 000 ou null, receiptRequired: bool }` → catégorie mise à jour ; 404 si la catégorie est inconnue |
 | GET | `/stats` | salarié / manager | Agrégats pour le tableau de bord, calculés côté serveur |
 | GET | `/exports/expenses.csv` | manager | Export des notes validées (`text/csv`) |
 
-Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents, receiptRequired }`, calculé par `PolicyChecker` (hors politique quand `overLimitByCents` n'est pas null).
+Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents, receiptRequired, receiptMissing }`, calculé par `PolicyChecker` (hors politique quand `overLimitByCents` n'est pas null ; soumission refusée quand `receiptMissing` est vrai, ce qui n'arrive que pour une note modifiable), et `receipt` : `{ name, mimeType, sizeBytes }` ou null.
 
 ## Conventions
 

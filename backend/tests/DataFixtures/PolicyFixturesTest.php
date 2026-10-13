@@ -17,7 +17,7 @@ final class PolicyFixturesTest extends KernelTestCase
     public function testC10LesDonneesDeDemoPortentLesPolitiquesDeDepart(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        (new AppFixtures())->load($em);
+        static::getContainer()->get(AppFixtures::class)->load($em); // service : ses dépendances sont injectées (spec 005, justificatifs de démo)
         $em->clear();
 
         $expected = [
@@ -38,7 +38,7 @@ final class PolicyFixturesTest extends KernelTestCase
     public function testC10LesDonneesDeDemoContiennentDesNotesHorsPlafond(): void
     {
         $em = static::getContainer()->get(EntityManagerInterface::class);
-        (new AppFixtures())->load($em);
+        static::getContainer()->get(AppFixtures::class)->load($em); // service : ses dépendances sont injectées (spec 005, justificatifs de démo)
         $em->clear();
 
         $checker = static::getContainer()->get(PolicyChecker::class);

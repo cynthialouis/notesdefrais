@@ -16,7 +16,7 @@ final class ApiDocTest extends ApiTestCase
      */
     public static function responseSchemas(): iterable
     {
-        foreach (['UserView', 'DemoUserView', 'PersonRef', 'CategoryView', 'ExpenseCategoryRef', 'PolicyCheck', 'ExpenseView', 'ExpenseEventView'] as $schema) {
+        foreach (['UserView', 'DemoUserView', 'PersonRef', 'CategoryView', 'ExpenseCategoryRef', 'PolicyCheck', 'ExpenseView', 'ExpenseEventView', 'ReceiptView'] as $schema) {
             yield $schema => [$schema];
         }
     }
@@ -34,5 +34,22 @@ final class ApiDocTest extends ApiTestCase
         sort($properties);
         sort($required);
         self::assertSame($properties, $required);
+    }
+
+    /**
+     * Spec 005 : les trois routes du justificatif sont décrites dans le contrat.
+     */
+    public function testC5LesRoutesDuJustificatifSontDecrites(): void
+    {
+        $this->client->request('GET', '/api/doc.json');
+        self::assertResponseIsSuccessful();
+
+        $path = $this->responseJson()['paths']['/api/expenses/{id}/receipt'] ?? null;
+        self::assertIsArray($path, 'Route /api/expenses/{id}/receipt absente du contrat.');
+        foreach (['post', 'get', 'delete'] as $method) {
+            self::assertArrayHasKey($method, $path, "Méthode $method absente du contrat.");
+        }
+        $expenseView = $this->responseJson()['components']['schemas']['ExpenseView']['properties'] ?? [];
+        self::assertArrayHasKey('receipt', $expenseView);
     }
 }

@@ -18,7 +18,7 @@ description: Relit le code de l'API Symfony modifié dans backend/ selon les con
 ## 2. D'abord les outils
 
 Dans `backend/`, lance et rapporte tels quels :
-- `php bin/phpunit`
+- `make test-back` (depuis la racine : migre la base de test et applique les limites d'upload de `backend/php.ini`)
 - `php bin/console lint:container`
 - `php bin/console lint:yaml config/`
 - `php bin/console doctrine:schema:validate` (mapping cohérent avec les migrations)
@@ -53,4 +53,4 @@ Termine par le résultat des outils et par « Aucune remarque » pour les fichie
 ## 5. Appliquer ou non
 
 - Si la demande est une revue seule : ne modifie aucun fichier.
-- Si la demande inclut les corrections (étape F6) : applique les remarques **bloquant** et **à corriger**, en ajoutant le test qui prouve chaque faille corrigée, relance `php bin/phpunit` et `php bin/console lint:container`, puis indique les remarques écartées avec leur justification.
+- Si la demande inclut les corrections (étape F6) : applique les remarques **bloquant** et **à corriger**, en ajoutant le test qui prouve chaque faille corrigée, relance `make test-back` et `php bin/console lint:container`, puis indique les remarques écartées avec leur justification.

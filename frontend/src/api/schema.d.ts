@@ -221,6 +221,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/expenses/{id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_receipt_show"];
+        put?: never;
+        post: operations["post_api_receipt_upload"];
+        delete: operations["delete_api_receipt_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/team/expenses": {
         parameters: {
             query?: never;
@@ -308,6 +324,14 @@ export interface components {
             /** Dépassement en centimes ; null si la note est conforme (montant ≤ plafond) ou sans plafond */
             overLimitByCents: number | null;
             receiptRequired: boolean;
+            /** Justificatif obligatoire et absent : la note ne peut pas être soumise (spec 005, C8, C9) */
+            receiptMissing: boolean;
+        };
+        ReceiptView: {
+            /** Nom d'origine, pour l'affichage */
+            name: string;
+            mimeType: string;
+            sizeBytes: number;
         };
         ExpenseView: {
             id: number;
@@ -332,6 +356,8 @@ export interface components {
             /** Vrai si le lecteur est le responsable du propriétaire et peut la valider ou la rejeter */
             decidable: boolean;
             policy: components["schemas"]["PolicyCheck"];
+            /** Justificatif joint (spec 005), null s'il n'y en a pas */
+            receipt: components["schemas"]["ReceiptView"] | null;
         };
         /** @enum {string} */
         ExpenseEventType: "created" | "submitted" | "approved" | "rejected";
@@ -950,6 +976,144 @@ export interface operations {
             };
             /** @description Catégorie inconnue */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_receipt_show: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Le fichier, affiché par le navigateur (inline) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": unknown;
+                    "image/png": unknown;
+                    "application/pdf": unknown;
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Note inexistante ou non visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_receipt_upload: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Justificatif joint ou remplacé */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseView"];
+                };
+            };
+            /** @description Fichier absent, vide, trop lourd ou d'un type refusé */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Note inexistante ou non visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La note n'est ni en brouillon ni rejetée */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    delete_api_receipt_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Justificatif retiré */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExpenseView"];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Note inexistante ou non visible */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La note n'est ni en brouillon ni rejetée */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

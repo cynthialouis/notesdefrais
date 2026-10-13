@@ -16,3 +16,19 @@ export function formatIsoDateTime(isoDateTime: string): string {
 export function formatIsoDay(isoDateTime: string): string {
   return new Intl.DateTimeFormat('fr-FR', { dateStyle: 'short', timeZone: 'Europe/Paris' }).format(new Date(isoDateTime))
 }
+
+const sizeFormatters = {
+  ko: new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }),
+  mo: new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }),
+}
+
+/** Taille d'un fichier, en unités décimales comme la limite du serveur (5 Mo = 5 000 000 octets) : « 350 Ko », « 1,2 Mo ». */
+export function formatFileSize(bytes: number): string {
+  if (bytes < 1000) {
+    return `${bytes} octets`
+  }
+  if (bytes < 1_000_000) {
+    return `${sizeFormatters.ko.format(bytes / 1000)} Ko`
+  }
+  return `${sizeFormatters.mo.format(bytes / 1_000_000)} Mo`
+}

@@ -29,7 +29,8 @@ export const draftExpense = {
   rejectionReason: null,
   editable: true,
   decidable: false,
-  policy: { limitCents: 30000, overLimitByCents: null, receiptRequired: false },
+  policy: { limitCents: 30000, overLimitByCents: null, receiptRequired: false, receiptMissing: false },
+  receipt: null,
 }
 
 export const submittedExpense = {
@@ -65,5 +66,5 @@ export const overLimitExpense = {
   id: 5,
   label: 'Dîner client Martin',
   amountCents: 6200,
-  policy: { limitCents: 5000, overLimitByCents: 1200, receiptRequired: false },
+  policy: { limitCents: 5000, overLimitByCents: 1200, receiptRequired: false, receiptMissing: false },
 }

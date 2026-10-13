@@ -17,7 +17,7 @@ Specs prévues dans `specs/` : `001-connexion-roles`, `002-soumettre-note`, `003
 | F2. Spec | `/ecrire-spec` avec l'idée de départ. Claude relit la spec avec la grille ci-dessous et la corrige ; l'humain tranche les questions ouvertes et valide. Commit `docs(spec): 00X nom` |
 | F3. Plan | Plan mode, prompt P-Plan. Claude vérifie le plan avec la grille et l'ajuste ; l'humain valide. Le plan et les tâches sont ajoutés à la spec. Commit `docs(spec): 00X plan` |
 | F4a. Tests | Subagent `testeur-spec` sur la spec. Claude vérifie : tests nommés d'après les critères, qui échouent pour la bonne raison ; `git diff --stat` ne montre que des fichiers de test. Commit `test(00X): tests depuis la spec` |
-| F4b. Implémentation | Une tâche du plan à la fois (P-Impl), lecture du diff par l'humain pour le comprendre, tests du projet touché (`php bin/phpunit` dans `backend/`, `npm run test` dans `frontend/`), commit `feat(00X): tâche N – description` |
+| F4b. Implémentation | Une tâche du plan à la fois (P-Impl), lecture du diff par l'humain pour le comprendre, tests du projet touché (`make test-back` depuis la racine, `npm run test` dans `frontend/`), commit `feat(00X): tâche N – description` |
 | F5. Vérification à la main | `symfony serve` dans `backend/` et `npm run dev` dans `frontend/`, chaque critère d'acceptation déroulé dans le navigateur avec le bon compte de démo |
 | F6. Revues | `/revue-api` si `backend/` a changé, `/revue-react` si `frontend/` a changé. Claude applique les remarques pertinentes et justifie celles qu'il écarte |
 | F7. Relecture à froid | Subagent `relecteur` sur la spec ; Claude corrige les problèmes signalés |
