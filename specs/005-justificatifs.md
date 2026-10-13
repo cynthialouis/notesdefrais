@@ -14,7 +14,7 @@ Pour être remboursé, un salarié doit souvent prouver sa dépense : il joint �
 - **C6** TANT QU'une note est modifiable, LE SYSTÈME DOIT permettre à son propriétaire de remplacer ou de retirer son justificatif.
 - **C7** SI la note n'est pas modifiable (soumise ou validée), ALORS LE SYSTÈME DOIT refuser tout dépôt, remplacement ou retrait de justificatif (409).
 - **C8** SI la catégorie d'une note exige un justificatif et que la note n'en a pas, ALORS LE SYSTÈME DOIT refuser sa soumission (409) avec un message explicite.
-- **C9** LE SYSTÈME DOIT indiquer, pour chaque note, si un justificatif obligatoire lui manque.
+- **C9** LE SYSTÈME DOIT indiquer, pour chaque note modifiable (brouillon ou rejetée), si un justificatif obligatoire lui manque ; une note soumise ou validée n'est jamais signalée, et l'indication n'apparaît que sur le détail de la note. *Précisé le 13/10 après la relecture à froid.*
 - **C10** TANT QU'un justificatif obligatoire manque, LE SYSTÈME DOIT l'expliquer à côté du bouton de soumission et désactiver ce bouton.
 - **C11** QUAND une note est supprimée, LE SYSTÈME DOIT supprimer aussi son justificatif.
 - **C12** LE SYSTÈME DOIT conserver les fichiers hors de la partie publique du serveur, sous un nom qu'il génère lui-même.

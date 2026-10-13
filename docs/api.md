@@ -27,7 +27,7 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 | GET | `/stats` | salarié / manager | Agrégats pour le tableau de bord, calculés côté serveur |
 | GET | `/exports/expenses.csv` | manager | Export des notes validées (`text/csv`) |
 
-Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents, receiptRequired, receiptMissing }`, calculé par `PolicyChecker` (hors politique quand `overLimitByCents` n'est pas null ; soumission refusée quand `receiptMissing` est vrai), et `receipt` : `{ name, mimeType, sizeBytes }` ou null.
+Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents, receiptRequired, receiptMissing }`, calculé par `PolicyChecker` (hors politique quand `overLimitByCents` n'est pas null ; soumission refusée quand `receiptMissing` est vrai, ce qui n'arrive que pour une note modifiable), et `receipt` : `{ name, mimeType, sizeBytes }` ou null.
 
 ## Conventions
 

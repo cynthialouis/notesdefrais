@@ -16,7 +16,7 @@ final readonly class PolicyCheck
         /** Dépassement en centimes ; null si la note est conforme (montant ≤ plafond) ou sans plafond */
         public ?int $overLimitByCents,
         public bool $receiptRequired,
-        /** Justificatif obligatoire et absent : la note ne peut pas être soumise (spec 005, C8, C9) */
+        /** Justificatif obligatoire et absent d'une note modifiable : elle ne peut pas être soumise (spec 005, C8, C9) */
         public bool $receiptMissing,
     ) {
     }
