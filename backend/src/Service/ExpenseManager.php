@@ -125,7 +125,7 @@ final class ExpenseManager
 
         $storageName = $this->receipts->store($file);
         try {
-            $expense->setReceipt(new Receipt($file->getClientOriginalName(), $mimeType, $sizeBytes, $storageName));
+            $expense->setReceipt(new Receipt(self::displayName($file->getClientOriginalName()), $mimeType, $sizeBytes, $storageName));
             $this->em->flush();
         } catch (\Throwable $error) {
             $this->receipts->delete($storageName);
@@ -149,6 +149,18 @@ final class ExpenseManager
         $this->receipts->delete($storageName);
 
         return $expense;
+    }
+
+    /** Nom d'origine tronqué à la taille de sa colonne (255 caractères), en gardant l'extension. */
+    private static function displayName(string $name): string
+    {
+        if (mb_strlen($name) <= 255) {
+            return $name;
+        }
+        $extension = pathinfo($name, \PATHINFO_EXTENSION);
+        $suffix = '' !== $extension && mb_strlen($extension) <= 10 ? '.'.$extension : '';
+
+        return mb_substr($name, 0, 255 - mb_strlen($suffix)).$suffix;
     }
 
     private function assertEditable(Expense $expense): void

@@ -520,4 +520,20 @@ final class UploadReceiptTest extends ApiTestCase
             'upload_max_filesize ('.\ini_get('upload_max_filesize').') doit dépasser 5 Mo pour tester la limite de C3 (et pour déposer un justificatif de 5 Mo en vrai).',
         );
     }
+
+    /** Revue F6 : un nom d'origine trop long est tronqué à 255 caractères (taille de la colonne), extension gardée. */
+    public function testRevueUnNomDOrigineTropLongEstTronqueEnGardantLExtension(): void
+    {
+        $team = $this->createTeam();
+        $id = (int) $this->createExpense($team['sophie'])->getId();
+        $this->login($team['sophie']);
+
+        $this->uploadReceipt($id, $this->uploadedFile($this->pdfBytes(), str_repeat('é', 300).'.pdf', 'application/pdf'));
+
+        self::assertResponseStatusCodeSame(200);
+        $name = $this->responseJson()['receipt']['name'] ?? '';
+        self::assertSame(255, mb_strlen($name));
+        self::assertStringEndsWith('é.pdf', $name);
+        self::assertSame($name, $this->findExpense($id)?->getReceipt()?->getOriginalName());
+    }
 }

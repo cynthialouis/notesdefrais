@@ -136,6 +136,23 @@ final class ShowReceiptTest extends ApiTestCase
         $this->assertErrorResponse(404);
     }
 
+    /** Revue F6 : un fichier absent du disque (données rechargées à la main) répond 404, pas 500. */
+    public function testRevueUnFichierAbsentDuStockageRenvoie404(): void
+    {
+        $team = $this->createTeam();
+        $id = (int) $this->createExpense($team['sophie'])->getId();
+        $this->login($team['sophie']);
+        $this->attachPng($id);
+        foreach ($this->receiptFiles() as $file) {
+            unlink($file);
+        }
+
+        $this->client->request('GET', '/api/expenses/'.$id.'/receipt');
+
+        $error = $this->assertErrorResponse(404);
+        self::assertStringNotContainsString('receipts', $error['message']);
+    }
+
     // --- Autorisations ---------------------------------------------------------------------
 
     public function testAutorisationOuvertureSansSessionRenvoie401(): void

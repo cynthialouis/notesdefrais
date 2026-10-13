@@ -73,8 +73,12 @@ final class ReceiptController extends AbstractController
     public function show(#[MapEntity(id: 'id')] Expense $expense, ReceiptStorage $storage): BinaryFileResponse
     {
         $receipt = $expense->getReceipt() ?? throw new NotFoundHttpException('Aucun justificatif sur cette note.');
+        $path = $storage->path($receipt->getStorageName());
+        if (!is_file($path)) {
+            throw new NotFoundHttpException('Fichier du justificatif absent du stockage.'); // jamais exposé : message générique
+        }
 
-        $response = new BinaryFileResponse($storage->path($receipt->getStorageName()), headers: ['Content-Type' => $receipt->getMimeType()], autoEtag: true);
+        $response = new BinaryFileResponse($path, headers: ['Content-Type' => $receipt->getMimeType()], autoEtag: true);
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         // Nom d'origine pour l'enregistrement, sans séparateur de chemin (refusé par makeDisposition)
         $name = str_replace(['/', '\\'], '_', $receipt->getOriginalName());

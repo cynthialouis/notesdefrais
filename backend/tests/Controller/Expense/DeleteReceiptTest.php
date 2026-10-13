@@ -232,4 +232,17 @@ final class DeleteReceiptTest extends ApiTestCase
         self::assertNull($this->findExpense($id));
         self::assertSame([], $this->receiptFiles());
     }
+
+    /** Revue F6 : retirer un justificatif absent renvoie 404, sans rien changer. */
+    public function testRevueRetirerUnJustificatifAbsentRenvoie404(): void
+    {
+        $team = $this->createTeam();
+        $id = (int) $this->createExpense($team['sophie'])->getId();
+        $this->login($team['sophie']);
+
+        $this->client->request('DELETE', '/api/expenses/'.$id.'/receipt');
+
+        $this->assertErrorResponse(404);
+        self::assertSame(ExpenseStatus::Draft, $this->findExpense($id)?->getStatus());
+    }
 }
