@@ -14,6 +14,7 @@ import { ExpenseForm } from './ExpenseForm'
 import { useExpensesStore, type Expense, type ExpenseEvent, type ExpenseInput } from './expensesStore'
 import { formatIsoDate, formatIsoDateTime } from './format'
 import { centsToEurosInput, formatCents } from './money'
+import { ReceiptCard } from './ReceiptCard'
 import { rejectionSchema } from './rejectionValidation'
 import { StatusBadge } from './StatusBadge'
 import { eventLabels } from './statusLabels'
@@ -72,10 +73,12 @@ function ExpenseDetail({
 }) {
   const result = use(expensePromise)
   const session = useSessionStore((state) => state.session)
+  // Note renvoyée par le serveur après une écriture sur place (justificatif) : elle remplace celle chargée
+  const [updated, setUpdated] = useState<Expense | null>(null)
   if (!result.ok) {
     return <Alert>{result.message}</Alert>
   }
-  const expense = result.value
+  const expense = updated ?? result.value
   const isOwn = session.status === 'authenticated' && session.user.id === expense.owner.id
 
   return (
@@ -92,6 +95,7 @@ function ExpenseDetail({
         <DecisionSummary expense={expense} />
         <PolicySummary expense={expense} />
         {expense.editable ? <EditableExpense expense={expense} categories={categories} /> : <ReadOnlyExpense expense={expense} />}
+        <ReceiptCard expense={expense} onChange={setUpdated} />
         {expense.decidable && <DecisionCard expense={expense} back={back} />}
         <Suspense fallback={<LoadingState label="Chargement de l'historique…" />}>
           <HistoryCard events={events} />
