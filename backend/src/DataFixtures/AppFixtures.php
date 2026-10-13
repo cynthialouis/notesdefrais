@@ -60,6 +60,29 @@ class AppFixtures extends Fixture
         // Justificatif obligatoire et absent : la soumission est bloquée (spec 005, C10)
         $this->expense($manager, $lea, 'Hôtel formation Lyon', 11900, 4, 'hebergement');
 
+        // Historique validé sur l'année, pour le tableau de bord des managers (spec 006) : plusieurs mois et
+        // catégories, un libellé à échapper dans le CSV, et une note hors des 12 derniers mois
+        foreach ([
+            [$lea, 'Train Paris – Nantes', 11200, 65, 'transport'],
+            [$tom, 'Dîner "Le Bistrot" ; client Durand', 4600, 95, 'repas'],
+            [$tom, 'Hôtel séminaire Bordeaux', 13900, 130, 'hebergement'],
+            [$lea, 'Taxi gare – client', 3800, 185, 'transport'],
+            [$tom, 'Écran 27 pouces', 32900, 250, 'materiel'],
+            [$lea, 'Déjeuner équipe projet', 4200, 320, 'repas'],
+            [$tom, 'Train salon Lille (année précédente)', 9800, 420, 'transport'],
+            [$ines, 'Avion Toulouse – Paris', 21500, 75, 'transport'],
+            [$ines, 'Repas client Morel', 3900, 140, 'repas'],
+            // Validée par Alice : le tableau de bord de l'admin montre les notes de ses managers
+            [$hugo, 'Train comité de direction', 8900, 45, 'transport'],
+        ] as [$owner, $label, $amount, $daysAgo, $slug]) {
+            $responsible = $owner->getManager();
+            \assert(null !== $responsible);
+            $expense = $this->expense($manager, $owner, $label, $amount, $daysAgo, $slug, [[ExpenseEventType::Submitted, $owner, $daysAgo - 1], [ExpenseEventType::Approved, $responsible, $daysAgo - 3]]);
+            if ($expense->getCategory()->isReceiptRequired()) {
+                $expense->setReceipt($this->receipt('facture-'.$slug.'-'.$daysAgo.'.pdf', $label, \sprintf('%d,%02d EUR', intdiv($amount, 100), $amount % 100)));
+            }
+        }
+
         // À traiter par Claire (Tom), par Hugo (Inès), par Alice (Claire)
         $this->expense($manager, $tom, 'Hôtel salon Rennes', 12800, 20, 'hebergement', [[ExpenseEventType::Submitted, $tom, 19]])
             ->setReceipt($this->receipt('facture-hotel-rennes.pdf', 'Hôtel salon Rennes', '128,00 EUR'));

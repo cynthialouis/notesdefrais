@@ -458,6 +458,32 @@
                 }
             }
         },
+        "/api/exports/team-expenses.csv": {
+            "get": {
+                "tags": [
+                    "Tableau de bord"
+                ],
+                "operationId": "get_api_exports_team_expenses",
+                "responses": {
+                    "200": {
+                        "description": "CSV pour tableur fran\u00e7ais (BOM UTF-8, \u00ab ; \u00bb, montants \u00e0 virgule)",
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    },
+                    "403": {
+                        "description": "R\u00e9serv\u00e9 aux managers"
+                    }
+                }
+            }
+        },
         "/api/health": {
             "get": {
                 "operationId": "get_api_health",
@@ -665,6 +691,55 @@
                     },
                     "404": {
                         "description": "Note inexistante ou non visible"
+                    }
+                }
+            }
+        },
+        "/api/stats/me": {
+            "get": {
+                "tags": [
+                    "Tableau de bord"
+                ],
+                "operationId": "get_api_stats_me",
+                "responses": {
+                    "200": {
+                        "description": "Nombre et total de ses notes pour chacun des quatre \u00e9tats",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/MyStatsView"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/stats/team": {
+            "get": {
+                "tags": [
+                    "Tableau de bord"
+                ],
+                "operationId": "get_api_stats_team",
+                "responses": {
+                    "200": {
+                        "description": "Notes valid\u00e9es de l'\u00e9quipe directe sur les 12 derniers mois civils, par cat\u00e9gorie et par mois",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/TeamStatsView"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "R\u00e9serv\u00e9 aux managers"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
                     }
                 }
             }
@@ -919,7 +994,7 @@
                         "type": "boolean"
                     },
                     "receiptMissing": {
-                        "title": "Justificatif obligatoire et absent : la note ne peut pas \u00eatre soumise (spec 005, C8, C9)",
+                        "title": "Justificatif obligatoire et absent d'une note modifiable : elle ne peut pas \u00eatre soumise (spec 005, C8, C9)",
                         "type": "boolean"
                     }
                 },
@@ -1071,10 +1146,127 @@
                     }
                 },
                 "type": "object"
+            },
+            "StatusTotalView": {
+                "required": [
+                    "status",
+                    "count",
+                    "totalCents"
+                ],
+                "properties": {
+                    "status": {
+                        "$ref": "#/components/schemas/ExpenseStatus"
+                    },
+                    "count": {
+                        "type": "integer"
+                    },
+                    "totalCents": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "MyStatsView": {
+                "required": [
+                    "byStatus"
+                ],
+                "properties": {
+                    "byStatus": {
+                        "title": "les quatre \u00e9tats, toujours pr\u00e9sents, dans l'ordre du cycle de vie",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/StatusTotalView"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "CategoryTotalView": {
+                "required": [
+                    "category",
+                    "count",
+                    "totalCents"
+                ],
+                "properties": {
+                    "category": {
+                        "$ref": "#/components/schemas/ExpenseCategoryRef"
+                    },
+                    "count": {
+                        "type": "integer"
+                    },
+                    "totalCents": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "MonthTotalView": {
+                "required": [
+                    "month",
+                    "count",
+                    "totalCents"
+                ],
+                "properties": {
+                    "month": {
+                        "title": "Mois au format AAAA-MM",
+                        "type": "string"
+                    },
+                    "count": {
+                        "type": "integer"
+                    },
+                    "totalCents": {
+                        "type": "integer"
+                    }
+                },
+                "type": "object"
+            },
+            "TeamStatsView": {
+                "required": [
+                    "from",
+                    "to",
+                    "count",
+                    "totalCents",
+                    "byCategory",
+                    "byMonth"
+                ],
+                "properties": {
+                    "from": {
+                        "title": "Premier jour de la p\u00e9riode, AAAA-MM-JJ",
+                        "type": "string"
+                    },
+                    "to": {
+                        "title": "Dernier jour de la p\u00e9riode, AAAA-MM-JJ",
+                        "type": "string"
+                    },
+                    "count": {
+                        "type": "integer"
+                    },
+                    "totalCents": {
+                        "type": "integer"
+                    },
+                    "byCategory": {
+                        "title": "toutes les cat\u00e9gories, dans l'ordre de r\u00e9f\u00e9rence",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CategoryTotalView"
+                        }
+                    },
+                    "byMonth": {
+                        "title": "les 12 mois, du plus ancien au plus r\u00e9cent",
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/MonthTotalView"
+                        }
+                    }
+                },
+                "type": "object"
             }
         }
     },
     "tags": [
+        {
+            "name": "Tableau de bord"
+        },
         {
             "name": "Justificatifs"
         }

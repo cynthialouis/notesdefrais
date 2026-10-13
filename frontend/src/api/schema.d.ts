@@ -173,6 +173,22 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exports/team-expenses.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_exports_team_expenses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -232,6 +248,38 @@ export interface paths {
         put?: never;
         post: operations["post_api_receipt_upload"];
         delete: operations["delete_api_receipt_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stats/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_stats_me"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/stats/team": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_stats_team"];
+        put?: never;
+        post?: never;
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -324,7 +372,7 @@ export interface components {
             /** Dépassement en centimes ; null si la note est conforme (montant ≤ plafond) ou sans plafond */
             overLimitByCents: number | null;
             receiptRequired: boolean;
-            /** Justificatif obligatoire et absent : la note ne peut pas être soumise (spec 005, C8, C9) */
+            /** Justificatif obligatoire et absent d'une note modifiable : elle ne peut pas être soumise (spec 005, C8, C9) */
             receiptMissing: boolean;
         };
         ReceiptView: {
@@ -368,6 +416,38 @@ export interface components {
             comment: string | null;
             /** Date et heure ISO 8601 */
             createdAt: string;
+        };
+        StatusTotalView: {
+            status: components["schemas"]["ExpenseStatus"];
+            count: number;
+            totalCents: number;
+        };
+        MyStatsView: {
+            /** les quatre états, toujours présents, dans l'ordre du cycle de vie */
+            byStatus: components["schemas"]["StatusTotalView"][];
+        };
+        CategoryTotalView: {
+            category: components["schemas"]["ExpenseCategoryRef"];
+            count: number;
+            totalCents: number;
+        };
+        MonthTotalView: {
+            /** Mois au format AAAA-MM */
+            month: string;
+            count: number;
+            totalCents: number;
+        };
+        TeamStatsView: {
+            /** Premier jour de la période, AAAA-MM-JJ */
+            from: string;
+            /** Dernier jour de la période, AAAA-MM-JJ */
+            to: string;
+            count: number;
+            totalCents: number;
+            /** toutes les catégories, dans l'ordre de référence */
+            byCategory: components["schemas"]["CategoryTotalView"][];
+            /** les 12 mois, du plus ancien au plus récent */
+            byMonth: components["schemas"]["MonthTotalView"][];
         };
     };
     responses: never;
@@ -885,6 +965,40 @@ export interface operations {
             };
         };
     };
+    get_api_exports_team_expenses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CSV pour tableur français (BOM UTF-8, « ; », montants à virgule) */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": string;
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réservé aux managers */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
     get_api_health: {
         parameters: {
             query?: never;
@@ -1114,6 +1228,67 @@ export interface operations {
             };
             /** @description La note n'est ni en brouillon ni rejetée */
             409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_stats_me: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Nombre et total de ses notes pour chacun des quatre états */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MyStatsView"];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_stats_team: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Notes validées de l'équipe directe sur les 12 derniers mois civils, par catégorie et par mois */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TeamStatsView"];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réservé aux managers */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

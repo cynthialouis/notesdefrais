@@ -34,7 +34,8 @@ Tailwind CSS 4, configuré dans `frontend/src/index.css` (`@import "tailwindcss"
 | `Card`, `PageHeader` | Conteneur blanc avec en-tête optionnel ; titre de page, description, actions |
 | `Field`, `Input`, `Select` | Champ de formulaire : `Field` génère l'`id` et les liaisons `aria-describedby` / `aria-invalid` (aide, erreur) |
 | `Badge`, `Alert`, `EmptyState`, `LoadingState` | Statut (le texte porte l'information), messages (`role="alert"` / `"status"`), états vides et de chargement |
-| `Table`, `Th`, `Td` | Tableau de données, défilement horizontal sur mobile, montants alignés en chiffres tabulaires |
+| `Table`, `Th`, `Td` | Tableau de données (nom accessible optionnel), défilement horizontal sur mobile, montants alignés en chiffres tabulaires |
+| `Bar` | Barre proportionnelle décorative (`aria-hidden`), toujours à côté de la valeur écrite ; seul style en ligne du projet (largeur calculée) |
 
 Les styles de variantes passent par `cx()` et `buttonStyles.ts`, sans dépendance supplémentaire.
 

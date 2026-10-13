@@ -1,11 +1,13 @@
 import type { ReactNode, TdHTMLAttributes, ThHTMLAttributes } from 'react'
 import { cx } from './cx'
 
-/** Tableau de données, avec défilement horizontal sur petit écran. */
-export function Table({ children }: { children: ReactNode }) {
+/** Tableau de données, avec défilement horizontal sur petit écran. `label` lui donne un nom accessible. */
+export function Table({ children, label }: { children: ReactNode; label?: string }) {
   return (
     <div className="-mx-5 overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200 text-sm">{children}</table>
+      <table aria-label={label} className="min-w-full divide-y divide-gray-200 text-sm">
+        {children}
+      </table>
     </div>
   )
 }

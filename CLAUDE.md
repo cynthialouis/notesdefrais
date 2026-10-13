@@ -11,7 +11,7 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 - feature 003 (valider / rejeter) en place : liste à traiter du responsable, décision motivée, resoumission, historique
 - feature 004 (politique de dépenses) en place : plafond et justificatif par catégorie, signalement hors politique
 - feature 005 (justificatifs) en place : un justificatif par note, stocké hors `public/`, soumission bloquée s'il est obligatoire et absent
-- à venir : tableau de bord (006)
+- feature 006 (tableau de bord) en place : totaux par état, totaux d'équipe par catégorie et par mois sur 12 mois, export CSV
 
 ## Documentation
 
