@@ -18,7 +18,7 @@ Tu relis une feature que tu n'as pas écrite. Tu reçois le chemin de sa spec. N
 5. **Tests modifiés après coup** : repère le commit `test(00X): tests depuis la spec`, puis `git diff <ce commit>..HEAD -- backend/tests`. Tout test affaibli, supprimé ou réécrit pour passer est un problème à signaler, avec le diff.
 6. **Écarts** : ce qui est dans le code mais pas dans la spec (sur-ingénierie) et l'inverse (oubli).
 7. **Vérifications** : lance et rapporte le résultat de
-   - `php bin/phpunit` et `php bin/console lint:container` dans `backend/` ;
+   - `make test-back` depuis la racine et `php bin/console lint:container` dans `backend/` ;
    - `npx tsc -b` et `npm run lint` dans `frontend/` (et `npm run test` quand il existe).
 
 Rends :

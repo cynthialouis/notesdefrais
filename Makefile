@@ -1,5 +1,8 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev stop test api-types db
+.PHONY: help install dev stop test test-back api-types db
+
+# Mêmes limites d'upload que backend/php.ini (justificatifs de 5 Mo), que PHP CLI ne lit pas
+PHPUNIT = php -d upload_max_filesize=6M -d post_max_size=8M bin/phpunit
 
 help: ## Affiche cette aide
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  make %-10s %s\n", $$1, $$2}'
@@ -15,9 +18,11 @@ dev: ## Lance l'API en arrière-plan puis le front (Ctrl+C arrête le front, mak
 stop: ## Arrête l'API
 	cd backend && symfony server:stop
 
-test: ## Lance les tests des deux projets
-	cd backend && php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test && php bin/phpunit
+test: test-back ## Lance les tests des deux projets
 	npm --prefix frontend run test
+
+test-back: ## Migre la base de test et lance PHPUnit (filtre : make test-back ARGS="--filter Nom")
+	cd backend && php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=test && $(PHPUNIT) $(ARGS)
 
 api-types: ## Régénère les types TypeScript du front depuis la spec OpenAPI du back
 	cd backend && php bin/console nelmio:apidoc:dump > ../frontend/src/api/openapi.json

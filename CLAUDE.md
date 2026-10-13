@@ -33,6 +33,7 @@ Depuis la racine (`Makefile`) :
 - `make dev` (API en arrière-plan + front)
 - `make stop` (arrête l'API)
 - `make test` (migre la base de test, puis PHPUnit et Vitest)
+- `make test-back` (tests du back seuls, avec les limites d'upload de `backend/php.ini` ; filtre : `ARGS="--filter Nom"`)
 - `make api-types` (régénère les types du front depuis la spec OpenAPI, après tout changement de contrat)
 - `make db` (migre la base de dev et recharge les données de démo, sans purger les catégories)
 - `make` (aide)
@@ -42,7 +43,7 @@ Dans chaque projet :
 | | `frontend/` | `backend/` |
 |---|---|---|
 | Lancer | `npm run dev` (port 5173, proxy `/api` → 8000) | `symfony serve -d` (port 8000) |
-| Tests | `npm run test` | `php bin/phpunit` (après migration de la base de test, voir `make test`) |
+| Tests | `npm run test` | `make test-back` depuis la racine (jamais `php bin/phpunit` seul : il ignore les limites d'upload de `backend/php.ini`) |
 | Types / lint | `npx tsc -b` · `npm run lint` | `php bin/console lint:container` |
 | Build | `npm run build` | — |
 | Base | — | `php bin/console make:migration` · `php bin/console doctrine:migrations:migrate` · `make db` (ne jamais lancer `doctrine:fixtures:load` sans `--purge-exclusions=category`) |
@@ -79,4 +80,4 @@ Spec OpenAPI : `GET /api/doc.json`.
 - Tu rédiges et tu corriges toi-même le harness (CLAUDE.md, subagents, skills, settings), la documentation et le journal : après une critique, applique les corrections pertinentes au lieu de me les laisser. Moi, je valide les specs et les plans, je tranche les questions ouvertes et je teste à la main.
 - Proposer un plan avant toute modification qui touche plus de deux fichiers.
 - Ne jamais modifier de fichier si je demande une analyse, une explication ou une review.
-- Après chaque modification, vérifier le projet touché : front → `npx tsc -b`, `npm run lint` et `npm run test` ; back → `php bin/phpunit` et `php bin/console lint:container`.
+- Après chaque modification, vérifier le projet touché : front → `npx tsc -b`, `npm run lint` et `npm run test` ; back → `make test-back` et `php bin/console lint:container`.
