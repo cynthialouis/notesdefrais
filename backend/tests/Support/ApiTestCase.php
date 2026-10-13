@@ -11,6 +11,7 @@ use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 /**
  * Base des tests de routes de l'API.
@@ -18,15 +19,37 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
  * La base de test est migrée par `make test` et remise à zéro entre les tests
  * par dama/doctrine-test-bundle (rollback de transaction) : chaque test crée
  * lui-même les utilisateurs dont il a besoin.
+ *
+ * Les justificatifs (spec 005) sont écrits sur disque, dans `var/receipts/test` : ce dossier n'est pas
+ * remis à zéro par dama, il est vidé avant et après chaque test.
  */
 abstract class ApiTestCase extends WebTestCase
 {
+    /** PNG 1×1 valide (69 octets). */
+    private const PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
     protected KernelBrowser $client;
+
+    /** @var list<string> fichiers temporaires créés pour les dépôts, effacés en fin de test */
+    private array $tempFiles = [];
 
     protected function setUp(): void
     {
         parent::setUp();
+        $this->clearReceiptDir();
         $this->client = static::createClient();
+    }
+
+    protected function tearDown(): void
+    {
+        $this->clearReceiptDir();
+        foreach ($this->tempFiles as $path) {
+            if (is_file($path)) {
+                unlink($path);
+            }
+        }
+        $this->tempFiles = [];
+        parent::tearDown();
     }
 
     /**
@@ -232,7 +255,7 @@ abstract class ApiTestCase extends WebTestCase
     {
         self::assertEqualsCanonicalizing(
             ['id', 'label', 'amountCents', 'date', 'category', 'status', 'createdAt', 'submittedAt', 'editable',
-                'owner', 'decidedAt', 'decidedBy', 'rejectionReason', 'decidable', 'policy'],
+                'owner', 'decidedAt', 'decidedBy', 'rejectionReason', 'decidable', 'policy', 'receipt'],
             array_keys($view),
         );
         self::assertIsInt($view['id']);
@@ -261,21 +284,162 @@ abstract class ApiTestCase extends WebTestCase
             self::assertIsString($view['rejectionReason']);
         }
         $this->assertPolicyShape($view['policy']);
+        if (null !== $view['receipt']) {
+            $this->assertReceiptShape($view['receipt']);
+        }
     }
 
     /**
-     * Signalement d'une note (spec 004) : { limitCents: int|null, overLimitByCents: int|null, receiptRequired: bool }.
+     * Signalement d'une note (spec 004) : { limitCents: int|null, overLimitByCents: int|null, receiptRequired: bool },
+     * étendu par la spec 005 (C9) : receiptMissing: bool.
      */
     protected function assertPolicyShape(mixed $policy): void
     {
         self::assertIsArray($policy);
-        self::assertEqualsCanonicalizing(['limitCents', 'overLimitByCents', 'receiptRequired'], array_keys($policy));
+        self::assertEqualsCanonicalizing(['limitCents', 'overLimitByCents', 'receiptRequired', 'receiptMissing'], array_keys($policy));
         foreach (['limitCents', 'overLimitByCents'] as $key) {
             if (null !== $policy[$key]) {
                 self::assertIsInt($policy[$key]);
             }
         }
         self::assertIsBool($policy['receiptRequired']);
+        self::assertIsBool($policy['receiptMissing']);
+    }
+
+    /**
+     * Justificatif d'une note (spec 005) : { name: nom d'origine, mimeType, sizeBytes }, les trois champs toujours présents.
+     */
+    protected function assertReceiptShape(mixed $receipt): void
+    {
+        self::assertIsArray($receipt);
+        self::assertEqualsCanonicalizing(['name', 'mimeType', 'sizeBytes'], array_keys($receipt));
+        self::assertIsString($receipt['name']);
+        self::assertNotSame('', $receipt['name']);
+        self::assertContains($receipt['mimeType'], ['image/jpeg', 'image/png', 'application/pdf']);
+        self::assertIsInt($receipt['sizeBytes']);
+        self::assertGreaterThan(0, $receipt['sizeBytes']);
+    }
+
+    // --- Justificatifs (spec 005) ----------------------------------------------------------
+
+    /**
+     * PNG valide, complété par des octets nuls jusqu'à `$size` octets si besoin (le type reste détecté d'après l'en-tête).
+     */
+    protected function pngBytes(int $size = 0): string
+    {
+        $png = (string) base64_decode(self::PNG_BASE64, true);
+
+        return $size > \strlen($png) ? $png.str_repeat("\0", $size - \strlen($png)) : $png;
+    }
+
+    /** En-tête JPEG/JFIF suffisant pour la détection d'après le contenu. */
+    protected function jpegBytes(): string
+    {
+        return "\xFF\xD8\xFF\xE0\x00\x10JFIF\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00".str_repeat("\x00", 64)."\xFF\xD9";
+    }
+
+    /** PDF minimal. */
+    protected function pdfBytes(): string
+    {
+        return "%PDF-1.4\n1 0 obj\n<< /Type /Catalog >>\nendobj\ntrailer\n<< /Root 1 0 R >>\n%%EOF\n";
+    }
+
+    /** GIF 1×1 valide : une image, mais pas d'un format accepté. */
+    protected function gifBytes(): string
+    {
+        return "GIF89a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff!\xf9\x04\x01\x00\x00\x00\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;";
+    }
+
+    /**
+     * Fichier envoyé par le client : contenu écrit dans un fichier temporaire, nom et type annoncés par le navigateur.
+     */
+    protected function uploadedFile(string $content, string $originalName, ?string $clientMimeType = null): UploadedFile
+    {
+        $path = tempnam(sys_get_temp_dir(), 'receipt-test-');
+        self::assertIsString($path);
+        file_put_contents($path, $content);
+        $this->tempFiles[] = $path;
+
+        return new UploadedFile($path, $originalName, $clientMimeType, null, true);
+    }
+
+    /**
+     * POST /api/expenses/{id}/receipt en multipart, champ fichier `file` (aucun fichier si null).
+     */
+    protected function uploadReceipt(int $expenseId, ?UploadedFile $file): void
+    {
+        $this->client->request('POST', '/api/expenses/'.$expenseId.'/receipt', [], null === $file ? [] : ['file' => $file], [
+            'HTTP_ACCEPT' => 'application/json',
+        ]);
+    }
+
+    /**
+     * Dépose un PNG valide sur une note et vérifie le succès (préparation d'un test).
+     */
+    protected function attachPng(int $expenseId, string $originalName = 'recu.png'): string
+    {
+        $content = $this->pngBytes();
+        $this->uploadReceipt($expenseId, $this->uploadedFile($content, $originalName, 'image/png'));
+        self::assertResponseStatusCodeSame(200, 'Préparation : le dépôt du justificatif doit réussir. '.$this->client->getResponse()->getContent());
+
+        return $content;
+    }
+
+    /** Dossier de stockage des justificatifs en test : %kernel.project_dir%/var/receipts/test. */
+    protected function receiptDir(): string
+    {
+        return \dirname(__DIR__, 2).'/var/receipts/test';
+    }
+
+    /**
+     * Fichiers présents dans le dossier de stockage (sous-dossiers compris), chemins absolus triés.
+     *
+     * @return list<string>
+     */
+    protected function receiptFiles(): array
+    {
+        $dir = $this->receiptDir();
+        if (!is_dir($dir)) {
+            return [];
+        }
+        $files = [];
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS));
+        foreach ($iterator as $file) {
+            \assert($file instanceof \SplFileInfo);
+            if ($file->isFile()) {
+                $files[] = $file->getPathname();
+            }
+        }
+        sort($files);
+
+        return $files;
+    }
+
+    private function clearReceiptDir(): void
+    {
+        $dir = $this->receiptDir();
+        if (!is_dir($dir)) {
+            return;
+        }
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS), \RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($iterator as $file) {
+            \assert($file instanceof \SplFileInfo);
+            $file->isDir() ? rmdir($file->getPathname()) : unlink($file->getPathname());
+        }
+    }
+
+    /**
+     * Fait passer une note à un état donné directement en base (préparation d'un test, sans le Workflow).
+     */
+    protected function forceStatus(int $expenseId, ExpenseStatus $status): void
+    {
+        $expense = $this->findExpense($expenseId);
+        self::assertNotNull($expense);
+        $expense->setStatus($status);
+        if (ExpenseStatus::Draft !== $status && null === $expense->getSubmittedAt()) {
+            $expense->setSubmittedAt(new \DateTimeImmutable('2026-10-02T09:00:00+02:00'));
+        }
+        $this->entityManager()->flush();
     }
 
     /**

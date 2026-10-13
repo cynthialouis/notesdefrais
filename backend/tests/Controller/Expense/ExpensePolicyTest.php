@@ -9,11 +9,12 @@ use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Signalement « hors politique » d'une note (ExpenseView.policy) — spec 004 (C5, C6, C7, C9).
- * policy = { limitCents, overLimitByCents, receiptRequired }, calculé par le serveur.
+ * policy = { limitCents, overLimitByCents, receiptRequired }, calculé par le serveur ; la spec 005 (C9) y ajoute
+ * receiptMissing (justificatif obligatoire manquant).
  */
 final class ExpensePolicyTest extends ApiTestCase
 {
-    private const OVER = ['limitCents' => 5000, 'overLimitByCents' => 1000, 'receiptRequired' => false];
+    private const OVER = ['limitCents' => 5000, 'overLimitByCents' => 1000, 'receiptRequired' => false, 'receiptMissing' => false];
 
     // --- C5 : égal = conforme ; sans plafond : aucune alerte -------------------------------
 
@@ -41,7 +42,7 @@ final class ExpensePolicyTest extends ApiTestCase
         self::assertResponseStatusCodeSame(200);
         $view = $this->responseJson();
         $this->assertExpenseView($view);
-        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => $expectedOver, 'receiptRequired' => false], $view['policy']);
+        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => $expectedOver, 'receiptRequired' => false, 'receiptMissing' => false], $view['policy']);
     }
 
     public function testC5CategorieSansPlafondAucuneAlerte(): void
@@ -53,7 +54,7 @@ final class ExpensePolicyTest extends ApiTestCase
         $this->client->request('GET', '/api/expenses/'.$id);
 
         self::assertResponseStatusCodeSame(200);
-        self::assertSame(['limitCents' => null, 'overLimitByCents' => null, 'receiptRequired' => false], $this->responseJson()['policy'] ?? null);
+        self::assertSame(['limitCents' => null, 'overLimitByCents' => null, 'receiptRequired' => false, 'receiptMissing' => false], $this->responseJson()['policy'] ?? null);
     }
 
     // --- C6 : signalement visible du propriétaire et du responsable, listes et détail -------
@@ -72,7 +73,7 @@ final class ExpensePolicyTest extends ApiTestCase
         $byId = array_column($this->responseJson(), null, 'id');
         $this->assertExpenseView($byId[$over->getId()]);
         self::assertSame(self::OVER, $byId[$over->getId()]['policy']);
-        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false], $byId[$ok->getId()]['policy'] ?? null);
+        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false, 'receiptMissing' => false], $byId[$ok->getId()]['policy'] ?? null);
 
         $this->client->request('GET', '/api/expenses/'.$over->getId());
         self::assertResponseStatusCodeSame(200);
@@ -129,7 +130,7 @@ final class ExpensePolicyTest extends ApiTestCase
         $this->client->request('GET', '/api/expenses/'.$id);
 
         self::assertResponseStatusCodeSame(200);
-        self::assertSame(['limitCents' => 15000, 'overLimitByCents' => null, 'receiptRequired' => true], $this->responseJson()['policy'] ?? null);
+        self::assertSame(['limitCents' => 15000, 'overLimitByCents' => null, 'receiptRequired' => true, 'receiptMissing' => true], $this->responseJson()['policy'] ?? null);
     }
 
     // --- C7 : calcul côté serveur, dans toutes les réponses qui renvoient une note ---------
@@ -145,7 +146,7 @@ final class ExpensePolicyTest extends ApiTestCase
         self::assertResponseStatusCodeSame(201);
         $view = $this->responseJson();
         $this->assertExpenseView($view);
-        self::assertSame(['limitCents' => 30000, 'overLimitByCents' => 2500, 'receiptRequired' => false], $view['policy']);
+        self::assertSame(['limitCents' => 30000, 'overLimitByCents' => 2500, 'receiptRequired' => false, 'receiptMissing' => false], $view['policy']);
         // La création n'est pas bloquée par le dépassement.
         self::assertSame(32500, $this->findExpense($view['id'])?->getAmountCents());
     }
@@ -163,7 +164,7 @@ final class ExpensePolicyTest extends ApiTestCase
         self::assertResponseStatusCodeSame(200);
         $view = $this->responseJson();
         $this->assertExpenseView($view);
-        self::assertSame(['limitCents' => 50000, 'overLimitByCents' => null, 'receiptRequired' => true], $view['policy']);
+        self::assertSame(['limitCents' => 50000, 'overLimitByCents' => null, 'receiptRequired' => true, 'receiptMissing' => true], $view['policy']);
         self::assertSame('materiel', $this->findExpense($id)?->getCategory()->getSlug());
     }
 
@@ -181,7 +182,7 @@ final class ExpensePolicyTest extends ApiTestCase
 
         // Champ inconnu ignoré par la désérialisation (comportement actuel de POST /api/expenses) : jamais pris en compte.
         self::assertResponseStatusCodeSame(201);
-        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => 3000, 'receiptRequired' => false], $this->responseJson()['policy'] ?? null);
+        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => 3000, 'receiptRequired' => false, 'receiptMissing' => false], $this->responseJson()['policy'] ?? null);
     }
 
     public function testC7LaSoumissionAuDessusDuPlafondEstAccepteeEtSignalee(): void
@@ -197,22 +198,23 @@ final class ExpensePolicyTest extends ApiTestCase
         $view = $this->responseJson();
         $this->assertExpenseView($view);
         self::assertSame('submitted', $view['status']);
-        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => 4000, 'receiptRequired' => false], $view['policy']);
+        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => 4000, 'receiptRequired' => false, 'receiptMissing' => false], $view['policy']);
         self::assertSame(ExpenseStatus::Submitted, $this->findExpense($id)?->getStatus());
     }
 
-    public function testC7UneNoteDUneCategorieAJustificatifObligatoireSeSoumetNormalement(): void
+    public function testC7UneNoteDUneCategorieAJustificatifObligatoireSeSoumetAvecSonJustificatif(): void
     {
-        // Le refus d'une note sans justificatif arrive avec la spec 005.
+        // Spec 005 (C8) : sans justificatif, la soumission serait refusée ; le signalement reste renvoyé à la soumission.
         $team = $this->createTeam();
         $this->setPolicy('hebergement', 15000, true);
         $id = (int) $this->createExpense($team['sophie'], 'Hôtel', 12000, '2026-10-01', 'hebergement')->getId();
         $this->login($team['sophie']);
+        $this->attachPng($id);
 
         $this->client->request('POST', '/api/expenses/'.$id.'/submit');
 
         self::assertResponseStatusCodeSame(200);
-        self::assertSame(['limitCents' => 15000, 'overLimitByCents' => null, 'receiptRequired' => true], $this->responseJson()['policy'] ?? null);
+        self::assertSame(['limitCents' => 15000, 'overLimitByCents' => null, 'receiptRequired' => true, 'receiptMissing' => false], $this->responseJson()['policy'] ?? null);
         self::assertSame(ExpenseStatus::Submitted, $this->findExpense($id)?->getStatus());
     }
 
@@ -259,7 +261,7 @@ final class ExpensePolicyTest extends ApiTestCase
 
         $this->login($team['sophie']);
         $this->client->request('GET', '/api/expenses/'.$id);
-        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false], $this->responseJson()['policy'] ?? null);
+        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false, 'receiptMissing' => false], $this->responseJson()['policy'] ?? null);
 
         $this->login($team['admin']);
         $this->jsonRequest('PUT', '/api/policies/repas', ['maxAmountCents' => 3000, 'receiptRequired' => false]);
@@ -268,7 +270,7 @@ final class ExpensePolicyTest extends ApiTestCase
         $this->login($team['sophie']);
         $this->client->request('GET', '/api/expenses/'.$id);
         self::assertResponseStatusCodeSame(200);
-        self::assertSame(['limitCents' => 3000, 'overLimitByCents' => 1000, 'receiptRequired' => false], $this->responseJson()['policy'] ?? null);
+        self::assertSame(['limitCents' => 3000, 'overLimitByCents' => 1000, 'receiptRequired' => false, 'receiptMissing' => false], $this->responseJson()['policy'] ?? null);
         self::assertNull($this->findExpense($id)?->getLimitAtApprovalCents());
     }
 
@@ -319,12 +321,12 @@ final class ExpensePolicyTest extends ApiTestCase
             $this->login($team[$reader]);
             $this->client->request('GET', '/api/expenses/'.$id);
             self::assertResponseStatusCodeSame(200);
-            self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false], $this->responseJson()['policy'] ?? null, "Lecture par $reader");
+            self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false, 'receiptMissing' => false], $this->responseJson()['policy'] ?? null, "Lecture par $reader");
         }
         $this->login($team['sophie']);
         $this->client->request('GET', '/api/expenses');
         $byId = array_column($this->responseJson(), null, 'id');
-        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false], $byId[$id]['policy'] ?? null);
+        self::assertSame(['limitCents' => 5000, 'overLimitByCents' => null, 'receiptRequired' => false, 'receiptMissing' => false], $byId[$id]['policy'] ?? null);
         self::assertSame(5000, $this->findExpense($id)?->getLimitAtApprovalCents());
     }
 
