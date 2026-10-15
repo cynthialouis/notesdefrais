@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev stop test test-back api-types db
+.PHONY: help install dev stop test test-back api-types db e2e-db
 
 # Mêmes limites d'upload que backend/php.ini (justificatifs de 5 Mo), que PHP CLI ne lit pas
 PHPUNIT = php -d upload_max_filesize=6M -d post_max_size=8M bin/phpunit
@@ -31,3 +31,7 @@ api-types: ## Régénère les types TypeScript du front depuis la spec OpenAPI d
 db: ## Met la base de dev à jour et recharge les données de démo (les catégories, insérées par migration, sont conservées)
 	cd backend && php bin/console doctrine:migrations:migrate --no-interaction
 	cd backend && php bin/console doctrine:fixtures:load --no-interaction --purge-exclusions=category
+
+e2e-db: ## Remet la base e2e dans l'état des données de démo (lancé avant chaque test e2e)
+	cd backend && php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=e2e
+	cd backend && php bin/console doctrine:fixtures:load --no-interaction --purge-exclusions=category --env=e2e
