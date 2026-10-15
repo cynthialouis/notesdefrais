@@ -36,6 +36,6 @@ db: ## Met la base de dev à jour et recharge les données de démo (les catégo
 test-e2e: ## Lance les tests e2e (Playwright démarre l'API sur 8001 et le front sur 5174 ; filtre : make test-e2e ARGS="connexion")
 	npm --prefix frontend run test:e2e -- $(ARGS)
 
-e2e-db: ##Remet la base e2e dans l'état des données de démo (lancé avant chaque test e2e)
+e2e-db: ## Remet la base e2e dans l'état des données de démo (lancé avant chaque test e2e)
 	cd backend && php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=e2e
 	cd backend && php bin/console doctrine:fixtures:load --no-interaction --purge-exclusions=category --env=e2e
