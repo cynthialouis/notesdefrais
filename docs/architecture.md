@@ -5,7 +5,9 @@ Un dépôt git, deux projets indépendants : un front React et une API Symfony.
 ```
 frontend/            front React 19 (Vite, TypeScript), organisé par feature
   src/features/{auth,expenses,approvals,policies,dashboard}/
-  vite.config.ts       proxy /api → API Symfony
+  vite.config.ts       proxy /api → API Symfony (cible réglable par API_PROXY_TARGET)
+  e2e/                 tests de bout en bout (Playwright), un fichier par parcours
+  playwright.config.ts lance l'API e2e et le front pour ces tests
 backend/             API Symfony 8 (PHP 8.4+)
   src/
     Controller/          contrôleurs fins, un par ressource
@@ -43,9 +45,13 @@ Les styles de variantes passent par `cx()` et `buttonStyles.ts`, sans dépendanc
 
 - **Deux processus en dev** : `symfony serve` dans `backend/` (port 8000), `npm run dev` dans `frontend/` (port 5173).
 - **Proxy Vite** : le front appelle `/api/...`, Vite redirige vers `http://127.0.0.1:8000`. Pas de CORS, pas d'URL de serveur en dur.
-- **Base de données** : SQLite via Doctrine, un fichier par environnement (`backend/var/data_dev.db`, `data_test.db`). Aucune installation.
+- **Base de données** : SQLite via Doctrine, un fichier par environnement (`backend/var/data_dev.db`, `data_test.db`, `data_e2e.db`). Aucune installation.
 - **Justificatifs** : fichiers dans `backend/var/receipts/<env>` (hors `public/`, ignoré par git), servis par l'API. Limite d'upload de PHP relevée dans `backend/php.ini` (lu par `symfony serve`) et passée à PHPUnit par `make test-back`. Le type est détecté d'après le contenu (`symfony/mime`).
 - **Session** : Symfony Security avec la session PHP native (cookie `httponly`, `samesite=lax`). Connexion de démo par l'authenticator `DemoLoginAuthenticator` (spec 001). Côté front, la session vit dans un store Zustand (`features/auth/sessionStore.ts`), lue une fois au démarrage dans `main.tsx`.
+- **Tests de bout en bout** : `make test-e2e`. Playwright lance une API dans l'environnement Symfony `e2e` (`php -S`, port 8001, base `data_e2e.db`, justificatifs dans `var/receipts/e2e`) et un front Vite sur le port 5174 dont le proxy vise cette API : les tests tournent pendant `make dev` sans toucher à la base de dev. `make e2e-db` remet la base e2e dans l'état des données de démo avant chaque test ; les tests passent un par un.
+  - `php -S` reçoit `-d variables_order=EGPCS` : avec le `GPCS` du `php.ini` par défaut, le serveur intégré ne transmet pas `APP_ENV` et Symfony retombe sur le `dev` de `.env`. Un garde-fou de `e2e/fixtures.ts` arrête les tests si l'API jointe par le proxy ne lit pas la base e2e.
+  - Le journal du serveur de l'API (accès et logs Symfony au niveau debug) va dans `backend/var/log/e2e-api.log`, écrasé à chaque lancement, et non dans le terminal : c'est là qu'on cherche la cause d'une réponse inattendue de l'API.
+  - Les parcours s'appuient sur les données de démo (`AppFixtures`) : un changement de celles-ci peut demander d'adapter un parcours.
 
 ## Contrat front / back
 
@@ -61,4 +67,4 @@ Les styles de variantes passent par `cx()` et `buttonStyles.ts`, sans dépendanc
 
 ## Versions
 
-Symfony 8.1, PHP 8.4+, React 19, Vite 8, TypeScript ~6.0, React Router 8 (tout s'importe de `react-router`, mode déclaratif), Zustand 5, Zod 4, Vitest 5. Ces librairies évoluent vite (par exemple, Zod 3 → 4 : `z.string().email()` devient `z.email()`). Vérifier la syntaxe dans la doc de la version installée (`composer.json`, `package.json`) plutôt que de la deviner.
+Symfony 8.1, PHP 8.4+, React 19, Vite 8, TypeScript ~6.0, React Router 8 (tout s'importe de `react-router`, mode déclaratif), Zustand 5, Zod 4, Vitest 5, Playwright 1.64 (Chromium seul). Ces librairies évoluent vite (par exemple, Zod 3 → 4 : `z.string().email()` devient `z.email()`). Vérifier la syntaxe dans la doc de la version installée (`composer.json`, `package.json`) plutôt que de la deviner.

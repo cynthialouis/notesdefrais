@@ -24,7 +24,7 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 
 ## Stack
 
-- **Front** : React 19, TypeScript strict, Vite 8, oxlint, React Router 8, Zustand 5, Zod 4, Vitest 5 + Testing Library, types générés depuis OpenAPI (`openapi-typescript`), Tailwind CSS 4.
+- **Front** : React 19, TypeScript strict, Vite 8, oxlint, React Router 8, Zustand 5, Zod 4, Vitest 5 + Testing Library, Playwright 1.64 (tests e2e), types générés depuis OpenAPI (`openapi-typescript`), Tailwind CSS 4.
 - **Back** : Symfony 8.1, Doctrine ORM + Migrations (SQLite), Validator, Serializer, Security, Workflow, NelmioApiDocBundle, PHPUnit.
 
 ## Commandes
@@ -34,6 +34,8 @@ Depuis la racine (`Makefile`) :
 - `make dev` (API en arrière-plan + front)
 - `make stop` (arrête l'API)
 - `make test` (migre la base de test, puis PHPUnit et Vitest)
+- `make test-e2e` (parcours Playwright : API `e2e` sur 8001 et front sur 5174, lancés par Playwright ; obligatoire avant la fusion d'une feature ; filtre : `ARGS="decision"`)
+- `make e2e-db` (remet la base e2e dans l'état des données de démo ; lancé avant chaque test e2e)
 - `make test-back` (tests du back seuls, avec les limites d'upload de `backend/php.ini` ; filtre : `ARGS="--filter Nom"`)
 - `make api-types` (régénère les types du front depuis la spec OpenAPI, après tout changement de contrat)
 - `make db` (migre la base de dev et recharge les données de démo, sans purger les catégories)

@@ -47,3 +47,5 @@ Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents,
 ## Tests
 
 PHPUnit : `WebTestCase` pour les routes (requête HTTP simulée, sans lancer de serveur), `KernelTestCase` pour les services. La base SQLite de test est migrée par `make test` et remise à zéro entre les tests par `dama/doctrine-test-bundle` (rollback de transaction) ; chaque test crée ses données via `tests/Support/ApiTestCase`. Chaque route a au moins un test nominal, un test 403 et un test de validation.
+
+Tests de bout en bout (`make test-e2e`, `frontend/e2e/`) : quelques parcours entre plusieurs rôles, joués dans un vrai navigateur contre l'API lancée dans l'environnement `e2e` (voir `docs/architecture.md`). Ils vérifient ce que PHPUnit et Vitest ne voient pas : proxy, cookie de session, envoi multipart réel, téléchargement du CSV. Ils ne remplacent pas les tests par critère.
