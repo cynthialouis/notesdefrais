@@ -19,8 +19,10 @@ export default defineConfig({
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: [
     {
-      // API en environnement e2e (base var/data_e2e.db), avec les limites d'upload de backend/php.ini
-      command: 'APP_ENV=e2e php -d upload_max_filesize=6M -d post_max_size=8M -S 127.0.0.1:8001 -t public public/index.php',
+      // API en environnement e2e (base var/data_e2e.db), avec les limites d'upload de backend/php.ini.
+      // variables_order=EGPCS : sans le E (absent du php.ini par défaut), le serveur intégré ne transmet pas
+      // APP_ENV à Symfony, qui retombe sur le dev de .env et écrit dans la base de dev (e2e/fixtures.ts le vérifie)
+      command: 'APP_ENV=e2e php -d variables_order=EGPCS -d upload_max_filesize=6M -d post_max_size=8M -S 127.0.0.1:8001 -t public public/index.php',
       cwd: '../backend',
       url: `${API_URL}/api/doc.json`,
       reuseExistingServer: false,
