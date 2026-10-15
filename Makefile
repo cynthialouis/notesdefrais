@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install dev stop test test-back api-types db e2e-db
+.PHONY: help install dev stop test test-back api-types db test-e2e e2e-db
 
 # Mêmes limites d'upload que backend/php.ini (justificatifs de 5 Mo), que PHP CLI ne lit pas
 PHPUNIT = php -d upload_max_filesize=6M -d post_max_size=8M bin/phpunit
@@ -7,9 +7,10 @@ PHPUNIT = php -d upload_max_filesize=6M -d post_max_size=8M bin/phpunit
 help: ## Affiche cette aide
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  make %-10s %s\n", $$1, $$2}'
 
-install: ## Installe les dépendances des deux projets
+install: ## Installe les dépendances des deux projets (et Chromium pour les tests e2e)
 	cd backend && composer install
 	npm --prefix frontend install
+	cd frontend && npx playwright install chromium
 
 dev: ## Lance l'API en arrière-plan puis le front (Ctrl+C arrête le front, make stop arrête l'API)
 	cd backend && symfony serve -d --no-tls
@@ -32,6 +33,9 @@ db: ## Met la base de dev à jour et recharge les données de démo (les catégo
 	cd backend && php bin/console doctrine:migrations:migrate --no-interaction
 	cd backend && php bin/console doctrine:fixtures:load --no-interaction --purge-exclusions=category
 
-e2e-db: ## Remet la base e2e dans l'état des données de démo (lancé avant chaque test e2e)
+test-e2e: ## Lance les tests e2e (Playwright démarre l'API sur 8001 et le front sur 5174 ; filtre : make test-e2e ARGS="connexion")
+	npm --prefix frontend run test:e2e -- $(ARGS)
+
+e2e-db: ##Remet la base e2e dans l'état des données de démo (lancé avant chaque test e2e)
 	cd backend && php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration --env=e2e
 	cd backend && php bin/console doctrine:fixtures:load --no-interaction --purge-exclusions=category --env=e2e

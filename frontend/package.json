@@ -9,7 +9,8 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
-    "gen:api": "openapi-typescript src/api/openapi.json -o src/api/schema.d.ts"
+    "gen:api": "openapi-typescript src/api/openapi.json -o src/api/schema.d.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "react": "^19.2.8",
@@ -19,6 +20,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/vite": "^4.3.3",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
