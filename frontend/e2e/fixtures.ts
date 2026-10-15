@@ -20,9 +20,11 @@ export const test = base.extend<Fixtures>({
     { auto: true },
   ],
 
-  // Connexion par la vraie page de connexion, sous le compte de démo dont le nom est donné
+  // Connexion par la vraie page de connexion, sous le compte de démo dont le nom est donné.
+  // Le cookie de session est d'abord effacé : un même test peut passer d'un compte à l'autre.
   loginAs: async ({ page }, use) => {
     await use(async (name) => {
+      await page.context().clearCookies()
       await page.goto('/login')
       await page.getByRole('radio', { name: new RegExp(name) }).check()
       await page.getByRole('button', { name: 'Se connecter' }).click()
