@@ -50,6 +50,7 @@ Les styles de variantes passent par `cx()` et `buttonStyles.ts`, sans dépendanc
 - **Session** : Symfony Security avec la session PHP native (cookie `httponly`, `samesite=lax`). Connexion de démo par l'authenticator `DemoLoginAuthenticator` (spec 001). Côté front, la session vit dans un store Zustand (`features/auth/sessionStore.ts`), lue une fois au démarrage dans `main.tsx`.
 - **Tests de bout en bout** : `make test-e2e`. Playwright lance une API dans l'environnement Symfony `e2e` (`php -S`, port 8001, base `data_e2e.db`, justificatifs dans `var/receipts/e2e`) et un front Vite sur le port 5174 dont le proxy vise cette API : les tests tournent pendant `make dev` sans toucher à la base de dev. `make e2e-db` remet la base e2e dans l'état des données de démo avant chaque test ; les tests passent un par un.
   - `php -S` reçoit `-d variables_order=EGPCS` : avec le `GPCS` du `php.ini` par défaut, le serveur intégré ne transmet pas `APP_ENV` et Symfony retombe sur le `dev` de `.env`. Un garde-fou de `e2e/fixtures.ts` arrête les tests si l'API jointe par le proxy ne lit pas la base e2e.
+  - Le journal du serveur de l'API (accès et logs Symfony au niveau debug) va dans `backend/var/log/e2e-api.log`, écrasé à chaque lancement, et non dans le terminal : c'est là qu'on cherche la cause d'une réponse inattendue de l'API.
   - Les parcours s'appuient sur les données de démo (`AppFixtures`) : un changement de celles-ci peut demander d'adapter un parcours.
 
 ## Contrat front / back

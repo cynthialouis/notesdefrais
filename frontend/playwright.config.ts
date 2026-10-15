@@ -21,8 +21,11 @@ export default defineConfig({
     {
       // API en environnement e2e (base var/data_e2e.db), avec les limites d'upload de backend/php.ini.
       // variables_order=EGPCS : sans le E (absent du php.ini par défaut), le serveur intégré ne transmet pas
-      // APP_ENV à Symfony, qui retombe sur le dev de .env et écrit dans la base de dev (e2e/fixtures.ts le vérifie)
-      command: 'APP_ENV=e2e php -d variables_order=EGPCS -d upload_max_filesize=6M -d post_max_size=8M -S 127.0.0.1:8001 -t public public/index.php',
+      // APP_ENV à Symfony, qui retombe sur le dev de .env et écrit dans la base de dev (e2e/fixtures.ts le vérifie).
+      // Journal du serveur (accès et logs Symfony au niveau debug, des milliers de lignes) dans var/log/e2e-api.log,
+      // écrasé à chaque lancement : à lire quand un test échoue sur une réponse inattendue de l'API.
+      command:
+        'mkdir -p var/log && APP_ENV=e2e php -d variables_order=EGPCS -d upload_max_filesize=6M -d post_max_size=8M -S 127.0.0.1:8001 -t public public/index.php 2> var/log/e2e-api.log',
       cwd: '../backend',
       url: `${API_URL}/api/doc.json`,
       reuseExistingServer: false,
