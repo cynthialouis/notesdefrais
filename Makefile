@@ -5,7 +5,7 @@
 PHPUNIT = php -d upload_max_filesize=6M -d post_max_size=8M bin/phpunit
 
 help: ## Affiche cette aide
-	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  make %-10s %s\n", $$1, $$2}'
+	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "} {printf "  make %-10s %s\n", $$1, $$2}'
 
 install: ## Installe les dépendances des deux projets (et Chromium pour les tests e2e)
 	cd backend && composer install
