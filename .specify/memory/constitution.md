@@ -1,50 +1,99 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Constitution — Notes de frais (POC)
+
+Ce projet est un POC qui sert à expérimenter des fonctionnalités. Les principes ci-dessous
+reprennent les règles de `CLAUDE.md`, `backend/AGENTS.md` et `docs/methode.md` ; en cas
+d'écart, ces fichiers font foi et la constitution est amendée.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Spec validée avant tout code
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+- Toute feature commence par une spec `specs/NNN-nom/spec.md`, validée par l'humain avant
+  tout code ; le plan (`plan.md`) et les tâches (`tasks.md`) sont validés à leur tour.
+- Les critères d'acceptation sont numérotés `C1`, `C2`… au format EARS, chacun testable ; ces
+  identifiants ne sont jamais renumérotés, car les tests et le code s'y réfèrent.
+- Les questions ouvertes sont listées avec une proposition et tranchées par l'humain, jamais
+  devinées.
+- Si le code s'écarte de la spec, l'écart est signalé : on corrige l'un ou l'autre consciemment.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rationale** : l'humain valide le quoi ; l'agent ne décide pas seul du comportement.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. Le back est la source de vérité
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+- Validation (Validator), autorisation (Voter) et transitions d'état (Workflow) sont toujours
+  faites dans `backend/`, même si le front les fait aussi.
+- Une règle métier recalculée côté front pour l'affichage est une duplication volontaire : listée
+  dans la spec (« Règles recalculées côté front ») et testée des deux côtés.
+- Les deux projets ne partagent aucun code et ne communiquent que par HTTP via `/api`.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**Rationale** : le front n'est qu'un confort ; aucune donnée ne doit dépendre de l'état du
+navigateur.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. Tests du back d'abord, jamais affaiblis
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+- Les tests du back sont écrits à partir de la spec, avant l'implémentation, nommés d'après les
+  critères.
+- Une tâche du plan à la fois, uniquement pour faire passer les tests existants.
+- Un test n'est jamais modifié pour le faire passer : s'il paraît faux, on s'arrête et on explique.
+- Une feature n'est fusionnée qu'après `make test-e2e` réussi.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**Rationale** : les tests traduisent la spec validée ; les adapter au code inverse la relation.
+
+### IV. Contrat OpenAPI unique
+
+- Les types de l'API côté front sont générés depuis la spec OpenAPI (`make api-types`), jamais
+  réécrits à la main.
+- Tout changement de contrat est suivi de la régénération des types.
+
+**Rationale** : un seul contrat évite que le front et le back divergent en silence.
+
+### V. Montants en centimes et typage strict
+
+- Les montants sont des centimes entiers, des deux côtés.
+- TypeScript strict : jamais de `any` (`unknown` + validation Zod), `import type` pour les types,
+  ni `enum`, ni `namespace`, ni parameter properties.
+
+**Rationale** : pas d'erreur d'arrondi ; les données venues de l'extérieur sont validées avant
+usage.
+
+### VI. Sobriété des dépendances
+
+- Aucune dépendance n'est ajoutée sans être signalée et justifiée.
+- Côté Symfony, on utilise d'abord ce que le framework fournit (composants, recettes Flex,
+  attributs, autowiring) avant d'écrire de l'infrastructure ou d'ajouter une bibliothèque tierce.
+
+**Rationale** : chaque dépendance est un coût de maintenance ; le framework couvre déjà la
+plupart des besoins.
+
+## Contraintes techniques
+
+- Front : React 19, TypeScript strict, Vite, React Router, Zustand, Zod, Tailwind CSS 4 ;
+  composants de `frontend/src/ui/` réutilisés avant d'écrire des classes ; styles uniquement en
+  classes Tailwind ; tout élément interactif garde un focus visible ; pas de `useEffect` pour une
+  valeur dérivée.
+- Back : Symfony 8, Doctrine ORM + Migrations (SQLite) ; tout changement de schéma passe par une
+  migration ; DTO reçus avec `#[MapRequestPayload]`.
+- Secrets jamais committés.
+- Toute la documentation (specs, docs, commentaires, journal) est rédigée en français.
+
+## Cycle d'une feature
+
+- Ordre d'implémentation : `backend/` puis `frontend/`.
+- Étapes F1 à F8 de `docs/methode.md` : branche `feat/NNN-nom`, spec, plan, tests, implémentation
+  tâche par tâche, vérification à la main, revues (`/revue-api`, `/revue-react`), relecture à
+  froid (`relecteur`), fusion.
+- Après chaque modification : front → `npx tsc -b`, `npm run lint`, `npm run test` ;
+  back → `make test-back`, `php bin/console lint:container`.
+- Commits conventionnels, petits et atomiques.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+- Cette constitution résume les règles du projet ; `CLAUDE.md`, `backend/AGENTS.md` et
+  `docs/methode.md` restent la référence détaillée et sont modifiés en même temps qu'elle.
+- Un amendement est proposé par l'agent et validé par l'humain ; il est noté dans `JOURNAL-IA.md`.
+- Versionnement sémantique : MAJOR si un principe est retiré ou redéfini, MINOR si un principe
+  ou une section est ajouté, PATCH pour une reformulation.
+- Chaque plan vérifie sa conformité dans sa section « Constitution Check » ; un écart y est
+  justifié ou corrigé.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-10-19 | **Last Amended**: 2026-10-19
