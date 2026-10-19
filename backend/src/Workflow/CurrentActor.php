@@ -19,7 +19,7 @@ final class CurrentActor
     {
         $user = $this->security->getUser();
         if (!$user instanceof User) {
-            throw new \LogicException('Une transition de note exige un utilisateur connecté.');
+            throw new \LogicException('Une transition de note ou de demande de congé exige un utilisateur connecté.');
         }
 
         return $user;

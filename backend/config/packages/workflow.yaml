@@ -26,3 +26,34 @@ framework:
                 reject:
                     from: submitted
                     to: rejected
+
+        # Cycle de vie d'une demande de congé (spec 007, specs/007-demander-conge/data-model.md).
+        # Les places sont les valeurs de l'enum App\Enum\LeaveStatus, stockée dans LeaveRequest::$status.
+        # Effets des transitions (décision, annulation) : listeners Leave* de src/Workflow/.
+        leave_request:
+            type: state_machine
+            marking_store:
+                type: method
+                property: status
+            supports:
+                - App\Entity\LeaveRequest
+            initial_marking: pending
+            places:
+                - pending
+                - accepted
+                - refused
+                - withdrawn
+                - cancelled
+            transitions:
+                accept:
+                    from: pending
+                    to: accepted
+                refuse:
+                    from: pending
+                    to: refused
+                withdraw:
+                    from: pending
+                    to: withdrawn
+                cancel:
+                    from: [pending, accepted]
+                    to: cancelled
