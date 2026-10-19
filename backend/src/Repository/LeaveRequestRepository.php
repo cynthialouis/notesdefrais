@@ -3,6 +3,9 @@
 namespace App\Repository;
 
 use App\Entity\LeaveRequest;
+use App\Entity\User;
+use App\Enum\LeaveStatus;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,5 +17,48 @@ class LeaveRequestRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, LeaveRequest::class);
+    }
+
+    /**
+     * Vrai si la période chevauche, même d'un jour (bornes comprises), une autre demande du même
+     * demandeur qui occupe encore sa période : en attente ou acceptée (spec 007, C4).
+     */
+    public function hasOverlap(User $requester, \DateTimeImmutable $start, \DateTimeImmutable $end): bool
+    {
+        $blocking = array_map(
+            static fn (LeaveStatus $status): string => $status->value,
+            array_values(array_filter(LeaveStatus::cases(), static fn (LeaveStatus $status): bool => $status->blocksPeriod())),
+        );
+
+        return null !== $this->createQueryBuilder('l')
+            ->select('l.id')
+            ->where('l.requester = :requester')
+            ->andWhere('l.status IN (:blocking)')
+            ->andWhere('l.startDate <= :end')
+            ->andWhere('l.endDate >= :start')
+            ->setParameter('requester', $requester)
+            ->setParameter('blocking', $blocking)
+            ->setParameter('start', $start, Types::DATE_IMMUTABLE)
+            ->setParameter('end', $end, Types::DATE_IMMUTABLE)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * Toutes les demandes d'un utilisateur, quel que soit leur état, date de début décroissante
+     * (spec 007, C16).
+     *
+     * @return list<LeaveRequest>
+     */
+    public function findForRequester(User $requester): array
+    {
+        return $this->createQueryBuilder('l')
+            ->where('l.requester = :requester')
+            ->setParameter('requester', $requester)
+            ->orderBy('l.startDate', 'DESC')
+            ->addOrderBy('l.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }
