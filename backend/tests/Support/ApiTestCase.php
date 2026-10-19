@@ -4,8 +4,10 @@ namespace App\Tests\Support;
 
 use App\Entity\Category;
 use App\Entity\Expense;
+use App\Entity\LeaveRequest;
 use App\Entity\User;
 use App\Enum\ExpenseStatus;
+use App\Enum\LeaveStatus;
 use App\Enum\UserRole;
 use App\Repository\CategoryRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -586,6 +588,152 @@ abstract class ApiTestCase extends WebTestCase
         }
 
         return $rows;
+    }
+
+    // --- Congés (spec 007) ---------------------------------------------------------------
+
+    /**
+     * Crée et enregistre une demande de congé directement en base (préparation d'un test, sans le Workflow).
+     * Seul endroit des tests qui appelle les setters de LeaveRequest (noms supposés, non fixés par le plan) :
+     * setRequester, setStartDate, setEndDate, setStatus, setDecidedAt, setDecidedBy, setRefusalReason,
+     * setCancelledAt, setCancelledBy, setCancellationReason.
+     * Les personnes sont rechargées depuis l'EntityManager courant : le helper reste utilisable après une requête.
+     */
+    protected function createLeave(
+        User $requester,
+        string $startDate,
+        string $endDate,
+        LeaveStatus $status = LeaveStatus::Pending,
+        ?User $decidedBy = null,
+        ?string $refusalReason = null,
+        ?User $cancelledBy = null,
+        ?string $cancellationReason = null,
+    ): LeaveRequest {
+        $em = $this->entityManager();
+        $managedRequester = $em->find(User::class, $requester->getId());
+        self::assertInstanceOf(User::class, $managedRequester);
+
+        $leave = new LeaveRequest();
+        $leave->setRequester($managedRequester);
+        $leave->setStartDate(new \DateTimeImmutable($startDate));
+        $leave->setEndDate(new \DateTimeImmutable($endDate));
+        $leave->setStatus($status);
+        if (null !== $decidedBy) {
+            $leave->setDecidedBy($em->find(User::class, $decidedBy->getId()));
+            $leave->setDecidedAt(new \DateTimeImmutable('2026-10-01T10:00:00+02:00'));
+        }
+        if (null !== $refusalReason) {
+            $leave->setRefusalReason($refusalReason);
+        }
+        if (null !== $cancelledBy) {
+            $leave->setCancelledBy($em->find(User::class, $cancelledBy->getId()));
+            $leave->setCancelledAt(new \DateTimeImmutable('2026-10-02T10:00:00+02:00'));
+        }
+        if (null !== $cancellationReason) {
+            $leave->setCancellationReason($cancellationReason);
+        }
+
+        $em->persist($leave);
+        $em->flush();
+
+        return $leave;
+    }
+
+    /**
+     * Crée une demande dans l'état voulu, avec les traces cohérentes de cet état :
+     * décision par le responsable du demandeur (acceptée, refusée), annulation par `$admin` (annulée).
+     */
+    protected function createLeaveInStatus(User $requester, string $startDate, string $endDate, LeaveStatus $status, ?User $admin = null): LeaveRequest
+    {
+        $responsible = $requester->getManager();
+
+        return match ($status) {
+            LeaveStatus::Pending, LeaveStatus::Withdrawn => $this->createLeave($requester, $startDate, $endDate, $status),
+            LeaveStatus::Accepted => $this->createLeave($requester, $startDate, $endDate, $status, decidedBy: $responsible),
+            LeaveStatus::Refused => $this->createLeave($requester, $startDate, $endDate, $status, decidedBy: $responsible, refusalReason: 'Motif de refus secret'),
+            LeaveStatus::Cancelled => $this->createLeave($requester, $startDate, $endDate, $status, cancelledBy: $admin ?? $responsible, cancellationReason: 'Motif d\'annulation secret'),
+        };
+    }
+
+    /**
+     * Relit une demande de congé en base, sans passer par le cache de l'EntityManager.
+     */
+    protected function findLeave(int $id): ?LeaveRequest
+    {
+        $em = $this->entityManager();
+        $em->clear();
+
+        return $em->find(LeaveRequest::class, $id);
+    }
+
+    protected function countLeaves(): int
+    {
+        $em = $this->entityManager();
+        $em->clear();
+
+        return $em->getRepository(LeaveRequest::class)->count([]);
+    }
+
+    /**
+     * Vérifie le format de sortie d'une demande de congé (LeaveRequestView, spec 007, data-model.md) :
+     * champs nullables toujours présents, booléens de ce que le lecteur peut faire.
+     *
+     * @param array<mixed> $view
+     */
+    protected function assertLeaveView(mixed $view): void
+    {
+        self::assertIsArray($view);
+        self::assertEqualsCanonicalizing(
+            ['id', 'requester', 'startDate', 'endDate', 'status', 'createdAt', 'decidedAt', 'decidedBy', 'refusalReason',
+                'cancelledAt', 'cancelledBy', 'cancellationReason', 'decidable', 'withdrawable', 'cancellable'],
+            array_keys($view),
+        );
+        self::assertIsInt($view['id']);
+        $this->assertPersonRef($view['requester']);
+        foreach (['startDate', 'endDate'] as $key) {
+            self::assertIsString($view[$key]);
+            self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $view[$key]);
+        }
+        self::assertContains($view['status'], ['pending', 'accepted', 'refused', 'withdrawn', 'cancelled']);
+        self::assertIsString($view['createdAt']);
+        self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view['createdAt']);
+        foreach (['decidedAt', 'cancelledAt'] as $key) {
+            if (null !== $view[$key]) {
+                self::assertIsString($view[$key]);
+                self::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/', $view[$key]);
+            }
+        }
+        foreach (['decidedBy', 'cancelledBy'] as $key) {
+            if (null !== $view[$key]) {
+                $this->assertPersonRef($view[$key]);
+            }
+        }
+        foreach (['refusalReason', 'cancellationReason'] as $key) {
+            if (null !== $view[$key]) {
+                self::assertIsString($view[$key]);
+            }
+        }
+        self::assertIsBool($view['decidable']);
+        self::assertIsBool($view['withdrawable']);
+        self::assertIsBool($view['cancellable']);
+    }
+
+    /**
+     * Liste de demandes renvoyée par une route : code 200, tableau JSON de LeaveRequestView, renvoyé tel quel.
+     *
+     * @return list<array<mixed>>
+     */
+    protected function leaveList(): array
+    {
+        self::assertResponseStatusCodeSame(200);
+        $data = $this->responseJson();
+        self::assertTrue(array_is_list($data), 'La réponse doit être un tableau JSON.');
+        foreach ($data as $view) {
+            $this->assertLeaveView($view);
+        }
+
+        /** @var list<array<mixed>> $data */
+        return $data;
     }
 
     /**
