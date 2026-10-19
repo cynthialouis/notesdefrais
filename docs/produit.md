@@ -13,7 +13,7 @@ Application de gestion de notes de frais pour trois rôles : salarié, manager, 
 | 005 | Justificatifs | salarié | Upload d'une image ou d'un PDF sur une note (type et taille validés). |
 | 006 | Tableau de bord | salarié, manager | Salarié : ses totaux par statut. Manager : totaux de l'équipe par catégorie et par mois, export CSV des notes validées. |
 
-Chaque feature a sa spec dans `specs/NNN-nom.md` (voir [methode.md](methode.md)).
+Chaque feature a sa spec dans `specs/NNN-nom/spec.md` (voir [methode.md](methode.md)).
 
 ## Hors périmètre
 

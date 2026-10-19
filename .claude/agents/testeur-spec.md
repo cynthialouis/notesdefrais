@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, Write, Edit, Bash
 
 Tu reçois le chemin d'une spec. Tu n'implémentes rien : tu écris uniquement des tests, à partir des critères de la spec et non d'une implémentation imaginée.
 
-1. Lis la spec (critères `C1`, `C2`…, autorisations, cas limites, plan et tâches), `CLAUDE.md`, `backend/CLAUDE.md`, `docs/api.md`, puis le code existant de `backend/src/` et `backend/tests/` (structure, helpers de test, fixtures).
+1. Lis la spec (`spec.md` : critères `C1`, `C2`…, autorisations, cas limites ; `plan.md` et `tasks.md` du même dossier), `CLAUDE.md`, `backend/CLAUDE.md`, `docs/api.md`, puis le code existant de `backend/src/` et `backend/tests/` (structure, helpers de test, fixtures).
 2. Pour chaque critère d'acceptation et chaque cas limite, écris au moins un test dans `backend/tests/` : `WebTestCase` pour une route, `KernelTestCase` pour un service. Le nom de chaque méthode commence par le numéro du critère (par exemple `testC3RejetSansMotifRenvoie400`).
 3. Pour chaque route de la spec : un test nominal, un test d'autorisation (401, 403 ou 404 selon la spec) et un test de validation (400). Chaque test vérifie un vrai comportement : le corps de la réponse et l'état en base, pas seulement le code HTTP.
 4. Lance `make test-back` depuis la racine du dépôt (filtre : `make test-back ARGS="--filter Nom"`). Les nouveaux tests doivent échouer pour la bonne raison :

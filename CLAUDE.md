@@ -55,7 +55,7 @@ Spec OpenAPI : `GET /api/doc.json`.
 
 ## Méthode (spec-driven)
 
-- Toute feature commence par une spec `specs/NNN-nom.md`, validée par moi avant tout code.
+- Toute feature commence par une spec `specs/NNN-nom/spec.md` (format Spec Kit, voir `docs/methode.md`), validée par moi avant tout code ; plan et tâches vont dans `plan.md` et `tasks.md` du même dossier.
 - Ordre d'implémentation : `backend/` puis `frontend/`.
 - Les tests du back sont écrits à partir de la spec, avant l'implémentation.
 - Une tâche du plan à la fois, uniquement pour faire passer les tests existants. Ne jamais modifier un test pour le faire passer : s'il paraît faux, s'arrêter et expliquer.

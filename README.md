@@ -102,7 +102,7 @@ backend/             API Symfony
   config/packages/workflow.yaml   cycle de vie d'une note
   migrations/          migrations Doctrine
   tests/               tests PHPUnit
-specs/               une spec par feature
+specs/               un dossier par feature (spec.md, plan.md, tasks.md)
 docs/                documentation du projet
 ```
 
