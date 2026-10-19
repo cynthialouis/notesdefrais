@@ -6,7 +6,7 @@
 
 **Status**: Validée (2026-10-19)
 
-**Input**: Chaque personne doit pouvoir demander un congé sur une période donnée, et son responsable direct doit pouvoir l'accepter ou la refuser. Pour que chacun sache qui est absent, tout le monde voit les congés acceptés de tout le monde. Un congé accepté ne peut plus être remis en cause que par l'admin, qui peut l'annuler. Le solde de congés (008) et le calendrier des absences (009) viendront ensuite.
+**Input**: Chaque personne doit pouvoir demander un congé sur une période donnée, et son responsable direct doit pouvoir l'accepter ou la refuser. Pour que chacun sache qui est absent, tout le monde voit les congés acceptés de tout le monde. L'admin peut annuler une demande en attente ou un congé accepté ; une fois accepté, un congé ne peut plus être remis en cause que par lui. Le solde de congés (008) et le calendrier des absences (009) viendront ensuite.
 
 ## Clarifications
 
@@ -23,6 +23,12 @@
 - Q: « Tout le monde voit les congés de tout le monde » : quoi exactement ? → A: Chacun voit toutes ses propres demandes ; des autres, il ne voit que les congés acceptés. Seule exception : le responsable voit les demandes en attente de son équipe, pour les traiter (C6, C15, C16, C17).
 - Q: Et l'admin, qui n'a pas de responsable ? → A: Il ne peut pas demander de congé (409), comme il ne peut pas soumettre de note (C5).
 - Q: Ordre de la liste à traiter du manager ? → A: La date de début la plus proche d'abord (C6).
+
+### Session 2026-10-19 (relecture du plan)
+
+- Q: La liste des congés acceptés de tous montre-t-elle les congés passés ? → A: Pas en 007 : seulement les congés en cours ou à venir ; les congés passés seront visibles plus tard, avec le calendrier (009) (C15).
+- Q: L'admin peut-il annuler une demande qui n'est pas acceptée ? → A: Oui, une demande en attente ; une demande refusée, retirée ou annulée reste définitive (C13, C14).
+- Q: Pour annuler une demande en attente, l'admin doit la voir : faut-il élargir la visibilité ? → A: L'admin voit les demandes en attente de tout le monde ; les demandes refusées, retirées ou annulées restent au seul demandeur (C17, C18).
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -78,25 +84,26 @@ Tout utilisateur connecté voit les congés acceptés de tout le monde, pour sav
 
 **Acceptance Scenarios**:
 
-1. **Given** des congés acceptés de plusieurs personnes, **When** un utilisateur connecté ouvre la liste des congés, **Then** il les voit tous, avec la personne et les dates, la date de début la plus proche d'abord (C15).
-2. **Given** une demande en attente, refusée, retirée ou annulée, **When** une autre personne que le demandeur consulte les congés, **Then** elle ne la voit pas, sauf le responsable pour une demande en attente à traiter (C17).
+1. **Given** des congés acceptés de plusieurs personnes, passés et à venir, **When** un utilisateur connecté ouvre la liste des congés, **Then** il voit ceux en cours ou à venir, avec la personne et les dates, la date de début la plus proche d'abord, et pas les congés terminés (C15).
+2. **Given** une demande en attente, refusée, retirée ou annulée, **When** une autre personne que le demandeur consulte les congés, **Then** elle ne la voit pas, sauf une demande en attente pour le responsable du demandeur et pour l'admin (C17).
 
 ---
 
-### User Story 4 - Annuler un congé accepté (Priority: P3)
+### User Story 4 - Annuler une demande ou un congé (Priority: P3)
 
-L'admin annule un congé déjà accepté, avec un motif.
+L'admin voit les demandes en attente de tout le monde et annule, avec un motif, une demande en attente ou un congé déjà accepté.
 
 **Why this priority**: Cas de correction, rare.
 
-**Independent Test**: Se connecter en admin, annuler un congé accepté avec un motif ; tenter d'annuler une demande en attente.
+**Independent Test**: Se connecter en admin, annuler une demande en attente d'un salarié et un congé accepté, avec un motif ; tenter d'annuler une demande refusée.
 
-**Critères couverts**: C9, C13, C14
+**Critères couverts**: C9, C13, C14, C18
 
 **Acceptance Scenarios**:
 
-1. **Given** un congé accepté, **When** l'admin l'annule avec un motif d'au moins 5 caractères, **Then** il passe à « annulé » avec le motif, qui a annulé et quand (C13) ; un motif plus court est refusé (400) (C9).
-2. **Given** une demande qui n'est pas acceptée, **When** l'admin tente de l'annuler, **Then** c'est refusé (409) (C14).
+1. **Given** des demandes en attente dans plusieurs équipes, **When** l'admin ouvre les demandes en attente, **Then** il les voit toutes, la date de début la plus proche d'abord (C18).
+2. **Given** une demande en attente ou un congé accepté, **When** l'admin l'annule avec un motif d'au moins 5 caractères, **Then** la demande passe à « annulée » avec le motif, qui a annulé et quand (C13) ; un motif plus court est refusé (400) (C9).
+3. **Given** une demande refusée, retirée ou déjà annulée, **When** l'admin tente de l'annuler, **Then** c'est refusé (409) (C14).
 
 ---
 
@@ -106,7 +113,8 @@ L'admin annule un congé déjà accepté, avec un motif.
 - Chevauchement d'un seul jour (fin de l'une = début de l'autre) : refusé (409). Chevauchement avec une demande refusée, retirée ou annulée : accepté.
 - Décider deux fois la même demande (double clic, deux onglets) : la seconde décision est refusée (409), la première est conservée.
 - Retirer une demande déjà décidée : 409. Retirer la demande d'un autre : 404.
-- Annuler un congé déjà annulé : 409.
+- Annuler une demande refusée, retirée ou déjà annulée : 409.
+- Congé accepté terminé hier : absent de la liste des congés de tous ; terminé aujourd'hui : présent.
 - Un manager ne décide jamais de ses propres demandes : c'est l'admin, son responsable, qui le fait.
 - Aucune demande à traiter, aucun congé à afficher : message explicite au lieu d'une liste vide.
 - Motif fait d'espaces : refusé ; motif conservé sans les espaces autour.
@@ -127,11 +135,12 @@ L'admin annule un congé déjà accepté, avec un motif.
 - **C10** SI la demande n'est pas en attente, ALORS LE SYSTÈME DOIT refuser son acceptation et son refus (409).
 - **C11** TANT QUE sa demande est en attente, LE SYSTÈME DOIT permettre au demandeur de la retirer : elle passe à l'état « retirée ».
 - **C12** SI la demande n'est plus en attente, ALORS LE SYSTÈME DOIT refuser son retrait (409).
-- **C13** QUAND l'admin annule un congé accepté avec un motif, LE SYSTÈME DOIT le passer à l'état « annulé » en enregistrant le motif, qui a annulé et quand, quelle que soit la date du congé.
-- **C14** SI le congé n'est pas à l'état « acceptée », ALORS LE SYSTÈME DOIT refuser son annulation (409).
-- **C15** LE SYSTÈME DOIT montrer à tout utilisateur connecté les congés acceptés de tout le monde, avec la personne et les dates, la date de début la plus proche d'abord.
+- **C13** QUAND l'admin annule une demande en attente ou un congé accepté avec un motif, LE SYSTÈME DOIT la passer à l'état « annulée » en enregistrant le motif, qui a annulé et quand, quelle que soit la date du congé.
+- **C14** SI la demande n'est ni en attente ni acceptée, ALORS LE SYSTÈME DOIT refuser son annulation (409).
+- **C15** LE SYSTÈME DOIT montrer à tout utilisateur connecté les congés acceptés en cours ou à venir de tout le monde (date de fin pas antérieure à aujourd'hui, heure de Paris), avec la personne et les dates, la date de début la plus proche d'abord.
 - **C16** LE SYSTÈME DOIT montrer à chacun toutes ses propres demandes, quel que soit leur état, avec le motif d'un refus ou d'une annulation.
-- **C17** LE SYSTÈME DOIT réserver à son seul demandeur une demande en attente, refusée, retirée ou annulée, et ses motifs ; seule exception, le responsable voit les demandes en attente de son équipe pour les traiter (C6).
+- **C17** LE SYSTÈME DOIT réserver à son seul demandeur une demande en attente, refusée, retirée ou annulée, et ses motifs ; seules exceptions, le responsable du demandeur et l'admin voient ses demandes en attente (C6, C18).
+- **C18** QUAND l'admin ouvre les demandes en attente, LE SYSTÈME DOIT lister les demandes en attente de tout le monde, la date de début la plus proche d'abord.
 
 ### Autorisations
 
@@ -143,8 +152,9 @@ L'admin annule un congé déjà accepté, avec un motif.
 | Lister les demandes à traiter | manager et plus | 401 non connecté ; 403 salarié |
 | Accepter, refuser | le responsable du demandeur | 403 pour le demandeur lui-même ; 404 pour tout autre |
 | Retirer une demande | son demandeur | 404 pour tout autre |
-| Annuler un congé accepté | admin | 401 non connecté ; 403 manager ou salarié |
-| Voir une demande non acceptée et ses motifs | son demandeur ; son responsable si elle est en attente | 404 (existence non révélée) |
+| Lister les demandes en attente de tous | admin | 401 non connecté ; 403 manager ou salarié |
+| Annuler une demande en attente ou un congé accepté | admin | 401 non connecté ; 403 manager ou salarié |
+| Voir une demande non acceptée et ses motifs | son demandeur ; son responsable et l'admin si elle est en attente | 404 (existence non révélée) |
 
 ### Règles recalculées côté front
 
@@ -161,12 +171,12 @@ Non recalculé : le chevauchement (C4), ni ce que le lecteur peut faire d'une de
 
 ### Measurable Outcomes
 
-- **SC-001**: Chaque critère C1 à C17 est couvert par au moins un test du back ou du front, et `make test` passe.
+- **SC-001**: Chaque critère C1 à C18 est couvert par au moins un test du back ou du front, et `make test` passe.
 - **SC-002**: Un parcours e2e passe (`make test-e2e`) : un salarié demande un congé, son manager l'accepte, un salarié d'une autre équipe le voit, l'admin l'annule.
 
 ## Assumptions
 
-- **Hors périmètre** : solde de congés, décompte des jours et types de congé (008) ; calendrier des absences (009) ; demi-journées ; jours ouvrés, week-ends et jours fériés ; modification d'une demande (on la retire et on en refait une) ; resoumission d'une demande refusée ; notifications ; arrêt maladie et toute donnée de santé ; délégation à un remplaçant ; lien avec les notes de frais ; historique détaillé des actions (la décision et l'annulation sont enregistrées sur la demande).
+- **Hors périmètre** : solde de congés, décompte des jours et types de congé (008) ; calendrier des absences et congés passés des autres (009) ; demi-journées ; jours ouvrés, week-ends et jours fériés ; modification d'une demande (on la retire et on en refait une) ; resoumission d'une demande refusée ; notifications ; arrêt maladie et toute donnée de santé ; délégation à un remplaçant ; lien avec les notes de frais ; historique détaillé des actions (la décision et l'annulation sont enregistrées sur la demande).
 - **Écarts avec les docs** :
   - `docs/produit.md` : l'application ne gérait que des notes de frais ; les congés sont un nouveau domaine (choix assumé : POC d'expérimentation), avec un nouvel écran.
   - `docs/modele-donnees.md` : nouvelle entité et nouveau cycle de vie, à documenter au plan.
