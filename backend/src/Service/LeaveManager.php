@@ -91,6 +91,23 @@ final class LeaveManager
         return $leave;
     }
 
+    /**
+     * Annule une demande en attente ou un congé accepté, quelle que soit sa date, avec un motif (C13) ;
+     * refusé si la demande est refusée, retirée ou déjà annulée (C14). La décision d'origine est conservée.
+     *
+     * @param string $reason motif déjà validé (RejectionInput, C9)
+     */
+    public function cancel(LeaveRequest $leave, string $reason): LeaveRequest
+    {
+        if (!$this->workflow->can($leave, 'cancel')) {
+            throw PublicHttpException::conflict('Seule une demande en attente ou un congé accepté peut être annulé.');
+        }
+        $this->workflow->apply($leave, 'cancel', ['reason' => UnicodeTrim::trim($reason)]);
+        $this->em->flush();
+
+        return $leave;
+    }
+
     /** @param array<string, mixed> $context */
     private function decide(LeaveRequest $leave, string $transition, array $context = []): void
     {

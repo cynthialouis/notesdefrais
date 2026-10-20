@@ -111,6 +111,33 @@ final class LeaveController extends AbstractController
         return $this->json(LeaveRequestView::fromEntity($this->leaves->refuse($leave, $input->reason), $user));
     }
 
+    #[Route('/api/leaves/pending', name: 'api_leaves_pending', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[OA\Response(response: 200, description: 'Demandes en attente de tout le monde, date de début la plus proche d\'abord', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: new Model(type: LeaveRequestView::class))))]
+    #[OA\Response(response: 403, description: 'Réservé à l\'admin')]
+    public function pending(#[CurrentUser] User $user, LeaveRequestRepository $repository): JsonResponse
+    {
+        return $this->list($repository->findAllPending(), $user);
+    }
+
+    /** Annuler : réservé à l'admin, sur une demande en attente ou un congé accepté, quelle que soit sa date. */
+    #[Route('/api/leaves/{id}/cancel', name: 'api_leaves_cancel', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    #[OA\Response(response: 200, description: 'Demande annulée', content: new Model(type: LeaveRequestView::class))]
+    #[OA\Response(response: 400, description: 'Motif invalide')]
+    #[OA\Response(response: 403, description: 'Réservé à l\'admin')]
+    #[OA\Response(response: 404, description: 'Demande inexistante')]
+    #[OA\Response(response: 409, description: 'La demande n\'est ni en attente ni acceptée')]
+    public function cancel(
+        #[CurrentUser] User $user,
+        #[MapEntity(id: 'id')] LeaveRequest $leave,
+        #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)] RejectionInput $input,
+    ): JsonResponse {
+        \assert(null !== $input->reason);
+
+        return $this->json(LeaveRequestView::fromEntity($this->leaves->cancel($leave, $input->reason), $user));
+    }
+
     /**
      * @param list<LeaveRequest> $leaves
      */

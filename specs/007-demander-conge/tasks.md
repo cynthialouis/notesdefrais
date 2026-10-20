@@ -95,7 +95,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 **Independent Test**: `make test-back ARGS="--filter 'PendingLeaves|CancelLeave'"`.
 
-- [ ] T013 [US4] `LeaveRequestRepository::findAllPending()` (date de début croissante) ; `LeaveManager::cancel(LeaveRequest, string $reason)` (409 si ni en attente ni acceptée) ; routes `GET /api/leaves/pending` et `POST /api/leaves/{id}/cancel` (`RejectionInput`), `ROLE_ADMIN` sinon 403, dans `backend/src/Controller/LeaveController.php` (C9, C13, C14, C18)
+- [X] T013 [US4] `LeaveRequestRepository::findAllPending()` (date de début croissante) ; `LeaveManager::cancel(LeaveRequest, string $reason)` (409 si ni en attente ni acceptée) ; routes `GET /api/leaves/pending` et `POST /api/leaves/{id}/cancel` (`RejectionInput`), `ROLE_ADMIN` sinon 403, dans `backend/src/Controller/LeaveController.php` (C9, C13, C14, C18)
 
 **Checkpoint**: tous les tests `Leave` verts.
 

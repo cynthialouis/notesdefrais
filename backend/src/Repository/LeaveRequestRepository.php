@@ -103,4 +103,23 @@ class LeaveRequestRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Demandes en attente de tout le monde, pour l'admin, date de début la plus proche d'abord
+     * (spec 007, C18).
+     *
+     * @return list<LeaveRequest>
+     */
+    public function findAllPending(): array
+    {
+        return $this->createQueryBuilder('l')
+            ->addSelect('r')
+            ->join('l.requester', 'r')
+            ->where('l.status = :status')
+            ->setParameter('status', LeaveStatus::Pending->value)
+            ->orderBy('l.startDate', 'ASC')
+            ->addOrderBy('l.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
