@@ -151,7 +151,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 - [x] T025 F5 — Vérification à la main par Cynthia, en suivant `specs/007-demander-conge/quickstart.md` (aucun commit avant son retour)
 - [x] T026 F6 — `/revue-api` et `/revue-react` sur la branche ; appliquer les remarques retenues, justifier les autres, ligne dans `JOURNAL-IA.md` pour chaque écart
 - [x] T027 F7 — Subagent `relecteur` sur `specs/007-demander-conge/` ; corriger les problèmes signalés
-- [ ] T028 F8 — `make test-e2e` (tous les parcours), puis fusion `git switch main && git merge --no-ff feat/007-demander-conge` après accord de Cynthia, puis `make test` sur `main`
+- [x] T028 F8 — `make test-e2e` (tous les parcours), puis fusion `git switch main && git merge --no-ff feat/007-demander-conge` après accord de Cynthia, puis `make test` sur `main`
 
 ---
 
