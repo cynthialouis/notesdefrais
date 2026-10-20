@@ -36,7 +36,7 @@ afterEach(() => {
 })
 
 describe('protection des pages', () => {
-  it.each(['/', '/notes', '/equipe', '/politique'])('C6 – %s sans session amène à la connexion', async (path) => {
+  it.each(['/', '/notes', '/conges', '/equipe', '/politique'])('C6 – %s sans session amène à la connexion', async (path) => {
     useSessionStore.setState({ session: { status: 'anonymous' } })
     await renderAsync(
       <MemoryRouter initialEntries={[path]}>
@@ -71,6 +71,11 @@ describe('protection des pages', () => {
     expect(screen.getByRole('heading', { name: 'Équipe' })).toBeInTheDocument()
   })
 
+  it.each([employee, manager, admin])('spec 007 – $role accède à Congés', (user) => {
+    renderAt('/conges', user)
+    expect(screen.getByRole('heading', { name: 'Congés' })).toBeInTheDocument()
+  })
+
   it.each([
     ['/notes', 'Mes notes'],
     ['/equipe', 'Équipe'],
@@ -94,17 +99,17 @@ describe('protection des pages', () => {
 describe('menu', () => {
   it('C8 – un salarié ne voit que ses pages', () => {
     renderAt('/', employee)
-    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes'])
+    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Congés'])
   })
 
   it('C8 – un manager voit aussi Équipe', () => {
     renderAt('/', manager)
-    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Équipe'])
+    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Congés', 'Équipe'])
   })
 
   it('C8 – un admin voit toutes les pages', () => {
     renderAt('/', admin)
-    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Équipe', 'Politique'])
+    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Congés', 'Équipe', 'Politique'])
   })
 })
 

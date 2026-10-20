@@ -10,6 +10,7 @@ import { cx } from '../ui/cx'
 const links: ReadonlyArray<{ to: string; label: string; role: Role }> = [
   { to: '/', label: 'Tableau de bord', role: 'employee' },
   { to: '/notes', label: 'Mes notes', role: 'employee' },
+  { to: '/conges', label: 'Congés', role: 'employee' },
   { to: '/equipe', label: 'Équipe', role: 'manager' },
   { to: '/politique', label: 'Politique', role: 'admin' },
 ]
