@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { json, stubApi } from '../../test/api'
 import { useSessionStore } from '../auth/sessionStore'
-import { acceptedLeave, cancelledLeave, employee, jsonResponse, manager, pendingLeave, refusedLeave } from '../../test/fixtures'
+import { acceptedLeave, admin, cancelledLeave, employee, jsonResponse, manager, pendingLeave, refusedLeave } from '../../test/fixtures'
 import { renderAsync } from '../../test/render'
 import { useLeavesStore } from './leavesStore'
 import { LeavesPage } from './LeavesPage'
@@ -385,5 +385,143 @@ describe('LeavesPage – congés à venir', () => {
 
     expect(await screen.findByRole('table', { name: 'Congés à venir' })).toBeInTheDocument()
     expect(rows('Congés à venir')).toEqual([['Léa Bernard', 'Du 03/11/2026 au 07/11/2026']])
+  })
+})
+
+describe('LeavesPage – annulation par l\'admin', () => {
+  const claireWaiting = { ...pendingLeave, id: 40, requester: { id: 2, name: 'Claire Dubois' }, startDate: '2026-11-14', endDate: '2026-11-18', withdrawable: false, cancellable: true }
+  const leaWaiting = { ...pendingLeave, id: 41, startDate: '2026-11-03', endDate: '2026-11-07', withdrawable: false, cancellable: true }
+  const leaAccepted = { ...acceptedLeave, id: 42, cancellable: true }
+  const cancelled = (leave: object) => ({ ...leave, status: 'cancelled', cancellable: false, cancelledAt: '2026-10-20T12:00:00+02:00', cancelledBy: { id: 1, name: 'Alice Martin' }, cancellationReason: 'Dates saisies par erreur' })
+  const asAdmin = () => useSessionStore.setState({ session: { status: 'authenticated', user: admin } })
+  const pendingItems = () => within(screen.getByRole('list', { name: 'Demandes en attente (toutes équipes)' })).getAllByRole('listitem')
+  const baseStubs = { 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, []) }
+
+  it('C18 – un manager ne voit pas la section et ne charge pas la liste', async () => {
+    useSessionStore.setState({ session: { status: 'authenticated', user: manager } })
+    const fetchMock = stubApi({ ...baseStubs, 'GET /api/leaves': json(200, []) })
+    await renderPage()
+    await screen.findByRole('heading', { name: 'Demandes à traiter' })
+
+    expect(screen.queryByRole('heading', { name: 'Demandes en attente (toutes équipes)' })).not.toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/leaves/pending')).toBe(false)
+  })
+
+  it('C18 – l\'admin voit les demandes en attente de toutes les équipes dans l\'ordre du serveur', async () => {
+    asAdmin()
+    stubApi({ ...baseStubs, 'GET /api/leaves': json(200, []), 'GET /api/leaves/pending': json(200, [leaWaiting, claireWaiting]) })
+    await renderPage()
+
+    await screen.findByRole('list', { name: 'Demandes en attente (toutes équipes)' })
+    expect(pendingItems().map((item) => item.querySelector('p')?.textContent)).toEqual(['Léa Bernard · Du 03/11/2026 au 07/11/2026', 'Claire Dubois · Du 14/11/2026 au 18/11/2026'])
+  })
+
+  it('C18 – sans demande en attente, un état vide l\'explique', async () => {
+    asAdmin()
+    stubApi({ ...baseStubs, 'GET /api/leaves': json(200, []), 'GET /api/leaves/pending': json(200, []) })
+    await renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Aucune demande en attente.' })).toBeInTheDocument()
+  })
+
+  it('C13 – « Annuler » une demande en attente envoie le motif et elle sort de la liste', async () => {
+    asAdmin()
+    let pending: unknown[] = [leaWaiting]
+    const fetchMock = stubApi({
+      ...baseStubs, 'GET /api/leaves': json(200, []),
+      'GET /api/leaves/pending': () => jsonResponse(200, pending),
+      'POST /api/leaves/41/cancel': () => {
+        pending = []
+        return jsonResponse(200, cancelled(leaWaiting))
+      },
+    })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes en attente (toutes équipes)' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler la demande de Léa Bernard (Du 03/11/2026 au 07/11/2026)' }))
+    await userEvent.type(screen.getByLabelText('Motif de l\'annulation pour Léa Bernard'), '  Dates saisies par erreur  ')
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler la demande' }))
+
+    expect(await screen.findByRole('heading', { name: 'Aucune demande en attente.' })).toBeInTheDocument()
+    const post = fetchMock.mock.calls.find(([url]) => url === '/api/leaves/41/cancel')
+    expect(JSON.parse(String(post?.[1]?.body))).toEqual({ reason: 'Dates saisies par erreur' })
+  })
+
+  it('C13 – « Annuler » un congé accepté envoie le motif et il sort des congés à venir', async () => {
+    asAdmin()
+    let accepted: unknown[] = [leaAccepted]
+    const fetchMock = stubApi({
+      ...baseStubs, 'GET /api/leaves/pending': json(200, []),
+      'GET /api/leaves': () => jsonResponse(200, accepted),
+      'POST /api/leaves/42/cancel': () => {
+        accepted = []
+        return jsonResponse(200, cancelled(leaAccepted))
+      },
+    })
+    await renderPage()
+    await screen.findByRole('table', { name: 'Congés à venir' })
+    expect(rows('Congés à venir')).toEqual([['Léa Bernard', 'Du 19/11/2026 au 23/11/2026', 'Annuler']])
+
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler le congé de Léa Bernard (Du 19/11/2026 au 23/11/2026)' }))
+    await userEvent.type(screen.getByLabelText('Motif de l\'annulation pour Léa Bernard'), 'Dates saisies par erreur')
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler le congé' }))
+
+    expect(await screen.findByRole('heading', { name: 'Aucun congé en cours ou à venir.' })).toBeInTheDocument()
+    const post = fetchMock.mock.calls.find(([url]) => url === '/api/leaves/42/cancel')
+    expect(JSON.parse(String(post?.[1]?.body))).toEqual({ reason: 'Dates saisies par erreur' })
+  })
+
+  it('C13 – un congé non annulable par le lecteur n\'a ni bouton ni colonne Action', async () => {
+    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/leaves': json(200, [acceptedLeave]) })
+    await renderPage()
+
+    const table = await screen.findByRole('table', { name: 'Congés à venir' })
+    expect(within(table).queryByRole('columnheader', { name: 'Action' })).not.toBeInTheDocument()
+    expect(within(table).queryByRole('button')).not.toBeInTheDocument()
+  })
+
+  it('« Abandonner » referme le motif sans rien envoyer', async () => {
+    asAdmin()
+    const fetchMock = stubApi({ ...baseStubs, 'GET /api/leaves': json(200, []), 'GET /api/leaves/pending': json(200, [leaWaiting]) })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes en attente (toutes équipes)' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Annuler la demande de Léa Bernard/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Abandonner' }))
+
+    expect(screen.queryByLabelText('Motif de l\'annulation pour Léa Bernard')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Annuler la demande de Léa Bernard/ })).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it('C9 – un motif d\'annulation trop court est signalé sous le champ, sans rien envoyer', async () => {
+    asAdmin()
+    const fetchMock = stubApi({ ...baseStubs, 'GET /api/leaves': json(200, []), 'GET /api/leaves/pending': json(200, [leaWaiting]) })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes en attente (toutes équipes)' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Annuler la demande de Léa Bernard/ }))
+    await userEvent.type(screen.getByLabelText('Motif de l\'annulation pour Léa Bernard'), '   abcd   ')
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler la demande' }))
+
+    expect(await screen.findByText('Le motif doit faire au moins 5 caractères.')).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it('C14 – une annulation refusée par le serveur (409) affiche son message sous le motif', async () => {
+    asAdmin()
+    stubApi({
+      ...baseStubs, 'GET /api/leaves': json(200, []),
+      'GET /api/leaves/pending': json(200, [leaWaiting]),
+      'POST /api/leaves/41/cancel': conflict('Seule une demande en attente ou un congé accepté peut être annulé.'),
+    })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes en attente (toutes équipes)' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Annuler la demande de Léa Bernard/ }))
+    await userEvent.type(screen.getByLabelText('Motif de l\'annulation pour Léa Bernard'), 'Dates saisies par erreur')
+    await userEvent.click(screen.getByRole('button', { name: 'Annuler la demande' }))
+
+    expect(await screen.findByText('Seule une demande en attente ou un congé accepté peut être annulé.')).toBeInTheDocument()
   })
 })

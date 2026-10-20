@@ -138,7 +138,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 ## Phase 12: User Story 4 — front
 
-- [ ] T022 [US4] Pour l'admin : section « Demandes en attente (toutes équipes) » et bouton « Annuler » avec motif (`rejectionSchema`) sur les demandes en attente et les congés acceptés quand `cancellable`, dans `frontend/src/features/leaves/LeavesPage.tsx` ; tests dans `LeavesPage.test.tsx` (C9, C13, C14, C18)
+- [x] T022 [US4] Pour l'admin : section « Demandes en attente (toutes équipes) » et bouton « Annuler » avec motif (`rejectionSchema`) sur les demandes en attente et les congés acceptés quand `cancellable`, dans `frontend/src/features/leaves/LeavesPage.tsx` ; tests dans `LeavesPage.test.tsx` (C9, C13, C14, C18)
 
 **Checkpoint**: `npx tsc -b`, `npm run lint`, `npm run test` verts dans `frontend/`.
 

@@ -8,6 +8,7 @@ import { PageHeader } from '../../ui/PageHeader'
 import { LoadingState } from '../../ui/Spinner'
 import { Table, Td, Th } from '../../ui/Table'
 import { canAccess, useSessionStore } from '../auth/sessionStore'
+import { AllPendingLeavesCard } from './AllPendingLeavesCard'
 import { leavePeriod } from './leavePeriod'
 import { LeaveRequestForm } from './LeaveRequestForm'
 import { LeaveStatusBadge } from './LeaveStatusBadge'
@@ -28,6 +29,7 @@ export function LeavesPage() {
           <LeaveRequestForm />
         </Card>
         {canAccess(session, 'manager') && <TeamLeavesCard />}
+        {canAccess(session, 'admin') && <AllPendingLeavesCard />}
         <MyLeavesCard />
         <UpcomingLeavesCard />
       </div>
