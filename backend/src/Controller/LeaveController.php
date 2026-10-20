@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Dto\LeaveRequestInput;
 use App\Dto\LeaveRequestView;
+use App\Dto\RejectionInput;
 use App\Entity\LeaveRequest;
 use App\Entity\User;
 use App\Repository\LeaveRequestRepository;
@@ -57,6 +58,46 @@ final class LeaveController extends AbstractController
     public function withdraw(#[CurrentUser] User $user, #[MapEntity(id: 'id')] LeaveRequest $leave): JsonResponse
     {
         return $this->json(LeaveRequestView::fromEntity($this->leaves->withdraw($leave), $user));
+    }
+
+    #[Route('/api/team/leaves', name: 'api_leaves_team', methods: ['GET'])]
+    #[IsGranted('ROLE_MANAGER')]
+    #[OA\Response(response: 200, description: 'Demandes en attente de l\'équipe directe, date de début la plus proche d\'abord', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: new Model(type: LeaveRequestView::class))))]
+    #[OA\Response(response: 403, description: 'Réservé aux managers')]
+    public function team(#[CurrentUser] User $user, LeaveRequestRepository $repository): JsonResponse
+    {
+        return $this->list($repository->findPendingForResponsible($user), $user);
+    }
+
+    /** Accepter : 404 si le lecteur n'est ni le demandeur ni son responsable, 403 pour le demandeur. */
+    #[Route('/api/leaves/{id}/accept', name: 'api_leaves_accept', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted(LeaveRequestVoter::PARTY, subject: 'leave', statusCode: Response::HTTP_NOT_FOUND)]
+    #[IsGranted(LeaveRequestVoter::DECIDE, subject: 'leave', statusCode: Response::HTTP_FORBIDDEN)]
+    #[OA\Response(response: 200, description: 'Demande acceptée', content: new Model(type: LeaveRequestView::class))]
+    #[OA\Response(response: 403, description: 'Le demandeur ne décide pas de sa propre demande')]
+    #[OA\Response(response: 404, description: 'Demande inexistante ou hors de l\'équipe')]
+    #[OA\Response(response: 409, description: 'La demande n\'est pas en attente')]
+    public function accept(#[CurrentUser] User $user, #[MapEntity(id: 'id')] LeaveRequest $leave): JsonResponse
+    {
+        return $this->json(LeaveRequestView::fromEntity($this->leaves->accept($leave), $user));
+    }
+
+    #[Route('/api/leaves/{id}/refuse', name: 'api_leaves_refuse', requirements: ['id' => '\d+'], methods: ['POST'])]
+    #[IsGranted(LeaveRequestVoter::PARTY, subject: 'leave', statusCode: Response::HTTP_NOT_FOUND)]
+    #[IsGranted(LeaveRequestVoter::DECIDE, subject: 'leave', statusCode: Response::HTTP_FORBIDDEN)]
+    #[OA\Response(response: 200, description: 'Demande refusée', content: new Model(type: LeaveRequestView::class))]
+    #[OA\Response(response: 400, description: 'Motif invalide')]
+    #[OA\Response(response: 403, description: 'Le demandeur ne décide pas de sa propre demande')]
+    #[OA\Response(response: 404, description: 'Demande inexistante ou hors de l\'équipe')]
+    #[OA\Response(response: 409, description: 'La demande n\'est pas en attente')]
+    public function refuse(
+        #[CurrentUser] User $user,
+        #[MapEntity(id: 'id')] LeaveRequest $leave,
+        #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)] RejectionInput $input,
+    ): JsonResponse {
+        \assert(null !== $input->reason);
+
+        return $this->json(LeaveRequestView::fromEntity($this->leaves->refuse($leave, $input->reason), $user));
     }
 
     /**
