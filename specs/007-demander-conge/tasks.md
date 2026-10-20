@@ -113,7 +113,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 ## Phase 8: Fondations du front
 
 - [X] T016 [P] `frontend/src/features/leaves/leavesStore.ts` (Zustand) : réponses validées par une union discriminée Zod sur `status` (`refused` exige `refusalReason`, `cancelled` exige `cancellationReason`), contrôlée à la compilation contre le type généré ; actions `fetchMine`, `fetchAccepted`, `fetchTeam`, `fetchAllPending`, `request`, `withdraw`, `accept`, `refuse`, `cancel` ; tests dans `leavesStore.test.ts` (C1, C6, C15, C16, C18)
-- [ ] T017 [P] `frontend/src/features/leaves/leaveFormValidation.ts` : schéma Zod des dates (fin pas antérieure au début, début pas antérieur à `todayIso()` de `features/expenses/expenseFormValidation.ts`), seule copie front de la règle ; tests dans `leaveFormValidation.test.ts`, mêmes cas limites que la spec (début aujourd'hui accepté, hier refusé, un seul jour accepté) (C3)
+- [X] T017 [P] `frontend/src/features/leaves/leaveFormValidation.ts` : schéma Zod des dates (fin pas antérieure au début, début pas antérieur à `todayIso()` de `features/expenses/expenseFormValidation.ts`), seule copie front de la règle ; tests dans `leaveFormValidation.test.ts`, mêmes cas limites que la spec (début aujourd'hui accepté, hier refusé, un seul jour accepté) (C3)
 - [ ] T018 `LeaveStatusBadge` (`switch` exhaustif avec `never`) dans `frontend/src/features/leaves/LeaveStatusBadge.tsx` ; route `/conges` pour tous les rôles dans `frontend/src/app/AppRoutes.tsx`, lien « Congés » dans `frontend/src/app/AppLayout.tsx` ; page `LeavesPage.tsx` vide ; test de route dans `frontend/src/app/AppRoutes.test.tsx`
 
 ---
