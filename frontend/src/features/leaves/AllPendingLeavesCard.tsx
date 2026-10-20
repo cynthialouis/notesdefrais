@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Alert } from '../../ui/Alert'
 import { Button } from '../../ui/Button'
 import { Card } from '../../ui/Card'
@@ -39,6 +40,7 @@ export function AllPendingLeavesCard() {
 function PendingLeaveItem({ leave }: { leave: Leave }) {
   const cancel = useLeavesStore((state) => state.cancel)
   const [cancelling, setCancelling] = useState(false)
+  const cancelButton = useRef<HTMLButtonElement>(null)
 
   return (
     <li className="flex flex-col gap-3 py-3">
@@ -48,7 +50,7 @@ function PendingLeaveItem({ leave }: { leave: Leave }) {
           <span className="text-gray-600"> · {leavePeriod(leave)}</span>
         </p>
         {leave.cancellable && !cancelling && (
-          <Button onClick={() => setCancelling(true)} aria-label={`Annuler la demande de ${leave.requester.name} (${leavePeriod(leave)})`}>
+          <Button ref={cancelButton} onClick={() => setCancelling(true)} aria-label={`Annuler la demande de ${leave.requester.name} (${leavePeriod(leave)})`}>
             Annuler
           </Button>
         )}
@@ -61,7 +63,11 @@ function PendingLeaveItem({ leave }: { leave: Leave }) {
           onSubmit={async (reason) => {
             await cancel(leave.id, reason)
           }}
-          onClose={() => setCancelling(false)}
+          onClose={() => {
+            // Le bouton revient dans le DOM avant de recevoir le focus : on garde sa place au clavier
+            flushSync(() => setCancelling(false))
+            cancelButton.current?.focus()
+          }}
         />
       )}
     </li>

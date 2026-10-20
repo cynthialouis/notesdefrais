@@ -1,4 +1,5 @@
-import { useEffect, useState, useTransition } from 'react'
+import { useEffect, useRef, useState, useTransition } from 'react'
+import { flushSync } from 'react-dom'
 import { ApiError } from '../../api/client'
 import { Alert } from '../../ui/Alert'
 import { Button } from '../../ui/Button'
@@ -43,6 +44,7 @@ function TeamLeaveItem({ leave }: { leave: Leave }) {
   const [isAccepting, startAccept] = useTransition()
   const [error, setError] = useState<string | null>(null)
   const [refusing, setRefusing] = useState(false)
+  const refuseButton = useRef<HTMLButtonElement>(null)
   const subject = `la demande de ${leave.requester.name} (${leavePeriod(leave)})`
 
   function handleAccept() {
@@ -68,7 +70,7 @@ function TeamLeaveItem({ leave }: { leave: Leave }) {
             <Button variant="primary" pending={isAccepting} onClick={handleAccept} aria-label={`Accepter ${subject}`}>
               Accepter
             </Button>
-            <Button disabled={isAccepting} onClick={() => setRefusing(true)} aria-label={`Refuser ${subject}`}>
+            <Button ref={refuseButton} disabled={isAccepting} onClick={() => setRefusing(true)} aria-label={`Refuser ${subject}`}>
               Refuser
             </Button>
           </div>
@@ -83,7 +85,11 @@ function TeamLeaveItem({ leave }: { leave: Leave }) {
           onSubmit={async (reason) => {
             await refuse(leave.id, reason)
           }}
-          onClose={() => setRefusing(false)}
+          onClose={() => {
+            // Le bouton revient dans le DOM avant de recevoir le focus : on garde sa place au clavier
+            flushSync(() => setRefusing(false))
+            refuseButton.current?.focus()
+          }}
         />
       )}
     </li>

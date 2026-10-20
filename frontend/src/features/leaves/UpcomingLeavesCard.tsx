@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Alert } from '../../ui/Alert'
 import { Button } from '../../ui/Button'
 import { Card } from '../../ui/Card'
@@ -56,6 +57,7 @@ export function UpcomingLeavesCard() {
 function UpcomingLeaveRows({ leave, withAction }: { leave: Leave; withAction: boolean }) {
   const cancel = useLeavesStore((state) => state.cancel)
   const [cancelling, setCancelling] = useState(false)
+  const cancelButton = useRef<HTMLButtonElement>(null)
 
   return (
     <>
@@ -65,7 +67,7 @@ function UpcomingLeaveRows({ leave, withAction }: { leave: Leave; withAction: bo
         {withAction && (
           <Td align="right">
             {leave.cancellable && !cancelling && (
-              <Button onClick={() => setCancelling(true)} aria-label={`Annuler le congé de ${leave.requester.name} (${leavePeriod(leave)})`}>
+              <Button ref={cancelButton} onClick={() => setCancelling(true)} aria-label={`Annuler le congé de ${leave.requester.name} (${leavePeriod(leave)})`}>
                 Annuler
               </Button>
             )}
@@ -82,7 +84,11 @@ function UpcomingLeaveRows({ leave, withAction }: { leave: Leave; withAction: bo
               onSubmit={async (reason) => {
                 await cancel(leave.id, reason)
               }}
-              onClose={() => setCancelling(false)}
+              onClose={() => {
+                // Le bouton revient dans le DOM avant de recevoir le focus : on garde sa place au clavier
+                flushSync(() => setCancelling(false))
+                cancelButton.current?.focus()
+              }}
             />
           </Td>
         </tr>

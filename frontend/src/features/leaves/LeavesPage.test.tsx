@@ -272,6 +272,18 @@ describe('LeavesPage – demandes à traiter', () => {
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
   })
 
+  it('« Abandonner » rend le focus au bouton « Refuser » de la demande', async () => {
+    asManager()
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [leaPending]) })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Refuser la demande de Léa Bernard/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Abandonner' }))
+
+    expect(screen.getByRole('button', { name: /^Refuser la demande de Léa Bernard/ })).toHaveFocus()
+  })
+
   it.each([
     ['vide', '', 'Le motif est obligatoire.'],
     ['de 4 caractères entourés d\'espaces', '   abcd   ', 'Le motif doit faire au moins 5 caractères.'],
@@ -492,6 +504,31 @@ describe('LeavesPage – annulation par l\'admin', () => {
     expect(screen.queryByLabelText('Motif de l\'annulation pour Léa Bernard')).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /^Annuler la demande de Léa Bernard/ })).toBeInTheDocument()
     expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it('« Abandonner » rend le focus au bouton « Annuler » de la demande en attente', async () => {
+    asAdmin()
+    stubApi({ ...baseStubs, 'GET /api/leaves': json(200, []), 'GET /api/leaves/pending': json(200, [leaWaiting]) })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes en attente (toutes équipes)' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Annuler la demande de Léa Bernard/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Abandonner' }))
+
+    expect(screen.getByRole('button', { name: /^Annuler la demande de Léa Bernard/ })).toHaveFocus()
+  })
+
+  it('« Abandonner » rend le focus au bouton « Annuler » du congé accepté', async () => {
+    asAdmin()
+    stubApi({ ...baseStubs, 'GET /api/leaves/pending': json(200, []), 'GET /api/leaves': json(200, [leaAccepted]) })
+    await renderPage()
+    await screen.findByRole('table', { name: 'Congés à venir' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Annuler le congé de Léa Bernard/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Abandonner' }))
+
+    expect(screen.queryByLabelText('Motif de l\'annulation pour Léa Bernard')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Annuler le congé de Léa Bernard/ })).toHaveFocus()
   })
 
   it('C9 – un motif d\'annulation trop court est signalé sous le champ, sans rien envoyer', async () => {

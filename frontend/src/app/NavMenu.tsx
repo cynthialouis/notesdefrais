@@ -85,6 +85,7 @@ function NavDisclosure({ group }: { group: NavGroup }) {
         type="button"
         aria-expanded={open}
         aria-controls={panelId}
+        aria-current={active || undefined}
         onClick={() => setOpenOn(open ? null : pathname)}
         className={cx(itemClass(active), 'flex items-center gap-1')}
       >

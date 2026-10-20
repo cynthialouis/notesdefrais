@@ -154,12 +154,12 @@ describe('menu', () => {
 
   it('choisir une page referme le groupe, qui reste mis en évidence sur cette page', async () => {
     renderAt('/', employee)
-    expect(notesButton()).not.toHaveClass('bg-brand-50')
+    expect(notesButton()).not.toHaveAttribute('aria-current')
     await openNotes()
     await userEvent.click(screen.getByRole('link', { name: 'Mes notes' }))
     expect(await screen.findByRole('heading', { name: 'Mes notes' })).toBeInTheDocument()
     expect(notesButton()).toHaveAttribute('aria-expanded', 'false')
-    expect(notesButton()).toHaveClass('bg-brand-50')
+    expect(notesButton()).toHaveAttribute('aria-current', 'true')
   })
 })
 

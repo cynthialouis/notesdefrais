@@ -40,7 +40,7 @@ pending ──accept──▶ accepted ──cancel (admin, motif)──▶ canc
 ```
 
 - Machine à états `leave_request` dans `workflow.yaml`, sans brouillon : la création pose `pending`. `refused`, `withdrawn` et `cancelled` sont finales ; une transition impossible est renvoyée en 409.
-- `LeaveRequestVoter` : `LEAVE_VIEW` (voir la visibilité dans `docs/api.md`), `LEAVE_PARTY` (demandeur ou son responsable), `LEAVE_DECIDE` (responsable du demandeur), `LEAVE_REQUESTER` (retrait). L'annulation est réservée à `ROLE_ADMIN`.
+- `LeaveRequestVoter` : `LEAVE_PARTY` (demandeur ou son responsable), `LEAVE_DECIDE` (responsable du demandeur), `LEAVE_REQUESTER` (retrait). L'annulation est réservée à `ROLE_ADMIN`. La visibilité (voir `docs/api.md`) est réglée par les requêtes des listes.
 - Listeners du Workflow : `LeaveDecidedListener` pose decidedAt, decidedBy et le motif d'un refus à l'entrée dans `accepted` ou `refused` ; `LeaveCancelledListener` pose cancelledAt, cancelledBy et le motif à l'entrée dans `cancelled`. Instants stockés en UTC, comme pour les notes.
 
 ## Entrées (back)
