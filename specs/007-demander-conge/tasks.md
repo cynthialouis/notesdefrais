@@ -120,7 +120,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 ## Phase 9: User Story 1 — front
 
-- [ ] T019 [US1] Dans `frontend/src/features/leaves/LeavesPage.tsx` : formulaire « Demander un congé » (`useActionState`, `Field` avec `<input type="date">`, erreurs par champ avant envoi, erreurs 409 du serveur en `Alert`), section « Mes demandes » (`Table`, badge, motif d'un refus ou d'une annulation, bouton « Retirer » si `withdrawable`), `EmptyState` sans demande ; tests dans `LeavesPage.test.tsx` (C1, C3, C4, C5, C11, C12, C16)
+- [X] T019 [US1] Dans `frontend/src/features/leaves/LeavesPage.tsx` : formulaire « Demander un congé » (`useActionState`, `Field` avec `<input type="date">`, erreurs par champ avant envoi, erreurs 409 du serveur en `Alert`), section « Mes demandes » (`Table`, badge, motif d'un refus ou d'une annulation, bouton « Retirer » si `withdrawable`), `EmptyState` sans demande ; tests dans `LeavesPage.test.tsx` (C1, C3, C4, C5, C11, C12, C16)
 
 ---
 
