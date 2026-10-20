@@ -3,7 +3,8 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { json, stubApi } from '../../test/api'
-import { acceptedLeave, cancelledLeave, jsonResponse, pendingLeave, refusedLeave } from '../../test/fixtures'
+import { useSessionStore } from '../auth/sessionStore'
+import { acceptedLeave, cancelledLeave, employee, jsonResponse, manager, pendingLeave, refusedLeave } from '../../test/fixtures'
 import { renderAsync } from '../../test/render'
 import { useLeavesStore } from './leavesStore'
 import { LeavesPage } from './LeavesPage'
@@ -39,6 +40,7 @@ afterEach(() => {
   vi.useRealTimers()
   vi.unstubAllGlobals()
   useLeavesStore.setState(useLeavesStore.getInitialState(), true)
+  useSessionStore.setState(useSessionStore.getInitialState(), true)
 })
 
 describe('LeavesPage – mes demandes', () => {
@@ -177,5 +179,155 @@ describe('LeavesPage – demander un congé', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(message)
     expect(screen.getByLabelText('Premier jour')).toHaveValue('2026-11-03')
     expect(screen.getByLabelText('Dernier jour')).toHaveValue('2026-11-07')
+  })
+})
+
+describe('LeavesPage – demandes à traiter', () => {
+  const tomPending = { ...pendingLeave, id: 20, requester: { id: 5, name: 'Tom Petit' }, startDate: '2026-10-25', endDate: '2026-10-25', decidable: true, withdrawable: false }
+  const leaPending = { ...pendingLeave, id: 21, decidable: true, withdrawable: false }
+  const asManager = () => useSessionStore.setState({ session: { status: 'authenticated', user: manager } })
+  const items = () => within(screen.getByRole('list', { name: 'Demandes à traiter' })).getAllByRole('listitem')
+
+  it('C6 – un salarié ne voit pas la section et ne charge pas la liste', async () => {
+    useSessionStore.setState({ session: { status: 'authenticated', user: employee } })
+    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []) })
+    await renderPage()
+    await screen.findByRole('heading', { name: 'Mes demandes' })
+
+    expect(screen.queryByRole('heading', { name: 'Demandes à traiter' })).not.toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/team/leaves')).toBe(false)
+  })
+
+  it('C6 – le manager voit les demandes de son équipe dans l\'ordre du serveur', async () => {
+    asManager()
+    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [tomPending, leaPending]) })
+    await renderPage()
+
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+    expect(items().map((item) => item.querySelector('p')?.textContent)).toEqual(['Tom Petit · Le 25/10/2026', 'Léa Bernard · Du 03/11/2026 au 07/11/2026'])
+  })
+
+  it('C6 – sans demande à traiter, un état vide l\'explique', async () => {
+    asManager()
+    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, []) })
+    await renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Aucune demande à traiter.' })).toBeInTheDocument()
+  })
+
+  it('C7 – « Accepter » accepte la demande, qui sort de la liste', async () => {
+    asManager()
+    let team: unknown[] = [leaPending]
+    const fetchMock = stubApi({
+      'GET /api/me/leaves': json(200, []),
+      'GET /api/team/leaves': () => jsonResponse(200, team),
+      'POST /api/leaves/21/accept': () => {
+        team = []
+        return jsonResponse(200, { ...acceptedLeave, id: 21 })
+      },
+    })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    await userEvent.click(screen.getByRole('button', { name: 'Accepter la demande de Léa Bernard (Du 03/11/2026 au 07/11/2026)' }))
+
+    expect(await screen.findByRole('heading', { name: 'Aucune demande à traiter.' })).toBeInTheDocument()
+    expect(fetchMock.mock.calls.find(([url]) => url === '/api/leaves/21/accept')?.[1]?.method).toBe('POST')
+  })
+
+  it('C8 – « Refuser » demande un motif, l\'envoie et la demande sort de la liste', async () => {
+    asManager()
+    let team: unknown[] = [leaPending]
+    const fetchMock = stubApi({
+      'GET /api/me/leaves': json(200, []),
+      'GET /api/team/leaves': () => jsonResponse(200, team),
+      'POST /api/leaves/21/refuse': () => {
+        team = []
+        return jsonResponse(200, { ...refusedLeave, id: 21 })
+      },
+    })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Refuser la demande de Léa Bernard/ }))
+    await userEvent.type(screen.getByLabelText('Motif du refus pour Léa Bernard'), '  Période de clôture  ')
+    await userEvent.click(screen.getByRole('button', { name: 'Refuser la demande' }))
+
+    expect(await screen.findByRole('heading', { name: 'Aucune demande à traiter.' })).toBeInTheDocument()
+    const post = fetchMock.mock.calls.find(([url]) => url === '/api/leaves/21/refuse')
+    expect(JSON.parse(String(post?.[1]?.body))).toEqual({ reason: 'Période de clôture' })
+  })
+
+  it('C8 – « Abandonner » referme le motif sans rien envoyer', async () => {
+    asManager()
+    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [leaPending]) })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Refuser la demande de Léa Bernard/ }))
+    await userEvent.click(screen.getByRole('button', { name: 'Abandonner' }))
+
+    expect(screen.queryByLabelText('Motif du refus pour Léa Bernard')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Accepter la demande de Léa Bernard/ })).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it.each([
+    ['vide', '', 'Le motif est obligatoire.'],
+    ['de 4 caractères entourés d\'espaces', '   abcd   ', 'Le motif doit faire au moins 5 caractères.'],
+  ])('C9 – un motif %s est signalé sous le champ, sans rien envoyer', async (_case, reason, message) => {
+    asManager()
+    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [leaPending]) })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Refuser la demande de Léa Bernard/ }))
+    if (reason) await userEvent.type(screen.getByLabelText('Motif du refus pour Léa Bernard'), reason)
+    await userEvent.click(screen.getByRole('button', { name: 'Refuser la demande' }))
+
+    expect(await screen.findByText(message)).toBeInTheDocument()
+    expect(screen.getByLabelText('Motif du refus pour Léa Bernard')).toHaveAccessibleDescription(expect.stringContaining(message))
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method === 'POST')).toBe(false)
+  })
+
+  it('C10 – une acceptation refusée par le serveur (409) affiche son message', async () => {
+    asManager()
+    stubApi({
+      'GET /api/me/leaves': json(200, []),
+      'GET /api/team/leaves': json(200, [leaPending]),
+      'POST /api/leaves/21/accept': conflict('Seule une demande en attente peut être acceptée ou refusée.'),
+    })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Accepter la demande de Léa Bernard/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Seule une demande en attente peut être acceptée ou refusée.')
+  })
+
+  it('C10 – un refus rejeté par le serveur (409) affiche son message sous le motif', async () => {
+    asManager()
+    stubApi({
+      'GET /api/me/leaves': json(200, []),
+      'GET /api/team/leaves': json(200, [leaPending]),
+      'POST /api/leaves/21/refuse': conflict('Seule une demande en attente peut être acceptée ou refusée.'),
+    })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    await userEvent.click(screen.getByRole('button', { name: /^Refuser la demande de Léa Bernard/ }))
+    await userEvent.type(screen.getByLabelText('Motif du refus pour Léa Bernard'), 'Période de clôture')
+    await userEvent.click(screen.getByRole('button', { name: 'Refuser la demande' }))
+
+    expect(await screen.findByText('Seule une demande en attente peut être acceptée ou refusée.')).toBeInTheDocument()
+  })
+
+  it('une demande non décidable par le lecteur n\'a pas de boutons', async () => {
+    asManager()
+    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [{ ...leaPending, decidable: false }]) })
+    await renderPage()
+    await screen.findByRole('list', { name: 'Demandes à traiter' })
+
+    expect(within(items()[0] as HTMLElement).queryByRole('button')).not.toBeInTheDocument()
   })
 })

@@ -126,7 +126,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 ## Phase 10: User Story 2 — front
 
-- [ ] T020 [US2] Section « Demandes à traiter » pour les managers (rôle lu dans la session) dans `frontend/src/features/leaves/LeavesPage.tsx` : boutons « Accepter » et « Refuser » si `decidable`, motif validé par `rejectionSchema` de `features/expenses/rejectionValidation.ts` avant envoi, `EmptyState` si vide ; tests dans `LeavesPage.test.tsx` (C6 à C10)
+- [X] T020 [US2] Section « Demandes à traiter » pour les managers (rôle lu dans la session) dans `frontend/src/features/leaves/LeavesPage.tsx` : boutons « Accepter » et « Refuser » si `decidable`, motif validé par `rejectionSchema` de `features/expenses/rejectionValidation.ts` avant envoi, `EmptyState` si vide ; tests dans `LeavesPage.test.tsx` (C6 à C10)
 
 ---
 

@@ -7,13 +7,17 @@ import { EmptyState } from '../../ui/EmptyState'
 import { PageHeader } from '../../ui/PageHeader'
 import { LoadingState } from '../../ui/Spinner'
 import { Table, Td, Th } from '../../ui/Table'
-import { formatIsoDate } from '../expenses/format'
+import { canAccess, useSessionStore } from '../auth/sessionStore'
+import { leavePeriod } from './leavePeriod'
 import { LeaveRequestForm } from './LeaveRequestForm'
 import { LeaveStatusBadge } from './LeaveStatusBadge'
 import { useLeavesStore, type Leave } from './leavesStore'
+import { TeamLeavesCard } from './TeamLeavesCard'
 
 /** Page des congés (spec 007), ouverte à tous les rôles. */
 export function LeavesPage() {
+  const session = useSessionStore((state) => state.session)
+
   return (
     <>
       <title>Congés – Notes de frais</title>
@@ -22,17 +26,11 @@ export function LeavesPage() {
         <Card title="Demander un congé">
           <LeaveRequestForm />
         </Card>
+        {canAccess(session, 'manager') && <TeamLeavesCard />}
         <MyLeavesCard />
       </div>
     </>
   )
-}
-
-/** « Du 03/11/2026 au 07/11/2026 », ou « Le 03/11/2026 » pour un seul jour. */
-function period(leave: Leave): string {
-  return leave.startDate === leave.endDate
-    ? `Le ${formatIsoDate(leave.startDate)}`
-    : `Du ${formatIsoDate(leave.startDate)} au ${formatIsoDate(leave.endDate)}`
 }
 
 /** Motif d'un refus ou d'une annulation, montré au demandeur (C16). */
@@ -92,14 +90,14 @@ function MyLeavesCard() {
           <tbody className="divide-y divide-gray-100">
             {list.leaves.map((leave) => (
               <tr key={leave.id}>
-                <Td className="font-medium text-gray-900">{period(leave)}</Td>
+                <Td className="font-medium text-gray-900">{leavePeriod(leave)}</Td>
                 <Td>
                   <LeaveStatusBadge status={leave.status} />
                 </Td>
                 <Td wrap>{reasonOf(leave)}</Td>
                 <Td align="right">
                   {leave.withdrawable && (
-                    <Button disabled={isPending} onClick={() => handleWithdraw(leave.id)} aria-label={`Retirer la demande : ${period(leave)}`}>
+                    <Button disabled={isPending} onClick={() => handleWithdraw(leave.id)} aria-label={`Retirer la demande : ${leavePeriod(leave)}`}>
                       Retirer
                     </Button>
                   )}
