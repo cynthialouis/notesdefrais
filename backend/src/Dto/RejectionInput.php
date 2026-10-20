@@ -6,7 +6,8 @@ use App\Text\UnicodeTrim;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Corps de POST /api/expenses/{id}/reject. Longueur comptée en caractères après UnicodeTrim, comme le front.
+ * Corps de POST /api/expenses/{id}/reject, et des motifs de refus et d'annulation d'une demande de congé
+ * (POST /api/leaves/{id}/refuse et /cancel, spec 007). Longueur comptée en caractères après UnicodeTrim, comme le front.
  */
 final readonly class RejectionInput
 {

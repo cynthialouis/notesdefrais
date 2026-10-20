@@ -70,7 +70,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 **Independent Test**: `make test-back ARGS="--filter 'TeamLeaves|AcceptLeave|RefuseLeave'"`.
 
-- [ ] T010 [US2] `LeaveRequestRepository::findPendingForResponsible(User)` (date de début croissante) ; `LeaveManager::accept()` et `refuse(LeaveRequest, string $reason)` (409 si `can()` est faux) ; docblock de `backend/src/Dto/RejectionInput.php` élargi aux motifs de refus et d'annulation de congé (C6, C7, C8, C10)
+- [X] T010 [US2] `LeaveRequestRepository::findPendingForResponsible(User)` (date de début croissante) ; `LeaveManager::accept()` et `refuse(LeaveRequest, string $reason)` (409 si `can()` est faux) ; docblock de `backend/src/Dto/RejectionInput.php` élargi aux motifs de refus et d'annulation de congé (C6, C7, C8, C10)
 - [ ] T011 [US2] Routes `GET /api/team/leaves` (`ROLE_MANAGER`, 403 sinon), `POST /api/leaves/{id}/accept` et `POST /api/leaves/{id}/refuse` (`RejectionInput`, `LEAVE_PARTY` en 404 puis `LEAVE_DECIDE` en 403) dans `backend/src/Controller/LeaveController.php` (C6 à C10)
 
 **Checkpoint**: tests US1 et US2 verts.

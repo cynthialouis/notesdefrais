@@ -7,6 +7,7 @@ use App\Entity\LeaveRequest;
 use App\Entity\User;
 use App\Http\PublicHttpException;
 use App\Repository\LeaveRequestRepository;
+use App\Text\UnicodeTrim;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Target;
 use Symfony\Component\Workflow\WorkflowInterface;
@@ -65,6 +66,39 @@ final class LeaveManager
         $this->em->flush();
 
         return $leave;
+    }
+
+    /**
+     * Accepte une demande en attente (C7) ; refusé si elle a déjà été décidée, retirée ou annulée (C10).
+     */
+    public function accept(LeaveRequest $leave): LeaveRequest
+    {
+        $this->decide($leave, 'accept');
+
+        return $leave;
+    }
+
+    /**
+     * Refuse une demande en attente avec un motif (C8), conservé sans les blancs autour ; même refus
+     * que l'acceptation si elle n'est plus en attente (C10).
+     *
+     * @param string $reason motif déjà validé (RejectionInput, C9)
+     */
+    public function refuse(LeaveRequest $leave, string $reason): LeaveRequest
+    {
+        $this->decide($leave, 'refuse', ['reason' => UnicodeTrim::trim($reason)]);
+
+        return $leave;
+    }
+
+    /** @param array<string, mixed> $context */
+    private function decide(LeaveRequest $leave, string $transition, array $context = []): void
+    {
+        if (!$this->workflow->can($leave, $transition)) {
+            throw PublicHttpException::conflict('Seule une demande en attente peut être acceptée ou refusée.');
+        }
+        $this->workflow->apply($leave, $transition, $context);
+        $this->em->flush();
     }
 
     /**

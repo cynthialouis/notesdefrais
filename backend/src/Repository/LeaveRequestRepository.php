@@ -61,4 +61,25 @@ class LeaveRequestRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Demandes à traiter par un responsable : les demandes en attente des personnes qu'il encadre
+     * directement, date de début la plus proche d'abord (spec 007, C6).
+     *
+     * @return list<LeaveRequest>
+     */
+    public function findPendingForResponsible(User $responsible): array
+    {
+        return $this->createQueryBuilder('l')
+            ->addSelect('r')
+            ->join('l.requester', 'r')
+            ->where('r.manager = :responsible')
+            ->andWhere('l.status = :status')
+            ->setParameter('responsible', $responsible)
+            ->setParameter('status', LeaveStatus::Pending->value)
+            ->orderBy('l.startDate', 'ASC')
+            ->addOrderBy('l.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
