@@ -19,18 +19,22 @@ import { UpcomingLeavesCard } from './UpcomingLeavesCard'
 /** Page des congés (spec 007), ouverte à tous les rôles. */
 export function LeavesPage() {
   const session = useSessionStore((state) => state.session)
+  const isAdmin = session.status === 'authenticated' && session.user.role === 'admin'
 
   return (
     <>
       <title>Congés – Espace salarié</title>
-      <PageHeader title="Congés" description="Demandez un congé et suivez vos demandes." />
+      <PageHeader title="Congés" description={isAdmin ? 'Demandes en attente de toutes les équipes et congés à venir.' : 'Demandez un congé et suivez vos demandes.'} />
       <div className="flex flex-col gap-6">
-        <Card title="Demander un congé">
-          <LeaveRequestForm />
-        </Card>
+        {/* L'admin n'a pas de responsable : toute demande lui serait refusée (C5), il n'a donc pas de demandes à suivre ; le serveur fait foi */}
+        {!isAdmin && (
+          <Card title="Demander un congé">
+            <LeaveRequestForm />
+          </Card>
+        )}
         {canAccess(session, 'manager') && <TeamLeavesCard />}
         {canAccess(session, 'admin') && <AllPendingLeavesCard />}
-        <MyLeavesCard />
+        {!isAdmin && <MyLeavesCard />}
         <UpcomingLeavesCard />
       </div>
     </>

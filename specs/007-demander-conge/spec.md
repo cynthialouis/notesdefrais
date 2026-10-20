@@ -30,6 +30,11 @@
 - Q: L'admin peut-il annuler une demande qui n'est pas acceptée ? → A: Oui, une demande en attente ; une demande refusée, retirée ou annulée reste définitive (C13, C14).
 - Q: Pour annuler une demande en attente, l'admin doit la voir : faut-il élargir la visibilité ? → A: L'admin voit les demandes en attente de tout le monde ; les demandes refusées, retirées ou annulées restent au seul demandeur (C17, C18).
 
+### Session 2026-10-20 (relecture à froid)
+
+- Q: L'admin voit le formulaire de demande alors que toute demande lui est refusée (C5) : le garder ? → A: Non : ni le bloc de demande de congé ni « Mes demandes » ne sont affichés pour l'admin, qui ne peut pas en avoir ; le serveur refuse toujours (409).
+- Q: Aucune route ne lit une demande seule : que veut dire « 404 (existence non révélée) » pour une demande non acceptée ? → A: Elle n'apparaît dans aucune liste du lecteur. L'annulation par un non-admin répond 403 si la demande existe, 404 sinon : son existence est révélée, pas son contenu, ce qui est admis.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Demander un congé et suivre sa demande (Priority: P1)
@@ -153,13 +158,14 @@ L'admin voit les demandes en attente de tout le monde et annule, avec un motif, 
 | Accepter, refuser | le responsable du demandeur | 403 pour le demandeur lui-même ; 404 pour tout autre |
 | Retirer une demande | son demandeur | 404 pour tout autre |
 | Lister les demandes en attente de tous | admin | 401 non connecté ; 403 manager ou salarié |
-| Annuler une demande en attente ou un congé accepté | admin | 401 non connecté ; 403 manager ou salarié |
-| Voir une demande non acceptée et ses motifs | son demandeur ; son responsable et l'admin si elle est en attente | 404 (existence non révélée) |
+| Annuler une demande en attente ou un congé accepté | admin | 401 non connecté ; 403 manager ou salarié (404 si la demande n'existe pas) |
+| Voir une demande non acceptée et ses motifs | son demandeur ; son responsable et l'admin si elle est en attente | absente des listes des autres (aucune route ne lit une demande seule) |
 
 ### Règles recalculées côté front
 
 - Validité des dates (fin pas antérieure au début, début pas antérieur à aujourd'hui) : pour l'erreur immédiate de C3 ; le front compare à la date locale du navigateur, le serveur à la date du jour à Paris, le serveur fait foi (comme en 002). Testée des deux côtés.
 - Longueur minimale d'un motif de refus ou d'annulation (5 caractères, espaces autour exclus) : pour l'erreur immédiate de C9, comme en 003. Testée des deux côtés.
+- L'admin n'a pas de responsable (C5) : l'écran ne lui montre ni le bloc de demande ni « Mes demandes », d'après son rôle. Le serveur, qui vérifie le responsable, fait foi (409). Testée des deux côtés.
 
 Non recalculé : le chevauchement (C4), ni ce que le lecteur peut faire d'une demande (accepter, refuser, retirer, annuler) : le serveur l'indique pour chaque demande.
 

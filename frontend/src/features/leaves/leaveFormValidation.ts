@@ -8,11 +8,14 @@ import type { LeaveInput } from './leavesStore'
  * front compare à la date locale du navigateur, le serveur à la date du jour à Paris, et le serveur fait foi.
  */
 
+const datePattern = /^\d{4}-\d{2}-\d{2}$/
+const isValidDate = (value: string) => datePattern.test(value) && isRealDate(value)
+
 const dateField = (requiredMessage: string) =>
   z
     .string()
     .min(1, requiredMessage)
-    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date invalide (format attendu : AAAA-MM-JJ).')
+    .regex(datePattern, 'Date invalide (format attendu : AAAA-MM-JJ).')
     .refine(isRealDate, 'Date invalide (format attendu : AAAA-MM-JJ).')
 
 const leaveFormSchema = z
@@ -23,8 +26,9 @@ const leaveFormSchema = z
     ),
     endDate: dateField('La date de fin est obligatoire.'),
   })
-  // Deux dates AAAA-MM-JJ se comparent comme des chaînes ; vérifié seulement si les deux sont valides
-  .refine(({ startDate, endDate }) => endDate >= startDate, {
+  // Deux dates AAAA-MM-JJ se comparent comme des chaînes. Zod 4 exécute ce contrôle même si un champ a échoué :
+  // il ne s'applique que si les deux dates sont valides, comme côté serveur (sinon l'erreur de format suffit)
+  .refine(({ startDate, endDate }) => !isValidDate(startDate) || !isValidDate(endDate) || endDate >= startDate, {
     message: 'La date de fin ne peut pas être antérieure à la date de début.',
     path: ['endDate'],
   })

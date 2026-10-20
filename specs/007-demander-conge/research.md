@@ -66,16 +66,19 @@ signalent les points où la spec laisse une marge d'interprétation.
 
 ## D7. Autorisations : Voter `LeaveRequestVoter`
 
-- **Decision** : trois attributs sur une `LeaveRequest` :
-  - `LEAVE_VIEW` : le demandeur ; tout le monde si la demande est acceptée ; le responsable du
-    demandeur et l'admin si elle est en attente (C15, C17, C6, C18) ;
+- **Decision** : attributs sur une `LeaveRequest` :
+  - ~~`LEAVE_VIEW`~~ : prévu (le demandeur ; tout le monde si la demande est acceptée ; le responsable
+    du demandeur et l'admin si elle est en attente), **retiré le 20/10** à la revue (F6) : aucune route
+    ne lit une demande seule, la visibilité (C15 à C18) est réglée par les requêtes des listes (voir
+    `JOURNAL-IA.md`) ;
   - `LEAVE_PARTY` : le demandeur ou son responsable ;
-  - `LEAVE_DECIDE` : le responsable du demandeur.
+  - `LEAVE_DECIDE` : le responsable du demandeur ;
+  - `LEAVE_REQUESTER` : le demandeur (retrait), ajouté à l'implémentation.
 
   Routes : accepter / refuser → `LEAVE_PARTY` en 404 puis `LEAVE_DECIDE` en 403 (403 pour le
   demandeur, 404 pour tout autre, comme 003) ; retirer → demandeur, 404 sinon ; annuler →
   `ROLE_ADMIN`, 403 sinon, puis 409 si la demande n'est ni en attente ni acceptée.
-- **Rationale** : `LEAVE_VIEW` seul ne suffit pas pour accepter / refuser : un congé accepté est
+- **Rationale** : un droit de lecture seul ne suffit pas pour accepter / refuser : un congé accepté est
   visible de tous, un tiers aurait alors 403 au lieu du 404 prévu par la spec.
 - **Tranché le 19/10** : l'admin annule une demande en attente ou acceptée, et voit les demandes en
   attente de tous. Sur une demande refusée, retirée ou annulée d'un autre, il reçoit 409 (C14) et non

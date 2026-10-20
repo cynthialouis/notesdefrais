@@ -55,6 +55,6 @@ Vraie authentification (mot de passe, OAuth), remboursement / paiement, multi-de
 | `/notes/nouvelle`, `/notes/:id` | salarié | Formulaire (`useActionState` + `expenseInputSchema.safeParse`), justificatif, alerte hors politique calculée en direct |
 | `/equipe` | manager et plus | Notes soumises de l'équipe, valider / rejeter (motif), historique |
 | `/politique` | admin | Plafonds par catégorie |
-| `/conges` | tous | Demander un congé, Mes demandes (retrait si en attente), Congés à venir de tous ; pour un manager, Demandes à traiter (accepter / refuser avec motif) ; pour l'admin, Demandes en attente (toutes équipes) et annulation motivée d'une demande en attente ou d'un congé accepté |
+| `/conges` | tous | Demander un congé et Mes demandes (retrait si en attente), sauf pour l'admin, qui n'a pas de responsable, Congés à venir de tous ; pour un manager, Demandes à traiter (accepter / refuser avec motif) ; pour l'admin, Demandes en attente (toutes équipes) et annulation motivée d'une demande en attente ou d'un congé accepté |
 
 Menu du header par domaine : « Tableau de bord », « Notes de frais ▾ » (groupe dépliant : Mes notes, Équipe, Politique, chaque lien filtré par rôle), « Congés » (`app/NavMenu.tsx`). Rôles hiérarchisés (admin > manager > salarié) : un rôle accède aux pages des rôles inférieurs. Routes protégées par rôle via un composant `RequireRole`. Badge de statut = `switch` exhaustif avec `never`.

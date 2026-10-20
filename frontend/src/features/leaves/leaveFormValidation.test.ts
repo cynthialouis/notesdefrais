@@ -32,6 +32,7 @@ describe('parseLeaveForm', () => {
     ['un début absent', { startDate: '', endDate: '2026-11-02' }, { startDate: 'La date de début est obligatoire.' }],
     ['une fin absente', { startDate: '2026-11-03', endDate: '' }, { endDate: 'La date de fin est obligatoire.' }],
     ['un 30 février', { startDate: '2027-02-30', endDate: '2027-03-02' }, { startDate: 'Date invalide (format attendu : AAAA-MM-JJ).' }],
+    ['un 30 février suivi d\'une fin plus tôt (seule l\'erreur de format, comme le serveur)', { startDate: '2027-02-30', endDate: '2027-02-01' }, { startDate: 'Date invalide (format attendu : AAAA-MM-JJ).' }],
     ['un format invalide', { startDate: '2026-11-03', endDate: '03/11/2026' }, { endDate: 'Date invalide (format attendu : AAAA-MM-JJ).' }],
   ])('C3 – refuse %s sur le champ en cause, avec le message du serveur', (_case, values, errors) => {
     expect(parseLeaveForm(values)).toEqual({ ok: false, errors })

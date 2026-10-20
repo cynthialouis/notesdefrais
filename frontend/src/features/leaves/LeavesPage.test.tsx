@@ -182,6 +182,32 @@ describe('LeavesPage – demander un congé', () => {
   })
 })
 
+describe('LeavesPage – admin sans responsable', () => {
+  it('C5 – l\'admin n\'a ni bloc de demande de congé ni « Mes demandes », et ne charge pas ses demandes', async () => {
+    useSessionStore.setState({ session: { status: 'authenticated', user: admin } })
+    const fetchMock = stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/team/leaves': json(200, []), 'GET /api/leaves/pending': json(200, []) })
+    await renderPage()
+    await screen.findByRole('heading', { name: 'Aucun congé en cours ou à venir.' })
+
+    expect(screen.queryByRole('heading', { name: 'Mes demandes' })).not.toBeInTheDocument()
+    expect(screen.getByText('Demandes en attente de toutes les équipes et congés à venir.')).toBeInTheDocument()
+    expect(fetchMock.mock.calls.some(([url]) => url === '/api/me/leaves')).toBe(false)
+
+    expect(screen.queryByRole('heading', { name: 'Demander un congé' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Demander ce congé' })).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Premier jour')).not.toBeInTheDocument()
+  })
+
+  it.each([employee, manager])('C1, C16 – $role voit le formulaire de demande et ses demandes', async (user) => {
+    useSessionStore.setState({ session: { status: 'authenticated', user } })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, []) })
+    await renderPage()
+
+    expect(await screen.findByRole('button', { name: 'Demander ce congé' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Mes demandes' })).toBeInTheDocument()
+  })
+})
+
 describe('LeavesPage – demandes à traiter', () => {
   const tomPending = { ...pendingLeave, id: 20, requester: { id: 5, name: 'Tom Petit' }, startDate: '2026-10-25', endDate: '2026-10-25', decidable: true, withdrawable: false }
   const leaPending = { ...pendingLeave, id: 21, decidable: true, withdrawable: false }
