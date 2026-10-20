@@ -7,6 +7,7 @@ test('un salarié voit « Accès refusé » sur les pages manager et admin, et l
 
   // Liens absents de la navigation
   const navigation = page.getByRole('navigation')
+  await navigation.getByRole('button', { name: 'Notes de frais' }).click()
   await expect(navigation.getByRole('link', { name: 'Mes notes' })).toBeVisible()
   await expect(navigation.getByRole('link', { name: 'Équipe' })).toHaveCount(0)
   await expect(navigation.getByRole('link', { name: 'Politique' })).toHaveCount(0)

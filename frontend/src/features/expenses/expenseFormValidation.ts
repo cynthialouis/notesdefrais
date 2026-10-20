@@ -15,7 +15,8 @@ export function todayIso(now: Date = new Date()): string {
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`
 }
 
-function isRealDate(value: string): boolean {
+/** Vrai si la date AAAA-MM-JJ existe au calendrier (pas de 30 février). */
+export function isRealDate(value: string): boolean {
   const [year = 0, month = 0, day = 0] = value.split('-').map(Number)
   const date = new Date(year, month - 1, day)
   return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day

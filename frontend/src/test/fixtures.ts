@@ -68,3 +68,52 @@ export const overLimitExpense = {
   amountCents: 6200,
   policy: { limitCents: 5000, overLimitByCents: 1200, receiptRequired: false, receiptMissing: false },
 }
+
+export const pendingLeave = {
+  id: 10,
+  requester: { id: 4, name: 'Léa Bernard' },
+  startDate: '2026-11-03',
+  endDate: '2026-11-07',
+  status: 'pending',
+  createdAt: '2026-10-17T10:00:00+02:00',
+  decidedAt: null,
+  decidedBy: null,
+  refusalReason: null,
+  cancelledAt: null,
+  cancelledBy: null,
+  cancellationReason: null,
+  decidable: false,
+  withdrawable: true,
+  cancellable: false,
+}
+
+export const acceptedLeave = {
+  ...pendingLeave,
+  id: 11,
+  startDate: '2026-11-19',
+  endDate: '2026-11-23',
+  status: 'accepted',
+  decidedAt: '2026-10-11T10:00:00+02:00',
+  decidedBy: { id: 2, name: 'Claire Dubois' },
+  withdrawable: false,
+}
+
+export const refusedLeave = {
+  ...acceptedLeave,
+  id: 12,
+  startDate: '2026-10-27',
+  endDate: '2026-10-28',
+  status: 'refused',
+  refusalReason: 'Période de clôture des comptes',
+}
+
+export const cancelledLeave = {
+  ...acceptedLeave,
+  id: 13,
+  startDate: '2026-11-29',
+  endDate: '2026-12-03',
+  status: 'cancelled',
+  cancelledAt: '2026-10-07T10:00:00+02:00',
+  cancelledBy: { id: 1, name: 'Alice Martin' },
+  cancellationReason: 'Dates saisies par erreur',
+}

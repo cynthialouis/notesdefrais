@@ -6,7 +6,7 @@ tools: Read, Grep, Glob, Bash
 
 Tu relis une feature que tu n'as pas écrite. Tu reçois le chemin de sa spec. Ne te fie qu'à la spec, au code et aux tests, pas aux explications de celui qui l'a écrite. Tu ne modifies aucun fichier.
 
-1. **Lire** la spec (critères `C1`, `C2`…, autorisations, cas limites, règles recalculées côté front, plan, tâches), puis tout ce que la branche a changé :
+1. **Lire** la spec (`spec.md` : critères `C1`, `C2`…, autorisations, cas limites, règles recalculées côté front ; `plan.md` et `tasks.md` du même dossier), puis tout ce que la branche a changé :
    - `git log --oneline main..HEAD`
    - `git diff main...HEAD` (travail commité)
    - `git diff HEAD` et `git ls-files --others --exclude-standard` (travail non commité et fichiers nouveaux)

@@ -38,9 +38,9 @@ export function LoginPage() {
 
   return (
     <main className="flex min-h-svh items-center justify-center px-4 py-12">
-      <title>Connexion – Notes de frais</title>
+      <title>Connexion – Espace salarié</title>
       <div className="w-full max-w-md">
-        <h1 className="text-center text-2xl font-semibold tracking-tight text-gray-900">Notes de frais</h1>
+        <h1 className="text-center text-2xl font-semibold tracking-tight text-gray-900">Espace salarié</h1>
         <p className="mt-2 text-center text-sm text-gray-600">Mode démo : connectez-vous sans mot de passe.</p>
         <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-xs">
           <Suspense fallback={<LoadingState label="Chargement des comptes…" />}>

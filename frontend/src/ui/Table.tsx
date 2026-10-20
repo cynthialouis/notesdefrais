@@ -24,6 +24,12 @@ export function Th({ align = 'left', className, ...props }: ThHTMLAttributes<HTM
   )
 }
 
-export function Td({ align = 'left', className, ...props }: TdHTMLAttributes<HTMLTableCellElement> & Align) {
-  return <td className={cx('px-5 py-3 whitespace-nowrap text-gray-700', align === 'right' && 'text-right tabular-nums', className)} {...props} />
+/** Cellule sur une ligne ; `wrap` la laisse aller à la ligne (texte libre, ex. un motif), sans défilement horizontal. */
+export function Td({ align = 'left', wrap = false, className, ...props }: TdHTMLAttributes<HTMLTableCellElement> & Align & { wrap?: boolean }) {
+  return (
+    <td
+      className={cx('px-5 py-3 text-gray-700', wrap ? 'min-w-48 wrap-break-word' : 'whitespace-nowrap', align === 'right' && 'text-right tabular-nums', className)}
+      {...props}
+    />
+  )
 }

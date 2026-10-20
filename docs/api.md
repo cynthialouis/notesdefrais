@@ -26,7 +26,18 @@ API Symfony dans `backend/`. Toutes les routes sont préfixées par `/api`. La s
 | PUT | `/policies/{slug}` | admin (403 sinon) | `{ maxAmountCents: int de 1 à 1 000 000 ou null, receiptRequired: bool }` → catégorie mise à jour ; 404 si la catégorie est inconnue |
 | GET | `/stats/me` | connecté | Ses totaux par état : `{ byStatus: [{ status, count, totalCents }] }`, les quatre états toujours présents |
 | GET | `/stats/team` | manager et plus (403 sinon) | Notes validées des subordonnés directs sur les 12 derniers mois civils (date de la dépense, heure de Paris) : `{ from, to, count, totalCents, byCategory, byMonth }`, catégories et mois toujours présents |
+| GET | `/leaves` | connecté | Congés acceptés en cours ou à venir de tous (date de fin pas antérieure à aujourd'hui, heure de Paris), date de début croissante |
+| GET | `/leaves/pending` | admin (403 sinon) | Demandes de congé en attente de tous, date de début croissante |
+| GET | `/me/leaves` | connecté | Toutes ses demandes de congé, quel que soit leur état, date de début décroissante |
+| GET | `/team/leaves` | manager et plus (403 sinon) | Demandes en attente des subordonnés directs, date de début croissante |
+| POST | `/leaves` | connecté (tous rôles) | `{ startDate, endDate }` (`Y-m-d`, bornes comprises) → demande `pending`, 201 ; 400 si une date est invalide, si le début est passé (heure de Paris) ou si la fin précède le début ; 409 sans responsable (l'admin), puis 409 si la période chevauche une de ses demandes en attente ou acceptée (dans cet ordre) |
+| POST | `/leaves/{id}/accept` | responsable du demandeur | `pending` → `accepted` ; 403 pour le demandeur, 404 pour tout autre ; 409 si pas en attente |
+| POST | `/leaves/{id}/refuse` | responsable du demandeur | `pending` → `refused`, motif de 5 à 1000 caractères (`RejectionInput`) ; mêmes 403 / 404 / 409 |
+| POST | `/leaves/{id}/withdraw` | demandeur (404 sinon) | `pending` → `withdrawn` ; 409 si pas en attente |
+| POST | `/leaves/{id}/cancel` | admin (403 sinon) | `pending` ou `accepted` → `cancelled`, motif (`RejectionInput`), quelle que soit la date du congé ; 409 sinon |
 | GET | `/exports/team-expenses.csv` | manager et plus (403 sinon) | Les mêmes notes en CSV pour tableur français : BOM UTF-8, `;`, CRLF, montants à virgule, dates JJ/MM/AAAA ; échappement RFC 4180, formules neutralisées (`'` devant `=`, `+`, `-`, `@`, une tabulation ou un retour chariot) |
+
+Toute demande de congé renvoyée par l'API est une `LeaveRequestView` construite pour le lecteur : décision et annulation (auteur, date, motif) toujours présentes, à `null` si besoin, et `decidable`, `withdrawable`, `cancellable`, ce que le lecteur peut en faire. Visibilité, réglée par les requêtes des listes (aucune route ne lit une demande seule) : une demande acceptée est visible de tous ; en attente, de son demandeur, de son responsable et de l'admin ; refusée, retirée ou annulée, de son seul demandeur.
 
 Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents, receiptRequired, receiptMissing }`, calculé par `PolicyChecker` (hors politique quand `overLimitByCents` n'est pas null ; soumission refusée quand `receiptMissing` est vrai, ce qui n'arrive que pour une note modifiable), et `receipt` : `{ name, mimeType, sizeBytes }` ou null.
 
@@ -36,7 +47,7 @@ Toute note renvoyée par l'API porte `policy` : `{ limitCents, overLimitByCents,
 - Toute entrée passe par un DTO validé, reçu avec `#[MapRequestPayload]` ou `#[MapQueryString]` en précisant `validationFailedStatusCode: 400` (Symfony renvoie 422 par défaut). Jamais de `json_decode()` à la main. Seule exception : `POST /auth/login`, traité par l'authenticator avant tout contrôleur, désérialise et valide `LoginInput` lui-même avec Serializer et Validator.
 - Rôles : `ROLE_EMPLOYEE`, `ROLE_MANAGER`, `ROLE_ADMIN`, hiérarchisés admin > manager > salarié (`security.yaml`). Toute route de `/api` exige une session, sauf `health`, `doc.json`, `auth/login` et `auth/demo-users`.
 - Autorisation par Voter, sur la ressource précise et pas seulement sur le rôle : un manager ne décide que pour les salariés de son équipe. Pour une ressource d'un autre utilisateur, le refus est un 404 (`#[IsGranted(..., statusCode: 404)]`), indiscernable d'une ressource inexistante.
-- Transitions de statut uniquement via le Workflow ; transition impossible → 409.
+- Transitions de statut uniquement via le Workflow (`expense`, `leave_request`) ; transition impossible → 409.
 - Erreurs au format unique : `{ error: { code, message, fields? } }`, construit uniquement par `App\Http\ApiError` (utilisé par le listener d'exceptions et par la sécurité).
 - Réponses : un champ nullable est toujours présent (valeur `null`), jamais omis. Nelmio ne le déclare pas obligatoire de lui-même : chaque vue renvoyée le précise avec `#[OA\Schema(required: [...])]`, et `ApiDocTest` vérifie que tous les champs des vues sont obligatoires dans `/api/doc.json` (une nouvelle vue s'ajoute à sa liste).
 - Codes HTTP : 400 validation, 401 non connecté, 403 interdit, 404 introuvable, 405 méthode non autorisée (ex. déconnexion en GET), 409 transition impossible, 415 corps non JSON (ex. connexion, contre le CSRF de connexion).

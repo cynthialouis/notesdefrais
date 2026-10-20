@@ -39,7 +39,7 @@ export function DashboardPage() {
 
   return (
     <>
-      <title>Tableau de bord – Notes de frais</title>
+      <title>Tableau de bord – Espace salarié</title>
       <PageHeader
         title="Tableau de bord"
         description={

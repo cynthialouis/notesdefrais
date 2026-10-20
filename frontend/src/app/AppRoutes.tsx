@@ -7,6 +7,7 @@ import { DashboardPage } from '../features/dashboard/DashboardPage'
 import { ExpenseDetailRoute } from '../features/expenses/ExpenseDetailPage'
 import { NewExpensePage } from '../features/expenses/NewExpensePage'
 import { NotesPage } from '../features/expenses/NotesPage'
+import { LeavesPage } from '../features/leaves/LeavesPage'
 import { AppLayout } from './AppLayout'
 
 export function AppRoutes() {
@@ -20,6 +21,7 @@ export function AppRoutes() {
             <Route path="notes" element={<NotesPage />} />
             <Route path="notes/nouvelle" element={<NewExpensePage />} />
             <Route path="notes/:id" element={<ExpenseDetailRoute back={{ to: '/notes', label: 'Mes notes' }} />} />
+            <Route path="conges" element={<LeavesPage />} />
           </Route>
           <Route element={<RequireRole role="manager" />}>
             <Route path="equipe" element={<TeamPage />} />

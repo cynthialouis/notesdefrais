@@ -36,7 +36,7 @@ afterEach(() => {
 })
 
 describe('protection des pages', () => {
-  it.each(['/', '/notes', '/equipe', '/politique'])('C6 – %s sans session amène à la connexion', async (path) => {
+  it.each(['/', '/notes', '/conges', '/equipe', '/politique'])('C6 – %s sans session amène à la connexion', async (path) => {
     useSessionStore.setState({ session: { status: 'anonymous' } })
     await renderAsync(
       <MemoryRouter initialEntries={[path]}>
@@ -44,7 +44,7 @@ describe('protection des pages', () => {
       </MemoryRouter>,
     )
 
-    expect(await screen.findByRole('heading', { name: 'Notes de frais' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Espace salarié' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Mes notes' })).not.toBeInTheDocument()
   })
 
@@ -71,6 +71,11 @@ describe('protection des pages', () => {
     expect(screen.getByRole('heading', { name: 'Équipe' })).toBeInTheDocument()
   })
 
+  it.each([employee, manager, admin])('spec 007 – $role accède à Congés', (user) => {
+    renderAt('/conges', user)
+    expect(screen.getByRole('heading', { name: 'Congés' })).toBeInTheDocument()
+  })
+
   it.each([
     ['/notes', 'Mes notes'],
     ['/equipe', 'Équipe'],
@@ -92,19 +97,69 @@ describe('protection des pages', () => {
 })
 
 describe('menu', () => {
-  it('C8 – un salarié ne voit que ses pages', () => {
+  const notesButton = () => screen.getByRole('button', { name: 'Notes de frais' })
+  const openNotes = () => userEvent.click(notesButton())
+
+  it('C8 – un salarié ne voit que ses pages', async () => {
     renderAt('/', employee)
-    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes'])
+    expect(navLinks()).toEqual(['Tableau de bord', 'Congés'])
+    await openNotes()
+    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Congés'])
   })
 
-  it('C8 – un manager voit aussi Équipe', () => {
+  it('C8 – un manager voit aussi Équipe', async () => {
     renderAt('/', manager)
-    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Équipe'])
+    await openNotes()
+    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Équipe', 'Congés'])
   })
 
-  it('C8 – un admin voit toutes les pages', () => {
+  it('C8 – un admin voit toutes les pages', async () => {
     renderAt('/', admin)
-    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Équipe', 'Politique'])
+    await openNotes()
+    expect(navLinks()).toEqual(['Tableau de bord', 'Mes notes', 'Équipe', 'Politique', 'Congés'])
+  })
+
+  it('le groupe Notes de frais est fermé par défaut et s\'ouvre au clic', async () => {
+    renderAt('/', employee)
+    expect(notesButton()).toHaveAttribute('aria-expanded', 'false')
+    await openNotes()
+    expect(notesButton()).toHaveAttribute('aria-expanded', 'true')
+    await openNotes()
+    expect(notesButton()).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('Échap referme le groupe et rend le focus au bouton', async () => {
+    renderAt('/', employee)
+    await openNotes()
+    await userEvent.keyboard('{Escape}')
+    expect(notesButton()).toHaveAttribute('aria-expanded', 'false')
+    expect(notesButton()).toHaveFocus()
+  })
+
+  it('un clic en dehors referme le groupe', async () => {
+    renderAt('/', employee)
+    await openNotes()
+    await userEvent.click(screen.getByRole('main'))
+    expect(notesButton()).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('le focus qui sort du groupe le referme', async () => {
+    renderAt('/', employee)
+    await openNotes()
+    await userEvent.tab() // Mes notes
+    await userEvent.tab() // Congés, hors du groupe
+    expect(screen.getByRole('link', { name: 'Congés' })).toHaveFocus()
+    expect(notesButton()).toHaveAttribute('aria-expanded', 'false')
+  })
+
+  it('choisir une page referme le groupe, qui reste mis en évidence sur cette page', async () => {
+    renderAt('/', employee)
+    expect(notesButton()).not.toHaveAttribute('aria-current')
+    await openNotes()
+    await userEvent.click(screen.getByRole('link', { name: 'Mes notes' }))
+    expect(await screen.findByRole('heading', { name: 'Mes notes' })).toBeInTheDocument()
+    expect(notesButton()).toHaveAttribute('aria-expanded', 'false')
+    expect(notesButton()).toHaveAttribute('aria-current', 'true')
   })
 })
 
@@ -128,7 +183,7 @@ describe('session', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Se déconnecter' }))
 
-    expect(await screen.findByRole('heading', { name: 'Notes de frais' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Espace salarié' })).toBeInTheDocument()
     expect(useSessionStore.getState().session).toEqual({ status: 'anonymous' })
   })
 

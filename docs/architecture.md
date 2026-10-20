@@ -18,7 +18,7 @@ backend/             API Symfony 8 (PHP 8.4+)
   config/packages/workflow.yaml   machine à états d'une note
   migrations/          Doctrine Migrations
   tests/               PHPUnit (WebTestCase, KernelTestCase)
-specs/               une spec par feature
+specs/               un dossier par feature (spec.md, plan.md, tasks.md)
 docs/                documentation du projet, docs/adr/ pour les décisions
 ```
 
