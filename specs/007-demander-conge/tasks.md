@@ -146,7 +146,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 ## Phase 13: Finition et étapes F5 à F8
 
-- [ ] T023 Parcours e2e `frontend/e2e/conges.spec.ts` : un salarié demande un congé, son manager l'accepte, un salarié de l'autre équipe le voit dans « Congés à venir », l'admin l'annule et il disparaît ; `make test-e2e ARGS="conges"` (SC-002)
+- [x] T023 Parcours e2e `frontend/e2e/conges.spec.ts` : un salarié demande un congé, son manager l'accepte, un salarié de l'autre équipe le voit dans « Congés à venir », l'admin l'annule et il disparaît ; `make test-e2e ARGS="conges"` (SC-002)
 - [ ] T024 [P] Docs : `docs/modele-donnees.md` (entité `LeaveRequest`, cycle de vie, `LeaveRequestInput`), `docs/api.md` (8 routes de `contracts/api.md`), `docs/produit.md` (feature 007, écran `/conges`), `CLAUDE.md` (état actuel : feature 007) ; commit `docs(007): …`
 - [ ] T025 F5 — Vérification à la main par Cynthia, en suivant `specs/007-demander-conge/quickstart.md` (aucun commit avant son retour)
 - [ ] T026 F6 — `/revue-api` et `/revue-react` sur la branche ; appliquer les remarques retenues, justifier les autres, ligne dans `JOURNAL-IA.md` pour chaque écart
