@@ -22,7 +22,7 @@ export function LeavesPage() {
 
   return (
     <>
-      <title>Congés – Notes de frais</title>
+      <title>Congés – Espace salarié</title>
       <PageHeader title="Congés" description="Demandez un congé et suivez vos demandes." />
       <div className="flex flex-col gap-6">
         <Card title="Demander un congé">

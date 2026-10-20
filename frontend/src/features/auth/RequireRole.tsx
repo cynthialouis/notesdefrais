@@ -24,7 +24,7 @@ export function RequireRole({ role }: Props) {
   if (role !== undefined && !canAccess(session, role)) {
     return (
       <>
-        <title>Accès refusé – Notes de frais</title>
+        <title>Accès refusé – Espace salarié</title>
         <EmptyState headingLevel={1} title="Accès refusé" description="Cette page n'est pas accessible avec votre rôle." />
       </>
     )

@@ -23,7 +23,7 @@ export function TeamPage() {
 
   return (
     <>
-      <title>Équipe – Notes de frais</title>
+      <title>Équipe – Espace salarié</title>
       <PageHeader title="Équipe" description="Notes soumises par votre équipe, des plus anciennes aux plus récentes." />
       <Card>
         {teamList.status === 'error' && <Alert>{teamList.message}</Alert>}

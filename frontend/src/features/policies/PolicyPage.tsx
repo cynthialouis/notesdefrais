@@ -17,7 +17,7 @@ export function PolicyPage() {
 
   return (
     <>
-      <title>Politique de dépenses – Notes de frais</title>
+      <title>Politique de dépenses – Espace salarié</title>
       <PageHeader
         title="Politique de dépenses"
         description="Plafond par note et justificatif obligatoire, par catégorie. Un dépassement est signalé sans bloquer la note."

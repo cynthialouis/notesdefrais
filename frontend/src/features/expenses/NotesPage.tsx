@@ -50,7 +50,7 @@ export function NotesPage() {
 
   return (
     <>
-      <title>Mes notes – Notes de frais</title>
+      <title>Mes notes – Espace salarié</title>
       <PageHeader
         title="Mes notes"
         description="Vos notes de frais, des plus récentes aux plus anciennes."

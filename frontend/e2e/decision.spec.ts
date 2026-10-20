@@ -1,4 +1,4 @@
-import { expect, test } from './fixtures.ts'
+import { expect, openNotesPage, test } from './fixtures.ts'
 
 // Parcours 2 (spec 003) : rejet motivé, correction, nouvelle soumission, validation, historique.
 // Part d'une note de démo : « Déjeuner client Dupont », soumise par Léa à Claire, sa responsable.
@@ -8,7 +8,7 @@ test('une note rejetée est corrigée, soumise de nouveau puis validée', async 
 
   // Claire rejette la note avec un motif
   await loginAs('Claire Dubois')
-  await page.getByRole('navigation').getByRole('link', { name: 'Équipe' }).click()
+  await openNotesPage(page, 'Équipe')
   await page.getByRole('link', { name: 'Déjeuner client Dupont' }).click()
   await page.getByLabel('Motif du rejet').fill(reason)
   await page.getByRole('button', { name: 'Rejeter la note' }).click()
@@ -17,7 +17,7 @@ test('une note rejetée est corrigée, soumise de nouveau puis validée', async 
 
   // Léa voit le motif, corrige le libellé et soumet de nouveau
   await loginAs('Léa Bernard')
-  await page.getByRole('navigation').getByRole('link', { name: 'Mes notes' }).click()
+  await openNotesPage(page, 'Mes notes')
   await expect(page.getByRole('row', { name: /Déjeuner client Dupont/ })).toContainText('Rejetée')
   await page.getByRole('link', { name: 'Déjeuner client Dupont' }).click()
   await expect(page.getByText(`« ${reason} »`).first()).toBeVisible()
@@ -31,7 +31,7 @@ test('une note rejetée est corrigée, soumise de nouveau puis validée', async 
 
   // Claire valide la note corrigée
   await loginAs('Claire Dubois')
-  await page.getByRole('navigation').getByRole('link', { name: 'Équipe' }).click()
+  await openNotesPage(page, 'Équipe')
   await page.getByRole('link', { name: 'Déjeuner client Dupont (Dupont SA)' }).click()
   const detailUrl = page.url()
   await page.getByRole('button', { name: 'Valider la note' }).click()

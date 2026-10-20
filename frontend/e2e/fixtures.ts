@@ -1,6 +1,6 @@
 import { execSync } from 'node:child_process'
 import { resolve } from 'node:path'
-import { expect, test as base } from '@playwright/test'
+import { expect, test as base, type Page } from '@playwright/test'
 import { z } from 'zod'
 
 const repoRoot = resolve(import.meta.dirname, '../..')
@@ -61,5 +61,12 @@ export const test = base.extend<Fixtures, WorkerFixtures>({
     })
   },
 })
+
+/** Ouvre une page du groupe « Notes de frais » du menu (Mes notes, Équipe, Politique). */
+export async function openNotesPage(page: Page, name: string): Promise<void> {
+  const navigation = page.getByRole('navigation')
+  await navigation.getByRole('button', { name: 'Notes de frais' }).click()
+  await navigation.getByRole('link', { name }).click()
+}
 
 export { expect }

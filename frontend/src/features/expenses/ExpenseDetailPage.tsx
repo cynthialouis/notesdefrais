@@ -47,7 +47,7 @@ function ExpenseDetailPage({ id, back }: { id: number; back: BackLink }) {
 
   return (
     <>
-      <title>Note de frais – Notes de frais</title>
+      <title>Note de frais – Espace salarié</title>
       <p className="mb-4">
         <Link to={back.to} className="rounded-xs text-sm font-medium text-gray-600 hover:text-gray-900 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-500">
           ← {back.label}

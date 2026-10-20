@@ -22,7 +22,7 @@ export function NewExpensePage() {
 
   return (
     <>
-      <title>Nouvelle note – Notes de frais</title>
+      <title>Nouvelle note – Espace salarié</title>
       <PageHeader title="Nouvelle note" description="La note est enregistrée en brouillon : vous pourrez ensuite joindre le justificatif, la modifier et la soumettre." />
       <Card className="max-w-2xl">
         <Suspense fallback={<LoadingState />}>
