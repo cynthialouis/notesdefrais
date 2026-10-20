@@ -205,6 +205,137 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/leaves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** « Aujourd'hui » s'entend en heure de Paris (C15). */
+        get: operations["get_api_leaves_accepted"];
+        put?: never;
+        post: operations["post_api_leaves_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/leaves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_leaves_mine"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leaves/{id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_api_leaves_withdraw"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/team/leaves": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_leaves_team"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leaves/{id}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Accepter : 404 si le lecteur n'est ni le demandeur ni son responsable, 403 pour le demandeur. */
+        post: operations["post_api_leaves_accept"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leaves/{id}/refuse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["post_api_leaves_refuse"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leaves/pending": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["get_api_leaves_pending"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/leaves/{id}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Annuler : réservé à l'admin, sur une demande en attente ou un congé accepté, quelle que soit sa date. */
+        post: operations["post_api_leaves_cancel"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me": {
         parameters: {
             query?: never;
@@ -328,6 +459,12 @@ export interface components {
             /** @default null */
             reason: string | null;
         };
+        LeaveRequestInput: {
+            /** @default null */
+            startDate: string | null;
+            /** @default null */
+            endDate: string | null;
+        };
         PolicyInput: {
             /**
              * @description Plafond en centimes ; null = aucun plafond
@@ -416,6 +553,35 @@ export interface components {
             comment: string | null;
             /** Date et heure ISO 8601 */
             createdAt: string;
+        };
+        /** @enum {string} */
+        LeaveStatus: "pending" | "accepted" | "refused" | "withdrawn" | "cancelled";
+        LeaveRequestView: {
+            id: number;
+            requester: components["schemas"]["PersonRef"];
+            /** Premier jour du congé, au format Y-m-d */
+            startDate: string;
+            /** Dernier jour du congé (compris), au format Y-m-d */
+            endDate: string;
+            status: components["schemas"]["LeaveStatus"];
+            /** Date et heure ISO 8601 de la demande */
+            createdAt: string;
+            /** Date et heure ISO 8601 de l'acceptation ou du refus, null sinon */
+            decidedAt: string | null;
+            decidedBy: components["schemas"]["PersonRef"] | null;
+            /** Motif du refus, null si la demande n'est pas refusée */
+            refusalReason: string | null;
+            /** Date et heure ISO 8601 de l'annulation, null sinon */
+            cancelledAt: string | null;
+            cancelledBy: components["schemas"]["PersonRef"] | null;
+            /** Motif de l'annulation, null si la demande n'est pas annulée */
+            cancellationReason: string | null;
+            /** Vrai si le lecteur est le responsable du demandeur et peut accepter ou refuser */
+            decidable: boolean;
+            /** Vrai si le lecteur est le demandeur et peut encore retirer sa demande */
+            withdrawable: boolean;
+            /** Vrai si le lecteur est l'admin et peut annuler la demande ou le congé */
+            cancellable: boolean;
         };
         StatusTotalView: {
             status: components["schemas"]["ExpenseStatus"];
@@ -1009,6 +1175,388 @@ export interface operations {
         requestBody?: never;
         responses: {
             default: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_leaves_accepted: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Congés acceptés en cours ou à venir de tout le monde, date de début croissante */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"][];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_leaves_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LeaveRequestInput"];
+            };
+        };
+        responses: {
+            /** @description Demande créée, en attente */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"];
+                };
+            };
+            /** @description Date absente ou invalide, début dans le passé, fin avant le début */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Demandeur sans responsable, ou période qui chevauche une autre de ses demandes en attente ou acceptée */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_leaves_mine: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Toutes ses demandes, quel que soit leur état, date de début décroissante */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"][];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_leaves_withdraw: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Demande retirée */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Demande inexistante ou d'un autre utilisateur */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La demande n'est plus en attente */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_leaves_team: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Demandes en attente de l'équipe directe, date de début la plus proche d'abord */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"][];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réservé aux managers */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_leaves_accept: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Demande acceptée */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Le demandeur ne décide pas de sa propre demande */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Demande inexistante ou hors de l'équipe */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La demande n'est pas en attente */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_leaves_refuse: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectionInput"];
+            };
+        };
+        responses: {
+            /** @description Demande refusée */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"];
+                };
+            };
+            /** @description Motif invalide */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Le demandeur ne décide pas de sa propre demande */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Demande inexistante ou hors de l'équipe */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La demande n'est pas en attente */
+            409: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    get_api_leaves_pending: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Demandes en attente de tout le monde, date de début la plus proche d'abord */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"][];
+                };
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réservé à l'admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    post_api_leaves_cancel: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RejectionInput"];
+            };
+        };
+        responses: {
+            /** @description Demande annulée */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LeaveRequestView"];
+                };
+            };
+            /** @description Motif invalide */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Non connecté */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Réservé à l'admin */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Demande inexistante */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description La demande n'est ni en attente ni acceptée */
+            409: {
                 headers: {
                     [name: string]: unknown;
                 };

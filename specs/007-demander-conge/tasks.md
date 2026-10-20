@@ -104,7 +104,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 ## Phase 7: Transverse du back
 
 - [X] T014 Données de démo des congés dans `backend/src/DataFixtures/AppFixtures.php`, relatives à la date du jour : au moins une demande en attente par équipe, des congés acceptés à venir dans les deux équipes, une refusée, une retirée, une annulée, une demande en attente d'un manager (à traiter par l'admin), un congé accepté terminé hier ; `make db` puis `make test-back` (tous les tests, dont `LeaveFixturesTest`) ; `php bin/console lint:container` (C6, C15, C18)
-- [ ] T015 Régénérer les types du front : `make api-types` (`frontend/src/api/openapi.json`, `frontend/src/api/schema.d.ts`), puis `npx tsc -b` dans `frontend/`
+- [X] T015 Régénérer les types du front : `make api-types` (`frontend/src/api/openapi.json`, `frontend/src/api/schema.d.ts`), puis `npx tsc -b` dans `frontend/`
 
 **Checkpoint**: back terminé, contrat publié.
 

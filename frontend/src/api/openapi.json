@@ -494,6 +494,324 @@
                 }
             }
         },
+        "/api/leaves": {
+            "get": {
+                "summary": "\u00ab Aujourd'hui \u00bb s'entend en heure de Paris (C15).",
+                "operationId": "get_api_leaves_accepted",
+                "responses": {
+                    "200": {
+                        "description": "Cong\u00e9s accept\u00e9s en cours ou \u00e0 venir de tout le monde, date de d\u00e9but croissante",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LeaveRequestView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "post_api_leaves_create",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/LeaveRequestInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Demande cr\u00e9\u00e9e, en attente",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LeaveRequestView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Date absente ou invalide, d\u00e9but dans le pass\u00e9, fin avant le d\u00e9but"
+                    },
+                    "409": {
+                        "description": "Demandeur sans responsable, ou p\u00e9riode qui chevauche une autre de ses demandes en attente ou accept\u00e9e"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/me/leaves": {
+            "get": {
+                "operationId": "get_api_leaves_mine",
+                "responses": {
+                    "200": {
+                        "description": "Toutes ses demandes, quel que soit leur \u00e9tat, date de d\u00e9but d\u00e9croissante",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LeaveRequestView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/leaves/{id}/withdraw": {
+            "post": {
+                "operationId": "post_api_leaves_withdraw",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande retir\u00e9e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LeaveRequestView"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Demande inexistante ou d'un autre utilisateur"
+                    },
+                    "409": {
+                        "description": "La demande n'est plus en attente"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/team/leaves": {
+            "get": {
+                "operationId": "get_api_leaves_team",
+                "responses": {
+                    "200": {
+                        "description": "Demandes en attente de l'\u00e9quipe directe, date de d\u00e9but la plus proche d'abord",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LeaveRequestView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "R\u00e9serv\u00e9 aux managers"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/leaves/{id}/accept": {
+            "post": {
+                "summary": "Accepter : 404 si le lecteur n'est ni le demandeur ni son responsable, 403 pour le demandeur.",
+                "operationId": "post_api_leaves_accept",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Demande accept\u00e9e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LeaveRequestView"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Le demandeur ne d\u00e9cide pas de sa propre demande"
+                    },
+                    "404": {
+                        "description": "Demande inexistante ou hors de l'\u00e9quipe"
+                    },
+                    "409": {
+                        "description": "La demande n'est pas en attente"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/leaves/{id}/refuse": {
+            "post": {
+                "operationId": "post_api_leaves_refuse",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectionInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande refus\u00e9e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LeaveRequestView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Motif invalide"
+                    },
+                    "403": {
+                        "description": "Le demandeur ne d\u00e9cide pas de sa propre demande"
+                    },
+                    "404": {
+                        "description": "Demande inexistante ou hors de l'\u00e9quipe"
+                    },
+                    "409": {
+                        "description": "La demande n'est pas en attente"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/leaves/pending": {
+            "get": {
+                "operationId": "get_api_leaves_pending",
+                "responses": {
+                    "200": {
+                        "description": "Demandes en attente de tout le monde, date de d\u00e9but la plus proche d'abord",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/LeaveRequestView"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "R\u00e9serv\u00e9 \u00e0 l'admin"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
+        "/api/leaves/{id}/cancel": {
+            "post": {
+                "summary": "Annuler : r\u00e9serv\u00e9 \u00e0 l'admin, sur une demande en attente ou un cong\u00e9 accept\u00e9, quelle que soit sa date.",
+                "operationId": "post_api_leaves_cancel",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "\\d+"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/RejectionInput"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Demande annul\u00e9e",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/LeaveRequestView"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Motif invalide"
+                    },
+                    "403": {
+                        "description": "R\u00e9serv\u00e9 \u00e0 l'admin"
+                    },
+                    "404": {
+                        "description": "Demande inexistante"
+                    },
+                    "409": {
+                        "description": "La demande n'est ni en attente ni accept\u00e9e"
+                    },
+                    "401": {
+                        "description": "Non connect\u00e9"
+                    }
+                }
+            }
+        },
         "/api/me": {
             "get": {
                 "operationId": "get_api_me",
@@ -839,6 +1157,21 @@
                 },
                 "type": "object"
             },
+            "LeaveRequestInput": {
+                "properties": {
+                    "startDate": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    },
+                    "endDate": {
+                        "type": "string",
+                        "nullable": true,
+                        "default": null
+                    }
+                },
+                "type": "object"
+            },
             "PolicyInput": {
                 "required": [
                     "receiptRequired"
@@ -1143,6 +1476,107 @@
                     "createdAt": {
                         "title": "Date et heure ISO 8601",
                         "type": "string"
+                    }
+                },
+                "type": "object"
+            },
+            "LeaveStatus": {
+                "type": "string",
+                "enum": [
+                    "pending",
+                    "accepted",
+                    "refused",
+                    "withdrawn",
+                    "cancelled"
+                ]
+            },
+            "LeaveRequestView": {
+                "required": [
+                    "id",
+                    "requester",
+                    "startDate",
+                    "endDate",
+                    "status",
+                    "createdAt",
+                    "decidedAt",
+                    "decidedBy",
+                    "refusalReason",
+                    "cancelledAt",
+                    "cancelledBy",
+                    "cancellationReason",
+                    "decidable",
+                    "withdrawable",
+                    "cancellable"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "requester": {
+                        "$ref": "#/components/schemas/PersonRef"
+                    },
+                    "startDate": {
+                        "title": "Premier jour du cong\u00e9, au format Y-m-d",
+                        "type": "string"
+                    },
+                    "endDate": {
+                        "title": "Dernier jour du cong\u00e9 (compris), au format Y-m-d",
+                        "type": "string"
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/LeaveStatus"
+                    },
+                    "createdAt": {
+                        "title": "Date et heure ISO 8601 de la demande",
+                        "type": "string"
+                    },
+                    "decidedAt": {
+                        "title": "Date et heure ISO 8601 de l'acceptation ou du refus, null sinon",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "decidedBy": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonRef"
+                            }
+                        ]
+                    },
+                    "refusalReason": {
+                        "title": "Motif du refus, null si la demande n'est pas refus\u00e9e",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cancelledAt": {
+                        "title": "Date et heure ISO 8601 de l'annulation, null sinon",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "cancelledBy": {
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/PersonRef"
+                            }
+                        ]
+                    },
+                    "cancellationReason": {
+                        "title": "Motif de l'annulation, null si la demande n'est pas annul\u00e9e",
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "decidable": {
+                        "title": "Vrai si le lecteur est le responsable du demandeur et peut accepter ou refuser",
+                        "type": "boolean"
+                    },
+                    "withdrawable": {
+                        "title": "Vrai si le lecteur est le demandeur et peut encore retirer sa demande",
+                        "type": "boolean"
+                    },
+                    "cancellable": {
+                        "title": "Vrai si le lecteur est l'admin et peut annuler la demande ou le cong\u00e9",
+                        "type": "boolean"
                     }
                 },
                 "type": "object"
