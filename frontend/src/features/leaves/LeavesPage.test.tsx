@@ -45,7 +45,7 @@ afterEach(() => {
 
 describe('LeavesPage – mes demandes', () => {
   it('C16 – liste toutes ses demandes dans l\'ordre du serveur, avec l\'état et le motif d\'un refus ou d\'une annulation', async () => {
-    stubApi({ 'GET /api/me/leaves': json(200, [cancelledLeave, acceptedLeave, pendingLeave, refusedLeave, { ...pendingLeave, id: 14, startDate: '2026-10-25', endDate: '2026-10-25' }]) })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, [cancelledLeave, acceptedLeave, pendingLeave, refusedLeave, { ...pendingLeave, id: 14, startDate: '2026-10-25', endDate: '2026-10-25' }]) })
     await renderPage()
 
     expect(await screen.findByRole('table', { name: 'Mes demandes' })).toBeInTheDocument()
@@ -59,14 +59,14 @@ describe('LeavesPage – mes demandes', () => {
   })
 
   it('C16 – sans demande, un état vide l\'explique', async () => {
-    stubApi({ 'GET /api/me/leaves': json(200, []) })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []) })
     await renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Vous n\'avez encore fait aucune demande.' })).toBeInTheDocument()
   })
 
   it('signale une liste impossible à charger', async () => {
-    stubApi({ 'GET /api/me/leaves': json(500, { error: { code: 'internal', message: 'Erreur interne.' } }) })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(500, { error: { code: 'internal', message: 'Erreur interne.' } }) })
     await renderPage()
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Erreur interne.')
@@ -75,7 +75,7 @@ describe('LeavesPage – mes demandes', () => {
   it('C11 – « Retirer » retire la demande en attente et relit la liste', async () => {
     let mine: unknown[] = [pendingLeave]
     const fetchMock = stubApi({
-      'GET /api/me/leaves': () => jsonResponse(200, mine),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': () => jsonResponse(200, mine),
       'POST /api/leaves/10/withdraw': () => {
         mine = [{ ...pendingLeave, status: 'withdrawn', withdrawable: false }]
         return jsonResponse(200, mine[0])
@@ -93,7 +93,7 @@ describe('LeavesPage – mes demandes', () => {
 
   it('C12 – un retrait refusé par le serveur (409) affiche son message', async () => {
     stubApi({
-      'GET /api/me/leaves': json(200, [pendingLeave]),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, [pendingLeave]),
       'POST /api/leaves/10/withdraw': conflict('Seule une demande en attente peut être retirée.'),
     })
     await renderPage()
@@ -109,7 +109,7 @@ describe('LeavesPage – demander un congé', () => {
   it('C1 – envoie la période, confirme l\'envoi, vide le formulaire et relit ses demandes', async () => {
     let mine: unknown[] = []
     const fetchMock = stubApi({
-      'GET /api/me/leaves': () => jsonResponse(200, mine),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': () => jsonResponse(200, mine),
       'POST /api/leaves': () => {
         mine = [pendingLeave]
         return jsonResponse(201, pendingLeave)
@@ -133,7 +133,7 @@ describe('LeavesPage – demander un congé', () => {
     ['une fin avant le début', '2026-11-03', '2026-11-02', 'Dernier jour', 'La date de fin ne peut pas être antérieure à la date de début.'],
     ['une fin absente', '2026-11-03', '', 'Dernier jour', 'La date de fin est obligatoire.'],
   ])('C3 – %s est signalé sous le champ, sans rien envoyer', async (_case, start, end, label, message) => {
-    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []) })
+    const fetchMock = stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []) })
     await renderPage()
 
     await fill(start, end)
@@ -144,7 +144,7 @@ describe('LeavesPage – demander un congé', () => {
   })
 
   it('C3 – un congé d\'un seul jour commençant aujourd\'hui est envoyé', async () => {
-    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []), 'POST /api/leaves': json(201, pendingLeave) })
+    const fetchMock = stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'POST /api/leaves': json(201, pendingLeave) })
     await renderPage()
 
     await fill('2026-10-20', '2026-10-20')
@@ -156,7 +156,7 @@ describe('LeavesPage – demander un congé', () => {
 
   it('C2 – une erreur de date du serveur (400) s\'affiche sous le champ', async () => {
     stubApi({
-      'GET /api/me/leaves': json(200, []),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []),
       'POST /api/leaves': json(400, { error: { code: 'validation_failed', message: 'Données invalides.', fields: { startDate: 'Le congé ne peut pas commencer dans le passé.' } } }),
     })
     await renderPage()
@@ -171,7 +171,7 @@ describe('LeavesPage – demander un congé', () => {
     ['C4', 'Cette période chevauche une autre de vos demandes, en attente ou acceptée.'],
     ['C5', 'Vous n\'avez pas de responsable : personne ne peut accepter vos demandes de congé, vous ne pouvez donc pas en faire.'],
   ])('%s – un refus du serveur (409) affiche son message et garde la saisie', async (_criterion, message) => {
-    stubApi({ 'GET /api/me/leaves': json(200, []), 'POST /api/leaves': conflict(message) })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'POST /api/leaves': conflict(message) })
     await renderPage()
 
     await fill('2026-11-03', '2026-11-07')
@@ -190,7 +190,7 @@ describe('LeavesPage – demandes à traiter', () => {
 
   it('C6 – un salarié ne voit pas la section et ne charge pas la liste', async () => {
     useSessionStore.setState({ session: { status: 'authenticated', user: employee } })
-    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []) })
+    const fetchMock = stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []) })
     await renderPage()
     await screen.findByRole('heading', { name: 'Mes demandes' })
 
@@ -200,7 +200,7 @@ describe('LeavesPage – demandes à traiter', () => {
 
   it('C6 – le manager voit les demandes de son équipe dans l\'ordre du serveur', async () => {
     asManager()
-    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [tomPending, leaPending]) })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [tomPending, leaPending]) })
     await renderPage()
 
     await screen.findByRole('list', { name: 'Demandes à traiter' })
@@ -209,7 +209,7 @@ describe('LeavesPage – demandes à traiter', () => {
 
   it('C6 – sans demande à traiter, un état vide l\'explique', async () => {
     asManager()
-    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, []) })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, []) })
     await renderPage()
 
     expect(await screen.findByRole('heading', { name: 'Aucune demande à traiter.' })).toBeInTheDocument()
@@ -219,7 +219,7 @@ describe('LeavesPage – demandes à traiter', () => {
     asManager()
     let team: unknown[] = [leaPending]
     const fetchMock = stubApi({
-      'GET /api/me/leaves': json(200, []),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []),
       'GET /api/team/leaves': () => jsonResponse(200, team),
       'POST /api/leaves/21/accept': () => {
         team = []
@@ -239,7 +239,7 @@ describe('LeavesPage – demandes à traiter', () => {
     asManager()
     let team: unknown[] = [leaPending]
     const fetchMock = stubApi({
-      'GET /api/me/leaves': json(200, []),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []),
       'GET /api/team/leaves': () => jsonResponse(200, team),
       'POST /api/leaves/21/refuse': () => {
         team = []
@@ -260,7 +260,7 @@ describe('LeavesPage – demandes à traiter', () => {
 
   it('C8 – « Abandonner » referme le motif sans rien envoyer', async () => {
     asManager()
-    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [leaPending]) })
+    const fetchMock = stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [leaPending]) })
     await renderPage()
     await screen.findByRole('list', { name: 'Demandes à traiter' })
 
@@ -277,7 +277,7 @@ describe('LeavesPage – demandes à traiter', () => {
     ['de 4 caractères entourés d\'espaces', '   abcd   ', 'Le motif doit faire au moins 5 caractères.'],
   ])('C9 – un motif %s est signalé sous le champ, sans rien envoyer', async (_case, reason, message) => {
     asManager()
-    const fetchMock = stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [leaPending]) })
+    const fetchMock = stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [leaPending]) })
     await renderPage()
     await screen.findByRole('list', { name: 'Demandes à traiter' })
 
@@ -293,7 +293,7 @@ describe('LeavesPage – demandes à traiter', () => {
   it('C10 – une acceptation refusée par le serveur (409) affiche son message', async () => {
     asManager()
     stubApi({
-      'GET /api/me/leaves': json(200, []),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []),
       'GET /api/team/leaves': json(200, [leaPending]),
       'POST /api/leaves/21/accept': conflict('Seule une demande en attente peut être acceptée ou refusée.'),
     })
@@ -308,7 +308,7 @@ describe('LeavesPage – demandes à traiter', () => {
   it('C10 – un refus rejeté par le serveur (409) affiche son message sous le motif', async () => {
     asManager()
     stubApi({
-      'GET /api/me/leaves': json(200, []),
+      'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []),
       'GET /api/team/leaves': json(200, [leaPending]),
       'POST /api/leaves/21/refuse': conflict('Seule une demande en attente peut être acceptée ou refusée.'),
     })
@@ -324,10 +324,66 @@ describe('LeavesPage – demandes à traiter', () => {
 
   it('une demande non décidable par le lecteur n\'a pas de boutons', async () => {
     asManager()
-    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [{ ...leaPending, decidable: false }]) })
+    stubApi({ 'GET /api/leaves': json(200, []), 'GET /api/me/leaves': json(200, []), 'GET /api/team/leaves': json(200, [{ ...leaPending, decidable: false }]) })
     await renderPage()
     await screen.findByRole('list', { name: 'Demandes à traiter' })
 
     expect(within(items()[0] as HTMLElement).queryByRole('button')).not.toBeInTheDocument()
+  })
+})
+
+describe('LeavesPage – congés à venir', () => {
+  const inesAccepted = { ...acceptedLeave, id: 30, requester: { id: 6, name: 'Inès Moreau' }, startDate: '2026-11-10', endDate: '2026-11-14', decidedBy: { id: 3, name: 'Hugo Lefèvre' } }
+  const tomOngoing = { ...acceptedLeave, id: 31, requester: { id: 5, name: 'Tom Petit' }, startDate: '2026-10-18', endDate: '2026-10-20' }
+
+  it('C15 – liste les congés acceptés de tous dans l\'ordre du serveur, avec la personne et la période', async () => {
+    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/leaves': json(200, [tomOngoing, inesAccepted, acceptedLeave]) })
+    await renderPage()
+
+    expect(await screen.findByRole('table', { name: 'Congés à venir' })).toBeInTheDocument()
+    expect(rows('Congés à venir')).toEqual([
+      ['Tom Petit', 'Du 18/10/2026 au 20/10/2026'],
+      ['Inès Moreau', 'Du 10/11/2026 au 14/11/2026'],
+      ['Léa Bernard', 'Du 19/11/2026 au 23/11/2026'],
+    ])
+  })
+
+  it('C17 – n\'affiche ni état ni motif ni décideur', async () => {
+    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/leaves': json(200, [inesAccepted]) })
+    await renderPage()
+
+    const table = await screen.findByRole('table', { name: 'Congés à venir' })
+    expect(within(table).queryByText('Hugo Lefèvre')).not.toBeInTheDocument()
+    expect(within(table).queryByText('Acceptée')).not.toBeInTheDocument()
+  })
+
+  it('C15 – sans congé à venir, un état vide l\'explique', async () => {
+    stubApi({ 'GET /api/me/leaves': json(200, []), 'GET /api/leaves': json(200, []) })
+    await renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'Aucun congé en cours ou à venir.' })).toBeInTheDocument()
+  })
+
+  it('C7/C15 – un congé accepté par le manager apparaît aussitôt dans les congés à venir', async () => {
+    useSessionStore.setState({ session: { status: 'authenticated', user: manager } })
+    let accepted: unknown[] = []
+    let team: unknown[] = [{ ...pendingLeave, decidable: true, withdrawable: false }]
+    stubApi({
+      'GET /api/me/leaves': json(200, []),
+      'GET /api/leaves': () => jsonResponse(200, accepted),
+      'GET /api/team/leaves': () => jsonResponse(200, team),
+      'POST /api/leaves/10/accept': () => {
+        accepted = [{ ...acceptedLeave, id: 10, startDate: '2026-11-03', endDate: '2026-11-07' }]
+        team = []
+        return jsonResponse(200, accepted[0])
+      },
+    })
+    await renderPage()
+    await screen.findByRole('heading', { name: 'Aucun congé en cours ou à venir.' })
+
+    await userEvent.click(await screen.findByRole('button', { name: /^Accepter la demande de Léa Bernard/ }))
+
+    expect(await screen.findByRole('table', { name: 'Congés à venir' })).toBeInTheDocument()
+    expect(rows('Congés à venir')).toEqual([['Léa Bernard', 'Du 03/11/2026 au 07/11/2026']])
   })
 })

@@ -13,6 +13,7 @@ import { LeaveRequestForm } from './LeaveRequestForm'
 import { LeaveStatusBadge } from './LeaveStatusBadge'
 import { useLeavesStore, type Leave } from './leavesStore'
 import { TeamLeavesCard } from './TeamLeavesCard'
+import { UpcomingLeavesCard } from './UpcomingLeavesCard'
 
 /** Page des congés (spec 007), ouverte à tous les rôles. */
 export function LeavesPage() {
@@ -28,6 +29,7 @@ export function LeavesPage() {
         </Card>
         {canAccess(session, 'manager') && <TeamLeavesCard />}
         <MyLeavesCard />
+        <UpcomingLeavesCard />
       </div>
     </>
   )

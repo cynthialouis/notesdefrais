@@ -132,7 +132,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 ## Phase 11: User Story 3 — front
 
-- [ ] T021 [US3] Section « Congés à venir » (personne, dates, date de début croissante) dans `frontend/src/features/leaves/LeavesPage.tsx`, `EmptyState` si vide ; tests dans `LeavesPage.test.tsx` (C15, C17)
+- [x] T021 [US3] Section « Congés à venir » (personne, dates, date de début croissante) dans `frontend/src/features/leaves/LeavesPage.tsx`, `EmptyState` si vide ; tests dans `LeavesPage.test.tsx` (C15, C17)
 
 ---
 
