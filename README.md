@@ -1,6 +1,6 @@
 # Notes de frais
 
-Application de gestion de notes de frais pour trois rôles : le salarié saisit et soumet ses notes, le manager les valide ou les rejette, l'admin fixe la politique de dépenses.
+Application de gestion de notes de frais et de congés (affichée sous le nom « Espace salarié ») pour trois rôles : le salarié saisit et soumet ses notes et demande ses congés, le manager valide ou rejette les notes et accepte ou refuse les congés de son équipe, l'admin fixe la politique de dépenses et peut annuler un congé.
 
 Le dépôt contient deux projets indépendants qui ne communiquent que par HTTP : un front **React 19 + TypeScript** (`frontend/`) et une API **Symfony 8** (`backend/`). L'application fonctionne en local, sans installation de base de données (SQLite), avec des comptes de démo sans mot de passe.
 
@@ -14,6 +14,7 @@ Le dépôt contient deux projets indépendants qui ne communiquent que par HTTP 
 | Politique de dépenses | admin | Plafond et justificatif obligatoire par catégorie ; une note hors politique est signalée sans être bloquée |
 | Justificatifs | salarié | Joindre une image ou un PDF (5 Mo au plus, type vérifié d'après le contenu) ; soumission bloquée si le justificatif est obligatoire et absent |
 | Tableau de bord | salarié, manager | Ses totaux par état ; pour un manager, les notes validées de l'équipe par catégorie et par mois sur 12 mois, et leur export CSV |
+| Demander un congé | tous | Demander une période de congé ; le responsable l'accepte ou la refuse avec un motif ; le demandeur la retire tant qu'elle est en attente ; les congés acceptés sont visibles de tous ; l'admin annule avec un motif |
 
 Chaque feature a sa spec dans [`specs/`](specs/). Hors périmètre : vraie authentification, remboursement, multi-devises, notifications, déploiement en production (voir [`docs/produit.md`](docs/produit.md)).
 

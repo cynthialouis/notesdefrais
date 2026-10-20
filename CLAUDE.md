@@ -1,6 +1,6 @@
 # Notes de frais
 
-Gestion de notes de frais pour trois rôles (salarié, manager, admin). 
+« Espace salarié » (nom affiché) : notes de frais et congés pour trois rôles (salarié, manager, admin).
 Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par HTTP via `/api` :
 - `frontend/` : React 19 + TypeScript (Vite)
 - `backend/` : API Symfony 8 (PHP 8.4+), Doctrine + SQLite. Voir aussi `backend/CLAUDE.md`.
@@ -12,6 +12,7 @@ Un dépôt, deux projets qui ne partagent aucun code et ne communiquent que par 
 - feature 004 (politique de dépenses) en place : plafond et justificatif par catégorie, signalement hors politique
 - feature 005 (justificatifs) en place : un justificatif par note, stocké hors `public/`, soumission bloquée s'il est obligatoire et absent
 - feature 006 (tableau de bord) en place : totaux par état, totaux d'équipe par catégorie et par mois sur 12 mois, export CSV
+- feature 007 (demander un congé) en place : demande sans brouillon, acceptation ou refus motivé du responsable, retrait, congés acceptés visibles de tous, annulation motivée par l'admin ; page `/conges`
 
 ## Documentation
 
