@@ -83,7 +83,7 @@ user story **à l'intérieur** de la partie back, puis de la partie front. Une t
 
 **Independent Test**: `make test-back ARGS="--filter AcceptedLeaves"`.
 
-- [ ] T012 [US3] `LeaveRequestRepository::findAcceptedEndingFrom(\DateTimeImmutable $today)` (`status = accepted`, `endDate >= :today`, date de début croissante, « aujourd'hui » en Europe/Paris via `ClockInterface`) et route `GET /api/leaves` dans `backend/src/Controller/LeaveController.php` (C15, C17)
+- [X] T012 [US3] `LeaveRequestRepository::findAcceptedEndingFrom(\DateTimeImmutable $today)` (`status = accepted`, `endDate >= :today`, date de début croissante, « aujourd'hui » en Europe/Paris via `ClockInterface`) et route `GET /api/leaves` dans `backend/src/Controller/LeaveController.php` (C15, C17)
 
 **Checkpoint**: tests US1 à US3 verts.
 

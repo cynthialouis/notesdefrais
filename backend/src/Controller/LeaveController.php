@@ -12,6 +12,7 @@ use App\Security\Voter\LeaveRequestVoter;
 use App\Service\LeaveManager;
 use Nelmio\ApiDocBundle\Attribute\Model;
 use OpenApi\Attributes as OA;
+use Psr\Clock\ClockInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -41,6 +42,16 @@ final class LeaveController extends AbstractController
         #[MapRequestPayload(validationFailedStatusCode: Response::HTTP_BAD_REQUEST)] LeaveRequestInput $input,
     ): JsonResponse {
         return $this->json(LeaveRequestView::fromEntity($this->leaves->request($user, $input), $user), Response::HTTP_CREATED);
+    }
+
+    /** « Aujourd'hui » s'entend en heure de Paris (C15). */
+    #[Route('/api/leaves', name: 'api_leaves_accepted', methods: ['GET'])]
+    #[OA\Response(response: 200, description: 'Congés acceptés en cours ou à venir de tout le monde, date de début croissante', content: new OA\JsonContent(type: 'array', items: new OA\Items(ref: new Model(type: LeaveRequestView::class))))]
+    public function accepted(#[CurrentUser] User $user, LeaveRequestRepository $repository, ClockInterface $clock): JsonResponse
+    {
+        $today = $clock->now()->setTimezone(new \DateTimeZone('Europe/Paris'))->setTime(0, 0);
+
+        return $this->list($repository->findAcceptedEndingFrom($today), $user);
     }
 
     #[Route('/api/me/leaves', name: 'api_leaves_mine', methods: ['GET'])]

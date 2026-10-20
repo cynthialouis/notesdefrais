@@ -82,4 +82,25 @@ class LeaveRequestRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Congés acceptés de tout le monde, en cours ou à venir : date de fin pas antérieure à $today, date
+     * de début croissante (spec 007, C15).
+     *
+     * @return list<LeaveRequest>
+     */
+    public function findAcceptedEndingFrom(\DateTimeImmutable $today): array
+    {
+        return $this->createQueryBuilder('l')
+            ->addSelect('r')
+            ->join('l.requester', 'r')
+            ->where('l.status = :status')
+            ->andWhere('l.endDate >= :today')
+            ->setParameter('status', LeaveStatus::Accepted->value)
+            ->setParameter('today', $today, Types::DATE_IMMUTABLE)
+            ->orderBy('l.startDate', 'ASC')
+            ->addOrderBy('l.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
