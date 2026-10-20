@@ -5,10 +5,12 @@ namespace App\DataFixtures;
 use App\Entity\Category;
 use App\Entity\Expense;
 use App\Entity\ExpenseEvent;
+use App\Entity\LeaveRequest;
 use App\Entity\Receipt;
 use App\Entity\User;
 use App\Enum\ExpenseEventType;
 use App\Enum\ExpenseStatus;
+use App\Enum\LeaveStatus;
 use App\Enum\UserRole;
 use App\Service\ReceiptStorage;
 use Doctrine\Bundle\FixturesBundle\Fixture;
@@ -17,7 +19,8 @@ use Symfony\Component\HttpFoundation\File\File;
 
 /**
  * Comptes de démo : 1 admin, 2 managers rattachés à l'admin, 4 salariés (2 par manager), et des notes
- * dans chaque état avec leur historique, et des justificatifs PDF générés (spec 005).
+ * dans chaque état avec leur historique, des justificatifs PDF générés (spec 005) et des demandes de congé
+ * dans chaque état (spec 007).
  * Les catégories sont des données de référence insérées par migration : make db ne les purge pas.
  */
 class AppFixtures extends Fixture
@@ -39,7 +42,7 @@ class AppFixtures extends Fixture
         $lea = $this->user($manager, 'Léa Bernard', 'lea.bernard@demo.test', UserRole::Employee, $claire);
         $tom = $this->user($manager, 'Tom Petit', 'tom.petit@demo.test', UserRole::Employee, $claire);
         $ines = $this->user($manager, 'Inès Moreau', 'ines.moreau@demo.test', UserRole::Employee, $hugo);
-        $this->user($manager, 'Noah Laurent', 'noah.laurent@demo.test', UserRole::Employee, $hugo);
+        $noah = $this->user($manager, 'Noah Laurent', 'noah.laurent@demo.test', UserRole::Employee, $hugo);
 
         // Politiques de départ (spec 004, C10) ; les catégories sont des données de référence déjà en base
         foreach (['repas' => [5000, false], 'hebergement' => [15000, true], 'transport' => [30000, false], 'materiel' => [50000, true], 'autre' => [null, false]] as $slug => [$max, $receipt]) {
@@ -90,6 +93,21 @@ class AppFixtures extends Fixture
         $this->expense($manager, $claire, 'Train séminaire managers', 14500, 10, 'transport', [[ExpenseEventType::Submitted, $claire, 9]]);
         $this->expense($manager, $hugo, 'Casque audio visio', 7900, 3, 'materiel');
 
+        // Congés (spec 007), datés en jours depuis aujourd'hui : en attente pour chaque responsable (Claire :
+        // Léa ; Hugo : Inès, Noah ; Alice : Claire), acceptés à venir dans les deux équipes, un accepté
+        // terminé hier, un refusé, un retiré, un annulé par l'admin
+        $this->leave($manager, $lea, 14, 18, 3);
+        $this->leave($manager, $ines, 10, 12, 2);
+        $this->leave($manager, $noah, 5, 5, 1);
+        $this->leave($manager, $claire, 25, 29, 4);
+        $this->leave($manager, $lea, 30, 34, 10, LeaveStatus::Accepted);
+        $this->leave($manager, $ines, 21, 25, 12, LeaveStatus::Accepted);
+        $this->leave($manager, $hugo, 45, 49, 8, LeaveStatus::Accepted);
+        $this->leave($manager, $tom, -6, -1, 20, LeaveStatus::Accepted);
+        $this->leave($manager, $lea, 7, 8, 6, LeaveStatus::Refused, 'Période de clôture des comptes : présence de toute l\'équipe nécessaire.');
+        $this->leave($manager, $tom, 20, 21, 5, LeaveStatus::Withdrawn);
+        $this->leave($manager, $ines, 40, 44, 15, LeaveStatus::Cancelled, 'Dates saisies par erreur, à redemander.');
+
         $manager->flush();
     }
 
@@ -125,6 +143,40 @@ class AppFixtures extends Fixture
         }
 
         return $expense;
+    }
+
+    /**
+     * Demande de congé du jour $start au jour $end (comptés depuis aujourd'hui, heure de Paris), créée il
+     * y a $createdDaysAgo jours. L'état et ses traces découlent du statut, comme après le Workflow :
+     * décision par le responsable le lendemain de la création, annulation (après acceptation) par
+     * l'admin, responsable des managers, le surlendemain. $reason est le motif du refus ou de l'annulation.
+     */
+    private function leave(ObjectManager $manager, User $requester, int $start, int $end, int $createdDaysAgo, LeaveStatus $status = LeaveStatus::Pending, ?string $reason = null): void
+    {
+        $paris = new \DateTimeZone('Europe/Paris');
+        $at = static fn (int $daysAgo): \DateTimeImmutable => new \DateTimeImmutable(\sprintf('-%d days 10:00', $daysAgo), $paris);
+        $leave = (new LeaveRequest())
+            ->setRequester($requester)
+            ->setStartDate(new \DateTimeImmutable(\sprintf('%+d days', $start), $paris)->setTime(0, 0))
+            ->setEndDate(new \DateTimeImmutable(\sprintf('%+d days', $end), $paris)->setTime(0, 0))
+            ->setStatus($status);
+        // Date de création dans le passé : réglée par réflexion, l'entité n'exposant pas de setter
+        new \ReflectionProperty(LeaveRequest::class, 'createdAt')->setValue($leave, $at($createdDaysAgo)->setTimezone(new \DateTimeZone('UTC')));
+
+        $responsible = $requester->getManager();
+        \assert(null !== $responsible);
+        if (\in_array($status, [LeaveStatus::Accepted, LeaveStatus::Refused, LeaveStatus::Cancelled], true)) {
+            $leave->setDecidedAt($at($createdDaysAgo - 1))->setDecidedBy($responsible);
+        }
+        if (LeaveStatus::Refused === $status) {
+            $leave->setRefusalReason($reason);
+        }
+        if (LeaveStatus::Cancelled === $status) {
+            $admin = $responsible->getManager();
+            \assert(null !== $admin);
+            $leave->setCancelledAt($at($createdDaysAgo - 2))->setCancelledBy($admin)->setCancellationReason($reason);
+        }
+        $manager->persist($leave);
     }
 
     /** Justificatif de démo : un PDF d'une page écrit dans le stockage, comme après un dépôt. */
