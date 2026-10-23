@@ -7,7 +7,7 @@ Chaque feature = une branche, un commit de spec, un commit de tests, puis les co
 - **Claude** rédige tout (specs, plans, tests, code, harness, documentation, journal), se critique avec les grilles ci-dessous et applique lui-même les corrections pertinentes. Il justifie ce qu'il écarte.
 - **L'humain** exprime le besoin, tranche les questions ouvertes, valide la spec et le plan, lit les diffs pour les comprendre, teste à la main dans le navigateur et prépare la démo.
 
-Specs dans `specs/`, au format [GitHub Spec Kit](https://github.com/github/spec-kit) : un dossier `NNN-nom/` par feature avec `spec.md`, `plan.md` et `tasks.md`. Existantes : `001-connexion-roles`, `002-soumettre-note`, `003-valider-rejeter`, `004-politique-depenses`, `005-justificatifs`, `006-tableau-de-bord`. Spec Kit est installé (`.specify/`, skills `speckit-*`) ; son cycle complet (`/speckit-plan`, `/speckit-tasks`, `/speckit-implement`) est à l'essai sur la prochaine feature.
+Specs dans `specs/`, au format [GitHub Spec Kit](https://github.com/github/spec-kit) : un dossier `NNN-nom/` par feature avec `spec.md`, `plan.md` et `tasks.md`. Existantes : `001-connexion-roles`, `002-soumettre-note`, `003-valider-rejeter`, `004-politique-depenses`, `005-justificatifs`, `006-tableau-de-bord`, `007-demander-conge`. Spec Kit (`.specify/`, skills `speckit-*`) est adopté depuis la fusion de la 007 : `/speckit-plan` et `/speckit-tasks` produisent `plan.md` et `tasks.md` à l'étape F3. Ses fichiers installés (`.claude/skills/speckit-*`, `.specify/templates/`, `.specify/scripts/`) restent en anglais et ne sont pas modifiés : une mise à jour de Spec Kit les réécrit. Le projet passe par ses surcharges (`.specify/templates/overrides/`), la constitution et les arguments donnés aux skills, qui demandent un contenu en français.
 
 ## Étapes
 
@@ -15,7 +15,7 @@ Specs dans `specs/`, au format [GitHub Spec Kit](https://github.com/github/spec-
 |---|---|
 | F1. Branche | `git switch -c feat/00X-nom-court` |
 | F2. Spec | `/ecrire-spec` avec l'idée de départ. Claude relit la spec avec la grille ci-dessous et la corrige ; l'humain tranche les questions ouvertes et valide. Commit `docs(spec): 00X nom` |
-| F3. Plan | Plan mode, prompt P-Plan. Claude vérifie le plan avec la grille et l'ajuste ; l'humain valide. Le plan et les tâches sont écrits dans `plan.md` et `tasks.md`, à côté de `spec.md`. Commit `docs(spec): 00X plan` |
+| F3. Plan | `/speckit-plan` (prompt P-Plan) puis `/speckit-tasks` (prompt P-Tâches). Claude vérifie le plan avec la grille et l'ajuste ; l'humain valide. Le plan et les tâches sont écrits dans `plan.md` et `tasks.md`, à côté de `spec.md`. Commit `docs(spec): 00X plan` |
 | F4a. Tests | Subagent `testeur-spec` sur la spec. Claude vérifie : tests nommés d'après les critères, qui échouent pour la bonne raison ; `git diff --stat` ne montre que des fichiers de test. Commit `test(00X): tests depuis la spec` |
 | F4b. Implémentation | Une tâche du plan à la fois (P-Impl), lecture du diff par l'humain pour le comprendre, tests du projet touché (`make test-back` depuis la racine, `npm run test` dans `frontend/`), commit `feat(00X): tâche N – description`. Si la feature crée ou modifie un parcours entre plusieurs rôles, une tâche du plan écrit ou adapte le parcours dans `frontend/e2e/` |
 | F5. Vérification à la main | `symfony serve` dans `backend/` et `npm run dev` dans `frontend/`, chaque critère d'acceptation déroulé dans le navigateur avec le bon compte de démo |
@@ -62,8 +62,11 @@ Modèle : `.specify/templates/overrides/spec-template.md`, qui remplace celui de
 
 ## Prompts
 
-**P-Plan**
-> Lis specs/00X-nom/spec.md, CLAUDE.md, frontend/CLAUDE.md et backend/CLAUDE.md. Propose le plan d'implémentation en tâches numérotées et petites, chacune reliée aux critères d'acceptation, dans l'ordre backend/ → frontend/. Les tests de backend/ seront écrits avant par le subagent testeur-spec. Ne code rien ; une fois le plan validé, écris-le dans plan.md et tasks.md.
+**P-Plan** (arguments de `/speckit-plan`)
+> Feature 00X (specs/00X-nom/spec.md, validée). Respecter la constitution et docs/methode.md : plan rédigé en français ; ordre backend/ puis frontend/ ; tests du back écrits avant (subagent testeur-spec) ; s'appuyer sur l'existant ; aucune nouvelle dépendance sauf justification ; prévoir la mise à jour des docs et un parcours e2e. Ne rien coder.
+
+**P-Tâches** (arguments de `/speckit-tasks`)
+> Feature 00X. Tâches en français, au format Spec Kit (T001… cases à cocher) : ordre backend/ puis frontend/ ; une première tâche « tests du back écrits par le subagent testeur-spec » ; chaque tâche reliée aux critères C… qu'elle couvre ; une tâche = un commit feat(00X) ; tests Testing Library dans la tâche front concernée ; parcours e2e ; mise à jour des docs ; étapes F5 à F8 en phase finale.
 
 **P-Tests**
 > Utilise le subagent testeur-spec sur specs/00X-nom/.
